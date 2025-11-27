@@ -56,18 +56,29 @@
     /* Supabase-style subtle noise/gradient if desired, but keeping it clean for now */
   }
 
-  /* Custom Scrollbar */
+  /* Custom Scrollbar - Theme Integrated */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: hsl(var(--background));
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+    background: hsl(var(--border));
+    border-radius: 6px;
+    border: 3px solid hsl(var(--background));
+    transition: background 200ms;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: hsl(var(--primary));
   }
 }
 

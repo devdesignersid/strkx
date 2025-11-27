@@ -22,7 +22,14 @@ export class ProblemsService {
     });
   }
 
-  async findAll() {
+  async findAll(page: number = 1, limit: number = 20) {
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for frontend to know when to stop loading
+    const total = await this.prisma.problem.count();
+
+    // Fetch paginated problems
     const problems = await this.prisma.problem.findMany({
       select: {
         id: true,
@@ -32,6 +39,9 @@ export class ProblemsService {
         tags: true,
         createdAt: true,
       },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
     });
 
     const user = await this.prisma.user.findUnique({
@@ -39,7 +49,13 @@ export class ProblemsService {
     });
 
     if (!user) {
-      return problems.map((p) => ({ ...p, status: 'Todo' }));
+      return {
+        problems: problems.map((p) => ({ ...p, status: 'Todo' })),
+        total,
+        page,
+        limit,
+        hasMore: skip + problems.length < total,
+      };
     }
 
     const submissions = await this.prisma.submission.findMany({
@@ -56,10 +72,16 @@ export class ProblemsService {
       }
     });
 
-    return problems.map((p) => ({
-      ...p,
-      status: statusMap.get(p.id) || 'Todo',
-    }));
+    return {
+      problems: problems.map((p) => ({
+        ...p,
+        status: statusMap.get(p.id) || 'Todo',
+      })),
+      total,
+      page,
+      limit,
+      hasMore: skip + problems.length < total,
+    };
   }
 
   async findOne(slug: string) {

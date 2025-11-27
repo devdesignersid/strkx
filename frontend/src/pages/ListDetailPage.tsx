@@ -58,6 +58,12 @@ export default function ListDetailPage() {
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const lastSelectedId = useRef<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const LIMIT = 20;
+
   useEffect(() => {
     if (id) fetchListDetails();
   }, [id]);
@@ -65,7 +71,7 @@ export default function ListDetailPage() {
   const fetchListDetails = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`http://localhost:3000/lists/${id}`);
+      const res = await axios.get(`http://localhost:3000/lists/${id}?page=1&limit=${LIMIT}`);
       setList(res.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractedProblems = res.data.problems.map((p: any) => ({
@@ -74,12 +80,40 @@ export default function ListDetailPage() {
           acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
       }));
       setProblems(extractedProblems);
+      setHasMore(res.data.hasMore);
+      setCurrentPage(1);
     } catch (error) {
       console.error('Failed to fetch list details:', error);
       toast.error('Failed to load list details');
       navigate('/lists');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    try {
+      const res = await axios.get(`http://localhost:3000/lists/${id}?page=${nextPage}&limit=${LIMIT}`);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newProblems = res.data.problems.map((p: any) => ({
+        ...p.problem,
+        acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
+      }));
+
+      setProblems(prev => [...prev, ...newProblems]);
+      setHasMore(res.data.hasMore);
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error('Error loading more problems:', error);
+      toast.error('Failed to load more problems');
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -212,8 +246,8 @@ export default function ListDetailPage() {
   const isAllSelected = processedProblems.length > 0 && selectedIds.size === processedProblems.length;
 
   return (
-    <div className="h-full flex flex-col bg-background text-foreground font-sans">
-      <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full">
+    <div className="h-full overflow-y-auto bg-background text-foreground font-sans">
+      <div className="py-8 mx-auto max-w-7xl px-8">
         {/* Header */}
         <div className="mb-8">
             <button
@@ -510,6 +544,30 @@ export default function ListDetailPage() {
             </tbody>
           </table>
           </div>
+
+          {/* Load More Button */}
+          {!isLoading && hasMore && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-lg font-medium text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Load More
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
           {!isLoading && processedProblems.length === 0 && (
             <EmptyState
               icon={Filter}

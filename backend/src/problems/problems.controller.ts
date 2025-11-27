@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ProblemsService } from './problems.service';
 import { CreateProblemDto } from './dto/create-problem.dto';
@@ -21,8 +22,10 @@ export class ProblemsController {
   }
 
   @Get()
-  findAll() {
-    return this.problemsService.findAll();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.problemsService.findAll(pageNum, limitNum);
   }
 
   @Get(':slug/submissions')

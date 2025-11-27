@@ -83,60 +83,75 @@ export class ListsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, page: number = 1, limit: number = 20) {
     const user = await this.getDemoUser();
+    const skip = (page - 1) * limit;
 
-    const list = await this.prisma.list.findUnique({
+    // First check if list exists and get metadata
+    const listMetadata = await this.prisma.list.findUnique({
       where: { id },
-      include: {
-        problems: {
-          include: {
-            problem: true,
-          },
-        },
-      },
     });
 
-    if (!list) {
+    if (!listMetadata) {
       throw new NotFoundException(`List with ID ${id} not found`);
     }
 
+    // Get total count of problems in this list
+    const total = await this.prisma.problemsOnLists.count({
+      where: { listId: id },
+    });
+
+    // Fetch paginated problems
+    const problemsOnList = await this.prisma.problemsOnLists.findMany({
+      where: { listId: id },
+      include: {
+        problem: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { addedAt: 'desc' }, // Order by when they were added
+    });
+
     // Fetch user submissions for these problems
-    const problemIds = list.problems.map(p => p.problemId);
+    const problemIds = problemsOnList.map((p) => p.problemId);
     const submissions = await this.prisma.submission.findMany({
-        where: {
-            userId: user.id,
-            problemId: { in: problemIds }
-        },
-        select: {
-            problemId: true,
-            status: true
-        }
+      where: {
+        userId: user.id,
+        problemId: { in: problemIds },
+      },
+      select: {
+        problemId: true,
+        status: true,
+      },
     });
 
     // Map status
     const statusMap = new Map<string, string>();
-    submissions.forEach(s => {
-        const current = statusMap.get(s.problemId);
-        if (s.status === 'ACCEPTED') {
-            statusMap.set(s.problemId, 'Solved');
-        } else if (current !== 'Solved') {
-            statusMap.set(s.problemId, 'Attempted');
-        }
+    submissions.forEach((s) => {
+      const current = statusMap.get(s.problemId);
+      if (s.status === 'ACCEPTED') {
+        statusMap.set(s.problemId, 'Solved');
+      } else if (current !== 'Solved') {
+        statusMap.set(s.problemId, 'Attempted');
+      }
     });
 
     // Enrich problems with status
-    const enrichedProblems = list.problems.map(p => ({
-        ...p,
-        problem: {
-            ...p.problem,
-            status: statusMap.get(p.problemId) || 'Todo'
-        }
+    const enrichedProblems = problemsOnList.map((p) => ({
+      ...p,
+      problem: {
+        ...p.problem,
+        status: statusMap.get(p.problemId) || 'Todo',
+      },
     }));
 
     return {
-        ...list,
-        problems: enrichedProblems
+      ...listMetadata,
+      problems: enrichedProblems,
+      total,
+      page,
+      limit,
+      hasMore: skip + problemsOnList.length < total,
     };
   }
 

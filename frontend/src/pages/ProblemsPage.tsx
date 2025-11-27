@@ -51,18 +51,26 @@ export default function ProblemsPage() {
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const lastSelectedId = useRef<string | null>(null);
 
+  // Pagination for API-based lazy loading
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const LIMIT = 20;
+
   useEffect(() => {
     setIsLoading(true);
-    axios.get('http://localhost:3000/problems')
+    // Fetch first page
+    axios.get(`http://localhost:3000/problems?page=1&limit=${LIMIT}`)
       .then(res => {
-        // Backend now returns status based on user progress
+        const { problems: fetchedProblems, hasMore: more } = res.data;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const enriched = res.data.map((p: any) => ({
+        const enriched = fetchedProblems.map((p: any) => ({
             ...p,
-            // acceptance is still mocked as it's not in DB yet, but status is real
             acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
         }));
         setProblems(enriched);
+        setHasMore(more);
+        setCurrentPage(1);
       })
       .catch(err => console.error(err))
       .finally(() => setIsLoading(false));
@@ -120,6 +128,33 @@ export default function ProblemsPage() {
 
     return result;
   }, [problems, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
+
+  // Load more function for pagination
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    try {
+      const res = await axios.get(`http://localhost:3000/problems?page=${nextPage}&limit=${LIMIT}`);
+      const { problems: fetchedProblems, hasMore: more } = res.data;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const enriched = fetchedProblems.map((p: any) => ({
+        ...p,
+        acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
+      }));
+
+      setProblems(prev => [...prev, ...enriched]);
+      setHasMore(more);
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error('Error loading more problems:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   // Handlers
   const handleSort = (key: SortKey) => {
@@ -234,8 +269,8 @@ export default function ProblemsPage() {
   const isAllSelected = processedProblems.length > 0 && selectedIds.size === processedProblems.length;
 
   return (
-    <div className="h-full flex flex-col bg-background text-foreground font-sans">
-      <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full">
+    <div className="h-full overflow-y-auto bg-background text-foreground font-sans">
+      <div className="py-8 mx-auto max-w-7xl px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -520,6 +555,30 @@ export default function ProblemsPage() {
             </tbody>
           </table>
           </div>
+
+          {/* Load More Button */}
+          {!isLoading && hasMore && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-lg font-medium text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Load More
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
           {!isLoading && processedProblems.length === 0 && (
             <EmptyState
               icon={Filter}
