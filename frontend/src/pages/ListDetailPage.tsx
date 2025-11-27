@@ -64,14 +64,22 @@ export default function ListDetailPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const LIMIT = 20;
 
-  useEffect(() => {
-    if (id) fetchListDetails();
-  }, [id]);
+  // Fetch List Details
+  const fetchListDetails = async (page: number, isReset: boolean = false) => {
+    if (isReset) setIsLoading(true);
 
-  const fetchListDetails = async () => {
-    setIsLoading(true);
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', LIMIT.toString());
+    if (searchQuery) params.append('search', searchQuery);
+    if (filterDifficulties.length) params.append('difficulty', filterDifficulties.join(','));
+    if (filterStatus.length) params.append('status', filterStatus.join(','));
+    if (filterTags.length) params.append('tags', filterTags.join(','));
+    params.append('sort', sortConfig.key);
+    params.append('order', sortConfig.direction);
+
     try {
-      const res = await axios.get(`http://localhost:3000/lists/${id}?page=1&limit=${LIMIT}`);
+      const res = await axios.get(`http://localhost:3000/lists/${id}?${params.toString()}`);
       setList(res.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractedProblems = res.data.problems.map((p: any) => ({
@@ -79,96 +87,42 @@ export default function ListDetailPage() {
           // Mock acceptance if missing
           acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
       }));
-      setProblems(extractedProblems);
+
+      if (isReset) {
+        setProblems(extractedProblems);
+        setCurrentPage(1);
+      } else {
+        setProblems(prev => [...prev, ...extractedProblems]);
+        setCurrentPage(page);
+      }
       setHasMore(res.data.hasMore);
-      setCurrentPage(1);
     } catch (error) {
       console.error('Failed to fetch list details:', error);
       toast.error('Failed to load list details');
-      navigate('/lists');
+      if (isReset) navigate('/lists');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadMore = async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    const nextPage = currentPage + 1;
-
-    try {
-      const res = await axios.get(`http://localhost:3000/lists/${id}?page=${nextPage}&limit=${LIMIT}`);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const newProblems = res.data.problems.map((p: any) => ({
-        ...p.problem,
-        acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
-      }));
-
-      setProblems(prev => [...prev, ...newProblems]);
-      setHasMore(res.data.hasMore);
-      setCurrentPage(nextPage);
-    } catch (error) {
-      console.error('Error loading more problems:', error);
-      toast.error('Failed to load more problems');
-    } finally {
       setIsLoadingMore(false);
     }
   };
 
-  // Filter & Sort Logic (Same as ProblemsPage)
-  const processedProblems = useMemo(() => {
-    let result = [...problems];
-
-    // 1. Filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p => p.title.toLowerCase().includes(q));
+  useEffect(() => {
+    if (id) {
+      const timer = setTimeout(() => {
+        fetchListDetails(1, true);
+      }, 300);
+      return () => clearTimeout(timer);
     }
+  }, [id, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
 
-    if (filterDifficulties.length > 0) {
-      result = result.filter(p => filterDifficulties.includes(p.difficulty));
-    }
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    await fetchListDetails(currentPage + 1, false);
+  };
 
-    if (filterStatus.length > 0) {
-      result = result.filter(p => filterStatus.includes(p.status));
-    }
-
-    if (filterTags.length > 0) {
-      result = result.filter(p => filterTags.every(t => p.tags.includes(t)));
-    }
-
-    // 2. Sort
-    result.sort((a, b) => {
-      const { key, direction } = sortConfig;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let valA = (a as any)[key];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let valB = (b as any)[key];
-
-      if (key === 'difficulty') {
-        const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
-        valA = map[String(a.difficulty).toLowerCase()] ?? 99;
-        valB = map[String(b.difficulty).toLowerCase()] ?? 99;
-      }
-
-      if (key === 'status') {
-          const map: Record<string, number> = { todo: 1, attempted: 2, solved: 3 };
-          valA = map[String(a.status).toLowerCase()] ?? 0;
-          valB = map[String(b.status).toLowerCase()] ?? 0;
-      }
-
-      if (valA === valB) return 0;
-      if (valA === undefined) return 1;
-      if (valB === undefined) return -1;
-
-      const comparison = valA > valB ? 1 : -1;
-      return direction === 'asc' ? comparison : -comparison;
-    });
-
-    return result;
-  }, [problems, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
+  // Use problems directly
+  const processedProblems = problems;
 
   const handleSort = (key: SortKey) => {
     setSortConfig(current => ({

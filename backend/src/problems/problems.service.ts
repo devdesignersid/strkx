@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Difficulty, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProblemsService {
@@ -22,15 +23,72 @@ export class ProblemsService {
     });
   }
 
-  async findAll(page: number = 1, limit: number = 20) {
-    // Calculate skip for pagination
-    const skip = (page - 1) * limit;
+  async findAll(
+    page: number = 1,
+    limit: number = 20,
+    search?: string,
+    difficulty?: string,
+    status?: string,
+    tags?: string,
+    sort?: string,
+    order?: 'asc' | 'desc',
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: 'demo@example.com' },
+    });
 
-    // Get total count for frontend to know when to stop loading
-    const total = await this.prisma.problem.count();
+    const where: Prisma.ProblemWhereInput = {};
 
-    // Fetch paginated problems
-    const problems = await this.prisma.problem.findMany({
+    // Search
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Difficulty
+    if (difficulty) {
+      where.difficulty = { in: difficulty.split(',') as Difficulty[] };
+    }
+
+    // Tags
+    if (tags) {
+      where.tags = { hasSome: tags.split(',') };
+    }
+
+    // Status Filter (DB Level)
+    if (status && user) {
+      const statuses = status.split(',');
+      const statusConditions: Prisma.ProblemWhereInput[] = [];
+
+      if (statuses.includes('Solved')) {
+        statusConditions.push({
+          submissions: { some: { userId: user.id, status: 'ACCEPTED' } },
+        });
+      }
+      if (statuses.includes('Attempted')) {
+        statusConditions.push({
+          submissions: {
+            some: { userId: user.id, status: { not: 'ACCEPTED' } },
+            none: { userId: user.id, status: 'ACCEPTED' },
+          },
+        });
+      }
+      if (statuses.includes('Todo')) {
+        statusConditions.push({
+          submissions: { none: { userId: user.id } },
+        });
+      }
+
+      if (statusConditions.length > 0) {
+        where.AND = [{ OR: statusConditions }];
+      }
+    }
+
+    // Fetch ALL matching problems (for in-memory sort/paginate)
+    const allProblems = await this.prisma.problem.findMany({
+      where,
       select: {
         id: true,
         title: true,
@@ -39,48 +97,69 @@ export class ProblemsService {
         tags: true,
         createdAt: true,
       },
-      skip,
-      take: limit,
       orderBy: { createdAt: 'desc' },
     });
 
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-
-    if (!user) {
-      return {
-        problems: problems.map((p) => ({ ...p, status: 'Todo' })),
-        total,
-        page,
-        limit,
-        hasMore: skip + problems.length < total,
-      };
-    }
-
-    const submissions = await this.prisma.submission.findMany({
-      where: { userId: user.id },
-      select: { problemId: true, status: true },
-    });
-
-    const statusMap = new Map<string, string>();
-    submissions.forEach((s) => {
-      if (s.status === 'ACCEPTED') {
-        statusMap.set(s.problemId, 'Solved');
-      } else if (!statusMap.has(s.problemId)) {
-        statusMap.set(s.problemId, 'Attempted');
-      }
-    });
-
-    return {
-      problems: problems.map((p) => ({
+    // Enrich with Status
+    let enrichedProblems: any[] = [];
+    if (user) {
+      const submissions = await this.prisma.submission.findMany({
+        where: { userId: user.id },
+        select: { problemId: true, status: true },
+      });
+      const statusMap = new Map<string, string>();
+      submissions.forEach((s) => {
+        if (s.status === 'ACCEPTED') {
+          statusMap.set(s.problemId, 'Solved');
+        } else if (!statusMap.has(s.problemId)) {
+          statusMap.set(s.problemId, 'Attempted');
+        }
+      });
+      enrichedProblems = allProblems.map((p) => ({
         ...p,
         status: statusMap.get(p.id) || 'Todo',
-      })),
+      }));
+    } else {
+      enrichedProblems = allProblems.map((p) => ({ ...p, status: 'Todo' }));
+    }
+
+    // Sort (In-Memory)
+    if (sort) {
+      const sortKey = sort as keyof typeof enrichedProblems[0];
+      const sortOrder = order === 'desc' ? -1 : 1;
+
+      enrichedProblems.sort((a, b) => {
+        let valA = a[sortKey];
+        let valB = b[sortKey];
+
+        // Custom Sorts
+        if (sortKey === 'difficulty') {
+          const diffMap = { Easy: 1, Medium: 2, Hard: 3 };
+          valA = diffMap[a.difficulty];
+          valB = diffMap[b.difficulty];
+        } else if (sortKey === 'status') {
+          const statusMap = { Todo: 1, Attempted: 2, Solved: 3 };
+          valA = statusMap[a.status];
+          valB = statusMap[b.status];
+        }
+
+        if (valA < valB) return -1 * sortOrder;
+        if (valA > valB) return 1 * sortOrder;
+        return 0;
+      });
+    }
+
+    // Paginate
+    const total = enrichedProblems.length;
+    const skip = (page - 1) * limit;
+    const paginatedProblems = enrichedProblems.slice(skip, skip + limit);
+
+    return {
+      problems: paginatedProblems,
       total,
       page,
       limit,
-      hasMore: skip + problems.length < total,
+      hasMore: skip + paginatedProblems.length < total,
     };
   }
 

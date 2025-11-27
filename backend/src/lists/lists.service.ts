@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Difficulty, Prisma } from '@prisma/client';
 import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 import { ManageListProblemsDto } from './dto/manage-list-problems.dto';
@@ -83,9 +84,18 @@ export class ListsService {
     });
   }
 
-  async findOne(id: string, page: number = 1, limit: number = 20) {
+  async findOne(
+    id: string,
+    page: number = 1,
+    limit: number = 20,
+    search?: string,
+    difficulty?: string,
+    status?: string,
+    tags?: string,
+    sort?: string,
+    order?: 'asc' | 'desc',
+  ) {
     const user = await this.getDemoUser();
-    const skip = (page - 1) * limit;
 
     // First check if list exists and get metadata
     const listMetadata = await this.prisma.list.findUnique({
@@ -96,20 +106,59 @@ export class ListsService {
       throw new NotFoundException(`List with ID ${id} not found`);
     }
 
-    // Get total count of problems in this list
-    const total = await this.prisma.problemsOnLists.count({
-      where: { listId: id },
-    });
+    // Build Filters
+    const problemWhere: Prisma.ProblemWhereInput = {};
 
-    // Fetch paginated problems
+    if (search) {
+      problemWhere.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (difficulty) {
+      problemWhere.difficulty = { in: difficulty.split(',') as Difficulty[] };
+    }
+    if (tags) {
+      problemWhere.tags = { hasSome: tags.split(',') };
+    }
+    if (status) {
+      const statuses = status.split(',');
+      const statusConditions: Prisma.ProblemWhereInput[] = [];
+      if (statuses.includes('Solved')) {
+        statusConditions.push({
+          submissions: { some: { userId: user.id, status: 'ACCEPTED' } },
+        });
+      }
+      if (statuses.includes('Attempted')) {
+        statusConditions.push({
+          submissions: {
+            some: { userId: user.id, status: { not: 'ACCEPTED' } },
+            none: { userId: user.id, status: 'ACCEPTED' },
+          },
+        });
+      }
+      if (statuses.includes('Todo')) {
+        statusConditions.push({
+          submissions: { none: { userId: user.id } },
+        });
+      }
+      if (statusConditions.length > 0) {
+        problemWhere.AND = [{ OR: statusConditions }];
+      }
+    }
+
+    const where: Prisma.ProblemsOnListsWhereInput = {
+      listId: id,
+      problem: problemWhere,
+    };
+
+    // Fetch ALL matching problems (for in-memory sort/paginate)
     const problemsOnList = await this.prisma.problemsOnLists.findMany({
-      where: { listId: id },
+      where,
       include: {
         problem: true,
       },
-      skip,
-      take: limit,
-      orderBy: { addedAt: 'desc' }, // Order by when they were added
+      orderBy: { addedAt: 'desc' },
     });
 
     // Fetch user submissions for these problems
@@ -145,13 +194,47 @@ export class ListsService {
       },
     }));
 
+    // Sort (In-Memory)
+    if (sort) {
+      const sortOrder = order === 'desc' ? -1 : 1;
+      enrichedProblems.sort((a, b) => {
+        let valA: any;
+        let valB: any;
+
+        if (sort === 'title') {
+          valA = a.problem.title;
+          valB = b.problem.title;
+        } else if (sort === 'difficulty') {
+          const diffMap = { Easy: 1, Medium: 2, Hard: 3 };
+          valA = diffMap[a.problem.difficulty];
+          valB = diffMap[b.problem.difficulty];
+        } else if (sort === 'status') {
+          const statusMapVal = { Todo: 1, Attempted: 2, Solved: 3 };
+          valA = statusMapVal[a.problem.status];
+          valB = statusMapVal[b.problem.status];
+        } else {
+          valA = (a.problem as any)[sort];
+          valB = (b.problem as any)[sort];
+        }
+
+        if (valA < valB) return -1 * sortOrder;
+        if (valA > valB) return 1 * sortOrder;
+        return 0;
+      });
+    }
+
+    // Paginate
+    const total = enrichedProblems.length;
+    const skip = (page - 1) * limit;
+    const paginatedProblems = enrichedProblems.slice(skip, skip + limit);
+
     return {
       ...listMetadata,
-      problems: enrichedProblems,
+      problems: paginatedProblems,
       total,
       page,
       limit,
-      hasMore: skip + problemsOnList.length < total,
+      hasMore: skip + paginatedProblems.length < total,
     };
   }
 

@@ -57,104 +57,63 @@ export default function ProblemsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const LIMIT = 20;
 
-  useEffect(() => {
-    setIsLoading(true);
-    // Fetch first page
-    axios.get(`http://localhost:3000/problems?page=1&limit=${LIMIT}`)
-      .then(res => {
-        const { problems: fetchedProblems, hasMore: more } = res.data;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const enriched = fetchedProblems.map((p: any) => ({
-            ...p,
-            acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
-        }));
-        setProblems(enriched);
-        setHasMore(more);
-        setCurrentPage(1);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setIsLoading(false));
-  }, []);
+  // Fetch Problems Function
+  const fetchProblems = async (page: number, isReset: boolean = false) => {
+    if (isReset) setIsLoading(true);
 
-  // Filter & Sort Logic
-  const processedProblems = useMemo(() => {
-    let result = [...problems];
-
-    // 1. Filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p => p.title.toLowerCase().includes(q));
-    }
-
-    if (filterDifficulties.length > 0) {
-      result = result.filter(p => filterDifficulties.includes(p.difficulty));
-    }
-
-    if (filterStatus.length > 0) {
-      result = result.filter(p => filterStatus.includes(p.status));
-    }
-
-    if (filterTags.length > 0) {
-      result = result.filter(p => filterTags.every(t => p.tags.includes(t)));
-    }
-
-    // 2. Sort
-    result.sort((a, b) => {
-      const { key, direction } = sortConfig;
-      let valA = a[key];
-      let valB = b[key];
-
-      // Custom sort for difficulty
-      if (key === 'difficulty') {
-        const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
-        valA = map[String(a.difficulty).toLowerCase()] ?? 99;
-        valB = map[String(b.difficulty).toLowerCase()] ?? 99;
-      }
-
-      // Custom sort for status (Todo < Attempted < Solved)
-      if (key === 'status') {
-          const map: Record<string, number> = { todo: 1, attempted: 2, solved: 3 };
-          valA = map[String(a.status).toLowerCase()] ?? 0;
-          valB = map[String(b.status).toLowerCase()] ?? 0;
-      }
-
-      if (valA === valB) return 0;
-      if (valA === undefined) return 1;
-      if (valB === undefined) return -1;
-
-      const comparison = valA > valB ? 1 : -1;
-      return direction === 'asc' ? comparison : -comparison;
-    });
-
-    return result;
-  }, [problems, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
-
-  // Load more function for pagination
-  const loadMore = async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    const nextPage = currentPage + 1;
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', LIMIT.toString());
+    if (searchQuery) params.append('search', searchQuery);
+    if (filterDifficulties.length) params.append('difficulty', filterDifficulties.join(','));
+    if (filterStatus.length) params.append('status', filterStatus.join(','));
+    if (filterTags.length) params.append('tags', filterTags.join(','));
+    params.append('sort', sortConfig.key);
+    params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`http://localhost:3000/problems?page=${nextPage}&limit=${LIMIT}`);
+      const res = await axios.get(`http://localhost:3000/problems?${params.toString()}`);
       const { problems: fetchedProblems, hasMore: more } = res.data;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const enriched = fetchedProblems.map((p: any) => ({
-        ...p,
-        acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
+          ...p,
+          acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
       }));
 
-      setProblems(prev => [...prev, ...enriched]);
+      if (isReset) {
+        setProblems(enriched);
+        setCurrentPage(1);
+      } else {
+        setProblems(prev => [...prev, ...enriched]);
+        setCurrentPage(page);
+      }
       setHasMore(more);
-      setCurrentPage(nextPage);
-    } catch (error) {
-      console.error('Error loading more problems:', error);
+    } catch (err) {
+      console.error(err);
     } finally {
+      setIsLoading(false);
       setIsLoadingMore(false);
     }
   };
+
+  // Initial Fetch & Filter/Sort Updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProblems(1, true);
+    }, 300); // Debounce search
+    return () => clearTimeout(timer);
+  }, [searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
+
+  // Load more function for pagination
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    await fetchProblems(currentPage + 1, false);
+  };
+
+  // Use problems directly instead of processedProblems
+  const processedProblems = problems;
 
   // Handlers
   const handleSort = (key: SortKey) => {

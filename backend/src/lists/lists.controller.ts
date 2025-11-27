@@ -23,10 +23,26 @@ export class ListsController {
     @Param('id') id: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('difficulty') difficulty?: string,
+    @Query('status') status?: string,
+    @Query('tags') tags?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: 'asc' | 'desc',
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.listsService.findOne(id, pageNum, limitNum);
+    return this.listsService.findOne(
+      id,
+      pageNum,
+      limitNum,
+      search,
+      difficulty,
+      status,
+      tags,
+      sort,
+      order,
+    );
   }
 
   @Patch(':id')

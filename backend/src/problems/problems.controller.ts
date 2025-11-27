@@ -22,10 +22,28 @@ export class ProblemsController {
   }
 
   @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('difficulty') difficulty?: string,
+    @Query('status') status?: string,
+    @Query('tags') tags?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: 'asc' | 'desc',
+  ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.problemsService.findAll(pageNum, limitNum);
+    return this.problemsService.findAll(
+      pageNum,
+      limitNum,
+      search,
+      difficulty,
+      status,
+      tags,
+      sort,
+      order,
+    );
   }
 
   @Get(':slug/submissions')
