@@ -22,61 +22,67 @@ let DashboardService = class DashboardService {
             where: { email: 'demo@example.com' },
         });
         if (!user)
-            return { solved: 0, attempted: 0, accuracy: 0, streak: 0 };
-        const submissions = await this.prisma.submission.findMany({
-            where: { userId: user.id },
-            select: { status: true, problemId: true, problem: { select: { difficulty: true } }, createdAt: true },
+            return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0 };
+        const distinctSolved = await this.prisma.submission.findMany({
+            where: { userId: user.id, status: 'ACCEPTED' },
+            distinct: ['problemId'],
+            select: { problem: { select: { difficulty: true } }, createdAt: true },
         });
-        const solvedProblems = new Set();
-        const solvedEasy = new Set();
-        const solvedMedium = new Set();
-        const solvedHard = new Set();
+        let solvedEasy = 0;
+        let solvedMedium = 0;
+        let solvedHard = 0;
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-        const solvedThisWeek = new Set();
-        const solvedLastWeek = new Set();
-        submissions.forEach((s) => {
-            if (s.status === 'ACCEPTED') {
-                solvedProblems.add(s.problemId);
-                if (s.problem.difficulty === 'Easy')
-                    solvedEasy.add(s.problemId);
-                if (s.problem.difficulty === 'Medium')
-                    solvedMedium.add(s.problemId);
-                if (s.problem.difficulty === 'Hard')
-                    solvedHard.add(s.problemId);
-                const submissionDate = new Date(s.createdAt);
-                if (submissionDate >= oneWeekAgo) {
-                    solvedThisWeek.add(s.problemId);
-                }
-                else if (submissionDate >= twoWeeksAgo) {
-                    solvedLastWeek.add(s.problemId);
-                }
-            }
-        });
-        const currentCount = solvedThisWeek.size;
-        const previousCount = solvedLastWeek.size;
-        let weeklyChange = 0;
-        if (previousCount > 0) {
-            weeklyChange = Math.round(((currentCount - previousCount) / previousCount) * 100);
+        let solvedThisWeek = 0;
+        let solvedLastWeek = 0;
+        for (const s of distinctSolved) {
+            if (s.problem.difficulty === 'Easy')
+                solvedEasy++;
+            else if (s.problem.difficulty === 'Medium')
+                solvedMedium++;
+            else if (s.problem.difficulty === 'Hard')
+                solvedHard++;
+            const date = new Date(s.createdAt);
+            if (date >= oneWeekAgo)
+                solvedThisWeek++;
+            else if (date >= twoWeeksAgo)
+                solvedLastWeek++;
         }
-        else if (currentCount > 0) {
+        const solvedTotal = distinctSolved.length;
+        const attemptedGroup = await this.prisma.submission.groupBy({
+            by: ['problemId'],
+            where: { userId: user.id },
+        });
+        const attempted = attemptedGroup.length;
+        const aggregations = await this.prisma.submission.aggregate({
+            where: { userId: user.id },
+            _count: {
+                id: true,
+            },
+        });
+        const totalSubmissions = aggregations._count.id;
+        const acceptedCount = await this.prisma.submission.count({
+            where: { userId: user.id, status: 'ACCEPTED' },
+        });
+        const accuracy = totalSubmissions > 0
+            ? Math.round((acceptedCount / totalSubmissions) * 100)
+            : 0;
+        let weeklyChange = 0;
+        if (solvedLastWeek > 0) {
+            weeklyChange = Math.round(((solvedThisWeek - solvedLastWeek) / solvedLastWeek) * 100);
+        }
+        else if (solvedThisWeek > 0) {
             weeklyChange = 100;
         }
-        const attemptedProblems = new Set(submissions.map((s) => s.problemId));
-        const totalSubmissions = submissions.length;
-        const acceptedSubmissions = submissions.filter((s) => s.status === 'ACCEPTED').length;
-        const accuracy = totalSubmissions > 0
-            ? Math.round((acceptedSubmissions / totalSubmissions) * 100)
-            : 0;
         return {
-            solved: solvedProblems.size,
-            attempted: attemptedProblems.size,
+            solved: solvedTotal,
+            attempted,
             accuracy,
             streak: 1,
-            easy: solvedEasy.size,
-            medium: solvedMedium.size,
-            hard: solvedHard.size,
+            easy: solvedEasy,
+            medium: solvedMedium,
+            hard: solvedHard,
             weeklyChange,
         };
     }

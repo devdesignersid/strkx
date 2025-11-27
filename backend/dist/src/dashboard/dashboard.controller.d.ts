@@ -7,15 +7,6 @@ export declare class DashboardController {
         attempted: number;
         accuracy: number;
         streak: number;
-        easy?: undefined;
-        medium?: undefined;
-        hard?: undefined;
-        weeklyChange?: undefined;
-    } | {
-        solved: number;
-        attempted: number;
-        accuracy: number;
-        streak: number;
         easy: number;
         medium: number;
         hard: number;

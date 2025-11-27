@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
 import Editor, { type OnMount } from '@monaco-editor/react';
@@ -627,33 +627,42 @@ interface Solution {
                     </div>
                  </div>
                  <div className="flex-1 pt-2 relative">
-                    <Editor
-                      height="100%"
-                      defaultLanguage="javascript"
-                      theme="vscode-dark"
-                      value={code}
-                      onChange={(value) => setCode(value || '')}
-                      beforeMount={handleEditorWillMount}
-                      onMount={handleEditorDidMount}
-                      options={{
-                        minimap: { enabled: false },
-                        fontSize: 14, // Slightly larger for better readability
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontLigatures: true,
-                        lineHeight: 1.6,
-                        scrollBeyondLastLine: false,
-                        padding: { top: 16, bottom: 16 },
-                        renderLineHighlight: 'none',
-                        suggest: {
-                          showWords: false,
-                        },
-                        quickSuggestions: autocompleteEnabled,
-                        roundedSelection: true,
-                        cursorBlinking: 'smooth',
-                        cursorSmoothCaretAnimation: 'on',
-                        automaticLayout: true,
-                      }}
-                    />
+                    <Suspense fallback={
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e] text-muted-foreground">
+                        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                        Loading Editor...
+                      </div>
+                    }>
+                      <Editor
+                        height="100%"
+                        defaultLanguage="javascript"
+                        theme="vscode-dark"
+                        value={code}
+                        onChange={(value) => setCode(value || '')}
+                        beforeMount={handleEditorWillMount}
+                        onMount={handleEditorDidMount}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 14,
+                          lineNumbers: 'on',
+                          roundedSelection: false,
+                          scrollBeyondLastLine: false,
+                          readOnly: false,
+                          automaticLayout: true,
+                          padding: { top: 16, bottom: 16 },
+                          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                          fontLigatures: true,
+                          cursorBlinking: 'smooth',
+                          cursorSmoothCaretAnimation: 'on',
+                          smoothScrolling: true,
+                          contextmenu: true,
+                          quickSuggestions: autocompleteEnabled,
+                          suggestOnTriggerCharacters: autocompleteEnabled,
+                          snippetSuggestions: autocompleteEnabled ? 'inline' : 'none',
+                          wordBasedSuggestions: autocompleteEnabled ? 'currentDocument' : 'off',
+                        }}
+                      />
+                    </Suspense>
                  </div>
               </Panel>
 

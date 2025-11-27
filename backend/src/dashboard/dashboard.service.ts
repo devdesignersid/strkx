@@ -10,73 +10,89 @@ export class DashboardService {
       where: { email: 'demo@example.com' },
     });
 
-    if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0 };
+    if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0 };
 
-    const submissions = await this.prisma.submission.findMany({
-      where: { userId: user.id },
-      select: { status: true, problemId: true, problem: { select: { difficulty: true } }, createdAt: true },
+    // 1. Get unique solved problems count by difficulty (Optimized)
+    // We group by problemId to get unique solved problems, then filter by difficulty
+    // Since Prisma doesn't support "count distinct problemId where status=ACCEPTED group by difficulty" easily in one go without raw query,
+    // we will use a slightly different approach:
+    // Fetch all unique accepted problemIds with their difficulty.
+    // This is still much lighter than fetching all submissions.
+
+    const distinctSolved = await this.prisma.submission.findMany({
+      where: { userId: user.id, status: 'ACCEPTED' },
+      distinct: ['problemId'],
+      select: { problem: { select: { difficulty: true } }, createdAt: true },
     });
 
-    const solvedProblems = new Set<string>();
-    const solvedEasy = new Set<string>();
-    const solvedMedium = new Set<string>();
-    const solvedHard = new Set<string>();
+    let solvedEasy = 0;
+    let solvedMedium = 0;
+    let solvedHard = 0;
 
-    // Weekly stats logic
+    // Weekly stats logic (on distinct solved problems)
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    const solvedThisWeek = new Set<string>();
-    const solvedLastWeek = new Set<string>();
+    let solvedThisWeek = 0;
+    let solvedLastWeek = 0;
 
-    submissions.forEach((s) => {
-      if (s.status === 'ACCEPTED') {
-        solvedProblems.add(s.problemId);
-        if (s.problem.difficulty === 'Easy') solvedEasy.add(s.problemId);
-        if (s.problem.difficulty === 'Medium') solvedMedium.add(s.problemId);
-        if (s.problem.difficulty === 'Hard') solvedHard.add(s.problemId);
+    for (const s of distinctSolved) {
+      if (s.problem.difficulty === 'Easy') solvedEasy++;
+      else if (s.problem.difficulty === 'Medium') solvedMedium++;
+      else if (s.problem.difficulty === 'Hard') solvedHard++;
 
-        const submissionDate = new Date(s.createdAt);
-        if (submissionDate >= oneWeekAgo) {
-          solvedThisWeek.add(s.problemId);
-        } else if (submissionDate >= twoWeeksAgo) {
-          solvedLastWeek.add(s.problemId);
-        }
-      }
-    });
-
-    // Calculate weekly change percentage
-    const currentCount = solvedThisWeek.size;
-    const previousCount = solvedLastWeek.size;
-    let weeklyChange = 0;
-
-    if (previousCount > 0) {
-      weeklyChange = Math.round(((currentCount - previousCount) / previousCount) * 100);
-    } else if (currentCount > 0) {
-      weeklyChange = 100; // 100% growth if started from 0
+      const date = new Date(s.createdAt);
+      if (date >= oneWeekAgo) solvedThisWeek++;
+      else if (date >= twoWeeksAgo) solvedLastWeek++;
     }
 
-    const attemptedProblems = new Set(submissions.map((s) => s.problemId));
+    const solvedTotal = distinctSolved.length;
 
-    const totalSubmissions = submissions.length;
-    const acceptedSubmissions = submissions.filter(
-      (s) => s.status === 'ACCEPTED',
-    ).length;
+    // 2. Get total attempted (distinct problemId)
+    // We can use groupBy for this
+    const attemptedGroup = await this.prisma.submission.groupBy({
+      by: ['problemId'],
+      where: { userId: user.id },
+    });
+    const attempted = attemptedGroup.length;
 
-    const accuracy =
-      totalSubmissions > 0
-        ? Math.round((acceptedSubmissions / totalSubmissions) * 100)
-        : 0;
+    // 3. Get Accuracy (Total Accepted / Total Submissions)
+    // We can use aggregate for total counts
+    const aggregations = await this.prisma.submission.aggregate({
+      where: { userId: user.id },
+      _count: {
+        id: true, // Total submissions
+      },
+    });
+
+    const totalSubmissions = aggregations._count.id;
+
+    // For accepted submissions count (not distinct problems, but total accepted submissions)
+    const acceptedCount = await this.prisma.submission.count({
+      where: { userId: user.id, status: 'ACCEPTED' },
+    });
+
+    const accuracy = totalSubmissions > 0
+      ? Math.round((acceptedCount / totalSubmissions) * 100)
+      : 0;
+
+    // Calculate weekly change
+    let weeklyChange = 0;
+    if (solvedLastWeek > 0) {
+      weeklyChange = Math.round(((solvedThisWeek - solvedLastWeek) / solvedLastWeek) * 100);
+    } else if (solvedThisWeek > 0) {
+      weeklyChange = 100;
+    }
 
     return {
-      solved: solvedProblems.size,
-      attempted: attemptedProblems.size,
+      solved: solvedTotal,
+      attempted,
       accuracy,
       streak: 1, // Mock streak for now
-      easy: solvedEasy.size,
-      medium: solvedMedium.size,
-      hard: solvedHard.size,
+      easy: solvedEasy,
+      medium: solvedMedium,
+      hard: solvedHard,
       weeklyChange,
     };
   }

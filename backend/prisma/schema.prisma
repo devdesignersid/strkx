@@ -58,6 +58,11 @@ model Submission {
 
   user   User   @relation(fields: [userId], references: [id])
   userId String
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model User {

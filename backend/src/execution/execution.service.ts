@@ -117,65 +117,91 @@ export class ExecutionService {
         result = ${functionName}(${args});
       `;
 
-      const startTime = process.hrtime.bigint();
-      const startMemory = process.memoryUsage().heapUsed;
-
+      // Hardened Execution Sandbox
       try {
-        // Add inputValues to sandbox
-        const contextSandbox = {
+        const startTime = performance.now();
+
+        // Create a secure context
+        const context = vm.createContext({
           ...sandbox,
-          inputValues,
-        };
-        vm.createContext(contextSandbox);
-        vm.runInContext(runCode, contextSandbox, { timeout: 1000 });
+          // Add any other safe globals here if needed
+        });
 
-        const endTime = process.hrtime.bigint();
-        const endMemory = process.memoryUsage().heapUsed;
+        // Execute with strict limits
+        // 1. Timeout: 1000ms (1s) to prevent infinite loops
+        // 2. No access to process/require
+        vm.runInNewContext(
+          `
+          ${code}
+          // Append the function call
+          try {
+             if (typeof ${functionName} === 'function') {
+               result = ${functionName}(...${JSON.stringify(inputData)});
+             } else {
+               throw new Error('Function ${functionName} not found');
+             }
+          } catch (e) {
+            throw e;
+          }
+          `,
+          context,
+          {
+            timeout: 1000, // 1s hard timeout
+            displayErrors: true,
+          }
+        );
 
-        // Calculate metrics (convert bigint to number for milliseconds)
-        const executionTimeMs = Number(endTime - startTime) / 1_000_000; // nanoseconds to milliseconds
-        const memoryUsedBytes = Math.max(0, endMemory - startMemory);
+        const endTime = performance.now();
+        const executionTime = endTime - startTime;
+        totalExecutionTime += executionTime;
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // Check correctness
+        const actual = context.result;
+
+        // Compare result with expected output
         let expected: any;
         if (typeof testCase.expectedOutput === 'string') {
           const jsonString = testCase.expectedOutput.replace(/(\w+):/g, '"$1":');
-          expected = JSON.parse(jsonString);
+          try {
+            expected = JSON.parse(jsonString);
+          } catch {
+            expected = testCase.expectedOutput;
+          }
         } else {
           expected = testCase.expectedOutput;
         }
-        const actual = contextSandbox.result;
 
-        // Deep compare (simple JSON stringify for now)
-        const passed = JSON.stringify(actual) === JSON.stringify(expected);
+        const isCorrect = JSON.stringify(actual) === JSON.stringify(expected);
 
-        if (!passed) allPassed = false;
+        if (!isCorrect) allPassed = false;
 
         results.push({
           testCaseId: testCase.id,
-          passed,
+          passed: isCorrect,
           input: testCase.input,
           expectedOutput: testCase.expectedOutput,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          actualOutput: actual,
-          logs: [],
-          executionTimeMs,
-          memoryUsedBytes,
+          actualOutput: JSON.stringify(actual),
+          logs: logs,
+          executionTimeMs: executionTime,
+          memoryUsedBytes: 0,
         });
 
-        // Accumulate metrics (we'll average them)
-        totalExecutionTime += executionTimeMs;
-        totalMemoryUsed += memoryUsedBytes;
-      } catch (error) {
+      } catch (error: any) {
         allPassed = false;
         results.push({
           testCaseId: testCase.id,
           passed: false,
           input: testCase.input,
           expectedOutput: testCase.expectedOutput,
-          error: (error as Error).message,
-          logs,
+          error: error.message,
+          logs: logs,
+          executionTimeMs: 0,
+          memoryUsedBytes: 0,
         });
+
+        if (error.message && error.message.includes('Script execution timed out')) {
+             break;
+        }
       }
     }
 

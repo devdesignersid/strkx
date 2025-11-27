@@ -117,43 +117,57 @@ let ExecutionService = class ExecutionService {
         // Call the function with the parsed input values
         result = ${functionName}(${args});
       `;
-            const startTime = process.hrtime.bigint();
-            const startMemory = process.memoryUsage().heapUsed;
             try {
-                const contextSandbox = {
+                const startTime = performance.now();
+                const context = vm.createContext({
                     ...sandbox,
-                    inputValues,
-                };
-                vm.createContext(contextSandbox);
-                vm.runInContext(runCode, contextSandbox, { timeout: 1000 });
-                const endTime = process.hrtime.bigint();
-                const endMemory = process.memoryUsage().heapUsed;
-                const executionTimeMs = Number(endTime - startTime) / 1_000_000;
-                const memoryUsedBytes = Math.max(0, endMemory - startMemory);
+                });
+                vm.runInNewContext(`
+          ${code}
+          // Append the function call
+          try {
+             if (typeof ${functionName} === 'function') {
+               result = ${functionName}(...${JSON.stringify(inputData)});
+             } else {
+               throw new Error('Function ${functionName} not found');
+             }
+          } catch (e) {
+            throw e;
+          }
+          `, context, {
+                    timeout: 1000,
+                    displayErrors: true,
+                });
+                const endTime = performance.now();
+                const executionTime = endTime - startTime;
+                totalExecutionTime += executionTime;
+                const actual = context.result;
                 let expected;
                 if (typeof testCase.expectedOutput === 'string') {
                     const jsonString = testCase.expectedOutput.replace(/(\w+):/g, '"$1":');
-                    expected = JSON.parse(jsonString);
+                    try {
+                        expected = JSON.parse(jsonString);
+                    }
+                    catch {
+                        expected = testCase.expectedOutput;
+                    }
                 }
                 else {
                     expected = testCase.expectedOutput;
                 }
-                const actual = contextSandbox.result;
-                const passed = JSON.stringify(actual) === JSON.stringify(expected);
-                if (!passed)
+                const isCorrect = JSON.stringify(actual) === JSON.stringify(expected);
+                if (!isCorrect)
                     allPassed = false;
                 results.push({
                     testCaseId: testCase.id,
-                    passed,
+                    passed: isCorrect,
                     input: testCase.input,
                     expectedOutput: testCase.expectedOutput,
-                    actualOutput: actual,
-                    logs: [],
-                    executionTimeMs,
-                    memoryUsedBytes,
+                    actualOutput: JSON.stringify(actual),
+                    logs: logs,
+                    executionTimeMs: executionTime,
+                    memoryUsedBytes: 0,
                 });
-                totalExecutionTime += executionTimeMs;
-                totalMemoryUsed += memoryUsedBytes;
             }
             catch (error) {
                 allPassed = false;
@@ -163,8 +177,13 @@ let ExecutionService = class ExecutionService {
                     input: testCase.input,
                     expectedOutput: testCase.expectedOutput,
                     error: error.message,
-                    logs,
+                    logs: logs,
+                    executionTimeMs: 0,
+                    memoryUsedBytes: 0,
                 });
+                if (error.message && error.message.includes('Script execution timed out')) {
+                    break;
+                }
             }
         }
         if (executeCodeDto.mode === 'submit') {
