@@ -109,25 +109,21 @@ let ExecutionService = class ExecutionService {
             else {
                 inputData = testCase.input;
             }
-            const inputValues = Object.values(inputData);
-            const args = inputValues.map((_, i) => `inputValues[${i}]`).join(', ');
-            const runCode = `
-        ${code}
-
-        // Call the function with the parsed input values
-        result = ${functionName}(${args});
-      `;
+            const args = (typeof inputData === 'object' && inputData !== null)
+                ? Object.values(inputData)
+                : [inputData];
             try {
                 const startTime = performance.now();
                 const context = vm.createContext({
                     ...sandbox,
+                    args,
                 });
                 vm.runInNewContext(`
           ${code}
           // Append the function call
           try {
              if (typeof ${functionName} === 'function') {
-               result = ${functionName}(...${JSON.stringify(inputData)});
+               result = ${functionName}(...args);
              } else {
                throw new Error('Function ${functionName} not found');
              }

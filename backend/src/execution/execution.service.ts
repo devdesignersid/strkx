@@ -105,17 +105,12 @@ export class ExecutionService {
       } else {
         inputData = testCase.input;
       }
-      const inputValues = Object.values(inputData);
 
-      // Generate function call arguments
-      const args = inputValues.map((_, i) => `inputValues[${i}]`).join(', ');
 
-      const runCode = `
-        ${code}
-
-        // Call the function with the parsed input values
-        result = ${functionName}(${args});
-      `;
+      // Prepare arguments for the function call
+      const args = (typeof inputData === 'object' && inputData !== null)
+        ? Object.values(inputData)
+        : [inputData];
 
       // Hardened Execution Sandbox
       try {
@@ -124,7 +119,7 @@ export class ExecutionService {
         // Create a secure context
         const context = vm.createContext({
           ...sandbox,
-          // Add any other safe globals here if needed
+          args, // Pass prepared arguments to the sandbox
         });
 
         // Execute with strict limits
@@ -136,7 +131,7 @@ export class ExecutionService {
           // Append the function call
           try {
              if (typeof ${functionName} === 'function') {
-               result = ${functionName}(...${JSON.stringify(inputData)});
+               result = ${functionName}(...args);
              } else {
                throw new Error('Function ${functionName} not found');
              }

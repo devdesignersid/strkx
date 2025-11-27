@@ -10,6 +10,8 @@ import {
   Trash2, Edit, Tag, X, Check, ChevronsUpDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Problem {
@@ -28,60 +30,27 @@ type SortDirection = 'asc' | 'desc';
 export default function ProblemsPage() {
   const navigate = useNavigate();
   const [problems, setProblems] = useState<Problem[]>([]);
-
-  // Filters State
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterDifficulties, setFilterDifficulties] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [hoveredTagTooltip, setHoveredTagTooltip] = useState<{
-    id: string;
-    x: number;
-    y: number;
-    tags: string[];
-    position: 'top' | 'bottom';
-  } | null>(null);
-
+  const [hoveredTagTooltip, setHoveredTagTooltip] = useState<string | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // Sorting
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
     key: 'title',
     direction: 'asc'
   });
 
-  // Delete Confirmation
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; title: string } | null>(null);
-
-  // Selection & Actions
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  // Menu State (Fixed Positioning)
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
 
-  // Close filter/menu on click outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        setIsFilterOpen(false);
-      }
-      if (activeMenu && !(event.target as Element).closest('.row-action-menu-trigger') && !(event.target as Element).closest('.row-action-menu-content')) {
-        setActiveMenu(null);
-      }
-    };
-    // Use capture to ensure we catch it before other handlers if needed, but bubble is fine usually.
-    // Adding to window to ensure we catch everything.
-    window.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('scroll', () => setActiveMenu(null), true); // Close on scroll
-    return () => {
-        window.removeEventListener('mousedown', handleClickOutside);
-        window.removeEventListener('scroll', () => setActiveMenu(null), true);
-    };
-  }, [activeMenu]);
-
-  useEffect(() => {
+    setIsLoading(true);
     axios.get('http://localhost:3000/problems')
       .then(res => {
         // Backend now returns status based on user progress
@@ -93,7 +62,8 @@ export default function ProblemsPage() {
         }));
         setProblems(enriched);
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error(err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   // Filter & Sort Logic
@@ -429,109 +399,119 @@ export default function ProblemsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {processedProblems.map((problem) => (
-                <tr
-                  key={problem.id}
-                  onClick={() => navigate(`/problems/${problem.slug}`)}
-                  className={cn(
-                    "group hover:bg-secondary/30 transition-colors cursor-pointer",
-                    selectedIds.has(problem.id) && "bg-primary/5 hover:bg-primary/10"
-                  )}
-                >
-                  <td className="px-4 py-3">
-                     <button
-                       onClick={(e) => toggleSelectOne(problem.id, e)}
-                       className={cn(
-                         "flex items-center justify-center transition-colors",
-                         selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
-                       )}
-                     >
-                        {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                     </button>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
-                    {problem.title}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                      problem.difficulty === 'Easy' && "bg-green-500/10 text-green-500 border-green-500/20",
-                      problem.difficulty === 'Medium' && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-                      problem.difficulty === 'Hard' && "bg-red-500/10 text-red-500 border-red-500/20",
-                    )}>
-                      {problem.difficulty}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center flex-wrap gap-1.5">
-                      {problem.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5">
-                          {tag}
-                        </span>
-                      ))}
-                      {problem.tags.length > 3 && (
-                        <span
-                          className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5 cursor-help"
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const viewportHeight = window.innerHeight;
-                            const spaceBelow = viewportHeight - rect.bottom;
-                            const showAbove = spaceBelow < 200; // If less than 200px below, show above
+              {isLoading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-3"><Skeleton className="w-4 h-4 rounded" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-32 rounded" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-16 rounded-full" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-24 rounded" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-20 rounded" /></td>
+                    <td className="px-4 py-3"></td>
+                  </tr>
+                ))
+              ) : (
+                processedProblems.map((problem) => (
+                  <tr
+                    key={problem.id}
+                    onClick={() => navigate(`/problems/${problem.slug}`)}
+                    className={cn(
+                      "group hover:bg-secondary/30 transition-colors cursor-pointer",
+                      selectedIds.has(problem.id) && "bg-primary/5 hover:bg-primary/10"
+                    )}
+                  >
+                    <td className="px-4 py-3">
+                       <button
+                         onClick={(e) => toggleSelectOne(problem.id, e)}
+                         className={cn(
+                           "flex items-center justify-center transition-colors",
+                           selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
+                         )}
+                       >
+                          {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                       </button>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
+                      {problem.title}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                        problem.difficulty === 'Easy' && "bg-green-500/10 text-green-500 border-green-500/20",
+                        problem.difficulty === 'Medium' && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+                        problem.difficulty === 'Hard' && "bg-red-500/10 text-red-500 border-red-500/20",
+                      )}>
+                        {problem.difficulty}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center flex-wrap gap-1.5">
+                        {problem.tags.slice(0, 3).map(tag => (
+                          <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5">
+                            {tag}
+                          </span>
+                        ))}
+                        {problem.tags.length > 3 && (
+                          <span
+                            className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5 cursor-help"
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const viewportHeight = window.innerHeight;
+                              const spaceBelow = viewportHeight - rect.bottom;
+                              const showAbove = spaceBelow < 200; // If less than 200px below, show above
 
-                            setHoveredTagTooltip({
-                              id: problem.id,
-                              x: rect.left + (rect.width / 2),
-                              y: showAbove ? rect.top : rect.bottom,
-                              tags: problem.tags.slice(3),
-                              position: showAbove ? 'top' : 'bottom'
-                            });
-                          }}
-                          onMouseLeave={() => setHoveredTagTooltip(null)}
-                        >
-                          +{problem.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                        {problem.status === 'Solved' ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        ) : problem.status === 'Attempted' ? (
-                          <Circle className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-muted-foreground/30" />
+                              setHoveredTagTooltip({
+                                id: problem.id,
+                                x: rect.left + (rect.width / 2),
+                                y: showAbove ? rect.top : rect.bottom,
+                                tags: problem.tags.slice(3),
+                                position: showAbove ? 'top' : 'bottom'
+                              });
+                            }}
+                            onMouseLeave={() => setHoveredTagTooltip(null)}
+                          >
+                            +{problem.tags.length - 3}
+                          </span>
                         )}
-                        <span className="text-xs text-muted-foreground">{problem.status}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right relative">
-                    <button
-                        onClick={(e) => handleMenuClick(e, problem.id)}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors row-action-menu-trigger"
-                    >
-                        <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                          {problem.status === 'Solved' ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          ) : problem.status === 'Attempted' ? (
+                            <Circle className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-muted-foreground/30" />
+                          )}
+                          <span className="text-xs text-muted-foreground">{problem.status}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right relative">
+                      <button
+                          onClick={(e) => handleMenuClick(e, problem.id)}
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors row-action-menu-trigger"
+                      >
+                          <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           </div>
-          {processedProblems.length === 0 && (
-            <div className="p-12 text-center text-muted-foreground">
-              <div className="bg-secondary/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                 <Filter className="w-5 h-5 opacity-50" />
-              </div>
-              <p className="font-medium text-foreground">No problems found</p>
-              <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
-              <button
-                 onClick={() => { setSearchQuery(''); setFilterDifficulties([]); setFilterStatus([]); setFilterTags([]); }}
-                 className="mt-4 text-xs text-primary hover:underline"
-              >
-                 Clear all filters
-              </button>
-            </div>
+          {!isLoading && processedProblems.length === 0 && (
+            <EmptyState
+              icon={Filter}
+              title="No problems found"
+              description="Try adjusting your filters or search query."
+              action={{
+                label: "Clear all filters",
+                onClick: () => { setSearchQuery(''); setFilterDifficulties([]); setFilterStatus([]); setFilterTags([]); }
+              }}
+              className="py-12"
+            />
           )}
         </div>
       </div>

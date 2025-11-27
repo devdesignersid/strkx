@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
 import Editor, { type OnMount } from '@monaco-editor/react';
@@ -8,9 +8,35 @@ import { Play, Loader2, CheckCircle2, XCircle, Terminal as TerminalIcon, FileTex
 import { cn } from '@/lib/utils';
 import * as monaco from 'monaco-editor';
 import { motion } from 'framer-motion';
+import { slideUp, staggerContainer, fadeIn } from '@/components/ui/DesignSystem';
+import { MotivationManager } from '@/lib/MotivationManager';
+import EmptyState from '@/components/ui/EmptyState';
+import { toast } from 'sonner';
 import remarkGfm from 'remark-gfm';
 
-// ... (interfaces remain same)
+interface Problem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  starterCode: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  timeLimit?: number;
+  testCases: { input: string; expectedOutput: string }[];
+}
+
+interface ExecutionResult {
+  passed: boolean;
+  results: {
+    passed: boolean;
+    input: string;
+    expectedOutput: string;
+    actualOutput: string;
+    error?: string;
+    logs?: string[];
+  }[];
+  error?: string;
+}
 
 export default function ProblemPage() {
   // ... (state remains same)
@@ -134,9 +160,22 @@ export default function ProblemPage() {
           // Also show output in console for feedback
           setOutput(res.data);
           if (isConsoleCollapsed) consolePanelRef.current?.expand();
+
+          if (res.data.passed) {
+            MotivationManager.recordSolve();
+          }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        toast.error('Execution timed out. Check for infinite loops.', {
+          icon: <Clock className="w-4 h-4" />
+        });
+      } else {
+        toast.error('Runtime Error. Check console for details.', {
+          icon: <XCircle className="w-4 h-4" />
+        });
+      }
     } finally {
       setIsRunning(false);
     }
@@ -390,15 +429,35 @@ interface Solution {
             </div>
             <div className="flex-1 overflow-y-auto p-6 prose prose-invert prose-sm max-w-none prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-headings:text-foreground/90 prose-p:text-muted-foreground prose-a:text-primary prose-code:text-primary/90 prose-code:text-[13px] prose-code:font-medium">
               {activeTab === 'description' && (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description || 'No description available.'}</ReactMarkdown>
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description || 'No description available.'}</ReactMarkdown>
+                </motion.div>
               )}
 
               {activeTab === 'submissions' && (
-                <div className="space-y-2 -m-6 p-4">
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="space-y-2 -m-6 p-4"
+                >
                   {submissions.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-8">
-                      No submissions yet. Click Submit to create one!
-                    </div>
+                    <EmptyState
+                      icon={Code2}
+                      title="No submissions yet"
+                      description="Run your code to see your history here."
+                      action={{
+                        label: "Run Code",
+                        onClick: () => handleRun('run')
+                      }}
+                      className="py-12"
+                    />
                   ) : (
                     submissions.map((sub) => (
                       <div
@@ -465,17 +524,24 @@ interface Solution {
                       </div>
                     ))
                   )}
-                </div>
+                </motion.div>
               )}
 
               {activeTab === 'solutions' && (
-                <div className="space-y-2 -m-6 p-4">
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="space-y-2 -m-6 p-4"
+                >
                   {solutions.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-8">
-                      <Star className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                      <p className="text-sm">No solutions yet</p>
-                      <p className="text-xs mt-1 opacity-70">Mark accepted submissions as solutions!</p>
-                    </div>
+                    <EmptyState
+                      icon={Star}
+                      title="No solutions yet"
+                      description="Mark accepted submissions as solutions to save them here."
+                      className="py-12"
+                    />
                   ) : (
                     solutions.map((sol) => (
                       <div
@@ -515,7 +581,7 @@ interface Solution {
                       </div>
                     ))
                   )}
-                </div>
+                </motion.div>
               )}
             </div>
           </Panel>
@@ -527,7 +593,7 @@ interface Solution {
             <PanelGroup direction="vertical">
               {/* Editor */}
               <Panel defaultSize={70} minSize={20} collapsible className="flex flex-col bg-[#1e1e1e] relative group">
-                 <div className="h-10 border-b border-white/5 bg-[#252526] flex items-center justify-between px-4">
+                 <div className="h-10 min-h-[2.5rem] shrink-0 border-b border-white/5 bg-[#252526] flex items-center justify-between px-4">
                     <div className="flex items-center gap-3">
                         {isDescriptionCollapsed && (
                             <button
@@ -709,13 +775,16 @@ interface Solution {
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 font-mono text-xs">
                   {output ? (
-                    <div className="space-y-6">
+                    <motion.div
+                      variants={staggerContainer}
+                      initial="initial"
+                      animate="animate"
+                      className="space-y-6"
+                    >
                       {output.results.map((result, i) => (
                         <motion.div
                           key={i}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
+                          variants={slideUp}
                           className="group"
                         >
                           <div className="flex items-center gap-2 mb-3">
@@ -729,25 +798,27 @@ interface Solution {
 
                           <div className="ml-6 space-y-3 pl-3 border-l border-white/5">
                             <div className="grid grid-cols-1 gap-1">
-                              <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Input</span>
-                              <div className="bg-black/30 p-2 rounded border border-white/5 text-foreground/90">
+                              <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold">Input</span>
+                              <div className="bg-secondary/20 p-2.5 rounded-md border border-border/50 text-foreground/90 font-mono text-[11px]">
                                 {result.input}
                               </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                               <div className="grid grid-cols-1 gap-1">
-                                <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Expected</span>
-                                <div className="bg-black/30 p-2 rounded border border-white/5 text-foreground/90">
+                                <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold">Expected</span>
+                                <div className="bg-secondary/20 p-2.5 rounded-md border border-border/50 text-foreground/90 font-mono text-[11px]">
                                   {result.expectedOutput}
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-1 gap-1">
-                                <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Received</span>
+                                <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold">Received</span>
                                 <div className={cn(
-                                  "p-2 rounded border border-white/5",
-                                  result.passed ? "bg-black/30 text-foreground/90" : "bg-red-500/5 text-red-400 border-red-500/10"
+                                  "p-2.5 rounded-md border font-mono text-[11px]",
+                                  result.passed
+                                    ? "bg-secondary/20 border-border/50 text-foreground/90"
+                                    : "bg-red-500/10 text-red-400 border-red-500/20"
                                 )}>
                                   {result.actualOutput ?? "undefined"}
                                 </div>
@@ -756,8 +827,8 @@ interface Solution {
 
                             {result.logs && result.logs.length > 0 && (
                               <div className="grid grid-cols-1 gap-1 mt-2">
-                                <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Logs</span>
-                                <div className="bg-black/50 p-2 rounded border border-white/5 text-muted-foreground whitespace-pre-wrap">
+                                <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold">Logs</span>
+                                <div className="bg-secondary/20 p-2.5 rounded-md border border-border/50 text-muted-foreground whitespace-pre-wrap font-mono text-[11px]">
                                   {result.logs.join('\n')}
                                 </div>
                               </div>
@@ -765,8 +836,8 @@ interface Solution {
 
                             {result.error && (
                               <div className="grid grid-cols-1 gap-1">
-                                <span className="text-red-500 uppercase tracking-wider text-[10px]">Error</span>
-                                <div className="bg-red-500/5 text-red-400 p-2 rounded border border-red-500/10">
+                                <span className="text-red-500 uppercase tracking-wider text-[10px] font-semibold">Error</span>
+                                <div className="bg-red-500/10 text-red-400 p-2.5 rounded-md border border-red-500/20 font-mono text-[11px]">
                                   {result.error}
                                 </div>
                               </div>
@@ -774,7 +845,7 @@ interface Solution {
                           </div>
                         </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50">
                       <TerminalIcon className="w-12 h-12 mb-4 opacity-10" />
@@ -816,7 +887,7 @@ interface Solution {
               id="solution-name-input"
               type="text"
               autoFocus
-              defaultValue={solutionModal.currentName || 'Optimized Solution'}
+              defaultValue={solutionModal?.currentName || 'Optimized Solution'}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   confirmMarkAsSolution((e.target as HTMLInputElement).value);
@@ -825,7 +896,7 @@ interface Solution {
                 }
               }}
               className="w-full bg-secondary/30 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors mb-4"
-              placeholder="e.g., Hash Map Approach, Two Pointer Solution"
+              placeholder="E.g. Hash Map Approach, Two Pointer Solution"
             />
             <div className="flex gap-3 justify-end">
               <button

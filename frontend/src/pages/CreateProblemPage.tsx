@@ -154,17 +154,17 @@ export default function CreateProblemPage() {
         <section className="space-y-4">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Title</label>
+              <label className="text-sm font-medium text-foreground">Title</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={handleTitleChange}
                 className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                placeholder="Two Sum"
+                placeholder="E.g. Two Sum"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Slug</label>
+              <label className="text-sm font-medium text-foreground">Slug</label>
               <input
                 type="text"
                 value={formData.slug}
@@ -176,7 +176,7 @@ export default function CreateProblemPage() {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Difficulty</label>
+              <label className="text-sm font-medium text-foreground">Difficulty</label>
               <div className="relative">
                 <button
                   type="button"
@@ -219,13 +219,13 @@ export default function CreateProblemPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Tags (comma separated)</label>
+              <label className="text-sm font-medium text-foreground">Tags (comma separated)</label>
               <input
                 type="text"
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                placeholder="Array, Hash Table"
+                placeholder="E.g. Array, Hash Table"
               />
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function CreateProblemPage() {
         {/* Description */}
         <section className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted-foreground">Description</label>
+            <label className="text-sm font-medium text-foreground">Description</label>
             <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-1 border border-white/5">
               <button onClick={() => insertMarkdown('**', '**')} className="p-1.5 hover:bg-white/10 rounded text-muted-foreground hover:text-foreground" title="Bold">
                 <Bold className="w-3.5 h-3.5" />
@@ -276,7 +276,7 @@ export default function CreateProblemPage() {
 
         {/* Starter Code */}
         <section className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Starter Code</label>
+          <label className="text-sm font-medium text-foreground">Starter Code</label>
           <div className="h-[300px] border border-white/5 rounded-md overflow-hidden">
             <Editor
               height="100%"
@@ -297,7 +297,7 @@ export default function CreateProblemPage() {
         {/* Test Cases */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted-foreground">Test Cases</label>
+            <label className="text-sm font-medium text-foreground">Test Cases</label>
             <button
               onClick={addTestCase}
               className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
@@ -317,7 +317,7 @@ export default function CreateProblemPage() {
                 </button>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Input</label>
+                    <label className="text-xs font-medium text-foreground/80">Input</label>
                     <textarea
                       value={tc.input}
                       onChange={(e) => updateTestCase(i, 'input', e.target.value)}
@@ -325,7 +325,7 @@ export default function CreateProblemPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Expected Output</label>
+                    <label className="text-xs font-medium text-foreground/80">Expected Output</label>
                     <textarea
                       value={tc.expectedOutput}
                       onChange={(e) => updateTestCase(i, 'expectedOutput', e.target.value)}

@@ -1,5 +1,7 @@
 import { useState, useEffect, memo } from 'react';
-import { Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { Activity, TrendingUp, CheckCircle2, Ghost } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { subDays, format, isSameDay, addDays, startOfDay, getDay } from 'date-fns';
@@ -255,38 +257,43 @@ export default function DashboardPage() {
 
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [heatmapData, setHeatmapData] = useState<HeatmapItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch Stats
-    axios.get('http://localhost:3000/dashboard/stats')
-      .then(res => setStats(res.data))
-      .catch(err => console.error(err));
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [statsRes, activityRes, heatmapRes] = await Promise.all([
+          axios.get('http://localhost:3000/dashboard/stats'),
+          axios.get('http://localhost:3000/dashboard/activity'),
+          axios.get('http://localhost:3000/dashboard/heatmap')
+        ]);
 
-    // Fetch Activity
-    axios.get('http://localhost:3000/dashboard/activity')
-      .then(res => {
+        setStats(statsRes.data);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setRecentActivity(res.data.map((item: any) => ({
-          id: item.problemSlug, // Use slug for link
+        setRecentActivity(activityRes.data.map((item: any) => ({
+          id: item.problemSlug,
           problem: item.problemTitle,
           status: item.status === 'ACCEPTED' ? 'Solved' : 'Attempted',
           time: format(new Date(item.timestamp), 'MMM d, h:mm a'),
           difficulty: item.difficulty,
           slug: item.problemSlug
         })));
-      })
-      .catch(err => console.error(err));
 
-    // Fetch Heatmap
-    axios.get('http://localhost:3000/dashboard/heatmap')
-      .then(res => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setHeatmapData(res.data.map((item: any) => ({
+        setHeatmapData(heatmapRes.data.map((item: any) => ({
           date: new Date(item.date),
           count: item.count
         })));
-      })
-      .catch(err => console.error(err));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -297,8 +304,21 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mt-1">Welcome back, Demo User</p>
         </header>
 
-        <StatsCard stats={stats} />
-        <Heatmap data={heatmapData} />
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
+        ) : (
+          <StatsCard stats={stats} />
+        )}
+
+        {isLoading ? (
+          <Skeleton className="h-[300px] w-full rounded-xl mb-8" />
+        ) : (
+          <Heatmap data={heatmapData} />
+        )}
 
         <div className="grid grid-cols-1 gap-8">
           <div className="bg-card border border-border p-6 rounded-xl">
@@ -306,38 +326,52 @@ export default function DashboardPage() {
               <h3 className="text-lg font-semibold">Recent Activity</h3>
             </div>
             <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "p-2 rounded-full",
-                      activity.status === 'Solved' ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
-                    )}>
-                      {activity.status === 'Solved' ? <CheckCircle2 className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "text-xs font-semibold uppercase tracking-wider",
-                          activity.status === 'Solved' ? "text-green-500" : "text-yellow-500"
-                        )}>
-                          {activity.status}
-                        </span>
-                        <Link to={`/problems/${activity.slug}`} className="font-medium hover:underline">{activity.problem}</Link>
+              {isLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))
+              ) : recentActivity.length > 0 ? (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "p-2 rounded-full",
+                        activity.status === 'Solved' ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
+                      )}>
+                        {activity.status === 'Solved' ? <CheckCircle2 className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
                       </div>
-                      <div className="text-xs text-muted-foreground">{activity.time}</div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-xs font-semibold uppercase tracking-wider",
+                            activity.status === 'Solved' ? "text-green-500" : "text-yellow-500"
+                          )}>
+                            {activity.status}
+                          </span>
+                          <Link to={`/problems/${activity.slug}`} className="font-medium hover:underline">{activity.problem}</Link>
+                        </div>
+                        <div className="text-xs text-muted-foreground">{activity.time}</div>
+                      </div>
                     </div>
+                    <span className={cn(
+                      "font-medium",
+                      activity.difficulty === 'Easy' && "text-green-500",
+                      activity.difficulty === 'Medium' && "text-yellow-500",
+                      activity.difficulty === 'Hard' && "text-red-500",
+                    )}>{activity.difficulty}</span>
                   </div>
-                  <span className={cn(
-                    "font-medium",
-                    activity.difficulty === 'Easy' && "text-green-500",
-                    activity.difficulty === 'Medium' && "text-yellow-500",
-                    activity.difficulty === 'Hard' && "text-red-500",
-                  )}>{activity.difficulty}</span>
-                </div>
-              ))}
-              {recentActivity.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">No recent activity</div>
+                ))
+              ) : (
+                <EmptyState
+                  icon={Ghost}
+                  title="No recent activity"
+                  description="Solve your first problem to see your progress here."
+                  action={{
+                    label: "Browse Problems",
+                    onClick: () => window.location.href = '/problems'
+                  }}
+                  className="py-12"
+                />
               )}
             </div>
           </div>
