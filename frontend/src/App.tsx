@@ -4,6 +4,8 @@ import ProblemsPage from './pages/ProblemsPage';
 import DashboardPage from './pages/DashboardPage';
 import ProblemPage from './pages/ProblemPage';
 import CreateProblemPage from './pages/CreateProblemPage';
+import ListsPage from './pages/ListsPage';
+import ListDetailPage from './pages/ListDetailPage';
 import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
 import { NetworkStatus } from '@/components/ui/NetworkStatus';
@@ -32,6 +34,8 @@ function App() {
             <Route path="problems/new" element={<CreateProblemPage />} />
             <Route path="problems/edit/:id" element={<CreateProblemPage />} />
             <Route path="problems/:slug" element={<ProblemPage />} />
+            <Route path="lists" element={<ListsPage />} />
+            <Route path="lists/:id" element={<ListDetailPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

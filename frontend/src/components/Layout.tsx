@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout() {
@@ -9,6 +9,7 @@ export default function Layout() {
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/problems', icon: Code2, label: 'Problems' },
+    { path: '/lists', icon: List, label: 'Lists' },
   ];
 
   return (

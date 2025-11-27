@@ -26,6 +26,7 @@ model Problem {
   updatedAt   DateTime     @updatedAt
   testCases   TestCase[]
   submissions Submission[]
+  lists       ProblemsOnLists[]
 }
 
 model TestCase {
@@ -70,6 +71,36 @@ model User {
   email       String       @unique
   name        String?
   submissions Submission[]
+  lists       List[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+}
+
+model List {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  problems    ProblemsOnLists[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ProblemsOnLists {
+  listId    String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  problemId String
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  addedAt   DateTime @default(now())
+
+  @@id([listId, problemId])
+  @@index([listId])
+  @@index([problemId])
 }

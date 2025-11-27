@@ -12,12 +12,13 @@ const problems_module_1 = require("./problems/problems.module");
 const execution_module_1 = require("./execution/execution.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
+const lists_module_1 = require("./lists/lists.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [problems_module_1.ProblemsModule, execution_module_1.ExecutionModule, prisma_module_1.PrismaModule, dashboard_module_1.DashboardModule],
+        imports: [problems_module_1.ProblemsModule, execution_module_1.ExecutionModule, prisma_module_1.PrismaModule, dashboard_module_1.DashboardModule, lists_module_1.ListsModule],
         controllers: [],
         providers: [],
     })

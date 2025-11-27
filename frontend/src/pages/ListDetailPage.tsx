@@ -1,18 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
 import {
-  Search, Plus, CheckCircle2, Circle,
+  Search, CheckCircle2, Circle,
   ChevronUp, ChevronDown, Filter,
   CheckSquare, Square, MoreHorizontal,
-  Trash2, Edit, X, Check, ChevronsUpDown, FolderPlus
+  X, Check, ChevronsUpDown, ArrowLeft, FolderMinus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import AddToListModal from '@/components/lists/AddToListModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface Problem {
   id: string;
@@ -24,11 +24,20 @@ interface Problem {
   acceptance: number;
 }
 
+interface ListDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  problems: { problem: Problem }[];
+}
+
 type SortKey = 'title' | 'difficulty' | 'status' | 'acceptance';
 type SortDirection = 'asc' | 'desc';
 
-export default function ProblemsPage() {
+export default function ListDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [list, setList] = useState<ListDetail | null>(null);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,30 +54,36 @@ export default function ProblemsPage() {
     direction: 'asc'
   });
 
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; title: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const lastSelectedId = useRef<string | null>(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    axios.get('http://localhost:3000/problems')
-      .then(res => {
-        // Backend now returns status based on user progress
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const enriched = res.data.map((p: any) => ({
-            ...p,
-            // acceptance is still mocked as it's not in DB yet, but status is real
-            acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
-        }));
-        setProblems(enriched);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setIsLoading(false));
-  }, []);
+    if (id) fetchListDetails();
+  }, [id]);
 
-  // Filter & Sort Logic
+  const fetchListDetails = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(`http://localhost:3000/lists/${id}`);
+      setList(res.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const extractedProblems = res.data.problems.map((p: any) => ({
+          ...p.problem,
+          // Mock acceptance if missing
+          acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
+      }));
+      setProblems(extractedProblems);
+    } catch (error) {
+      console.error('Failed to fetch list details:', error);
+      toast.error('Failed to load list details');
+      navigate('/lists');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter & Sort Logic (Same as ProblemsPage)
   const processedProblems = useMemo(() => {
     let result = [...problems];
 
@@ -93,17 +108,17 @@ export default function ProblemsPage() {
     // 2. Sort
     result.sort((a, b) => {
       const { key, direction } = sortConfig;
-      let valA = a[key];
-      let valB = b[key];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let valA = (a as any)[key];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let valB = (b as any)[key];
 
-      // Custom sort for difficulty
       if (key === 'difficulty') {
         const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
         valA = map[String(a.difficulty).toLowerCase()] ?? 99;
         valB = map[String(b.difficulty).toLowerCase()] ?? 99;
       }
 
-      // Custom sort for status (Todo < Attempted < Solved)
       if (key === 'status') {
           const map: Record<string, number> = { todo: 1, attempted: 2, solved: 3 };
           valA = map[String(a.status).toLowerCase()] ?? 0;
@@ -121,7 +136,6 @@ export default function ProblemsPage() {
     return result;
   }, [problems, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
 
-  // Handlers
   const handleSort = (key: SortKey) => {
     setSortConfig(current => ({
       key,
@@ -137,27 +151,26 @@ export default function ProblemsPage() {
     }
   };
 
-  const toggleSelectOne = (id: string, e: React.MouseEvent) => {
+  const toggleSelectOne = (problemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newSet = new Set(selectedIds);
 
     if (e.shiftKey && lastSelectedId.current) {
         const start = processedProblems.findIndex(p => p.id === lastSelectedId.current);
-        const end = processedProblems.findIndex(p => p.id === id);
-        // Ensure we found both
+        const end = processedProblems.findIndex(p => p.id === problemId);
         if (start !== -1 && end !== -1) {
             const [lower, upper] = start < end ? [start, end] : [end, start];
             for (let i = lower; i <= upper; i++) {
                 newSet.add(processedProblems[i].id);
             }
         } else {
-             if (newSet.has(id)) newSet.delete(id);
-             else newSet.add(id);
+             if (newSet.has(problemId)) newSet.delete(problemId);
+             else newSet.add(problemId);
         }
     } else {
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
-        lastSelectedId.current = id;
+        if (newSet.has(problemId)) newSet.delete(problemId);
+        else newSet.add(problemId);
+        lastSelectedId.current = problemId;
     }
     setSelectedIds(newSet);
   };
@@ -171,63 +184,28 @@ export default function ProblemsPage() {
     }
   };
 
-  const handleMenuClick = (e: React.MouseEvent, id: string) => {
+  const handleMenuClick = (e: React.MouseEvent, problemId: string) => {
       e.stopPropagation();
-      if (activeMenu?.id === id) {
+      if (activeMenu?.id === problemId) {
           setActiveMenu(null);
       } else {
           const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          setActiveMenu({ id, x: rect.right, y: rect.bottom });
+          setActiveMenu({ id: problemId, x: rect.right, y: rect.bottom });
       }
   };
 
-  const handleModify = (id: string) => {
-    const problem = problems.find(p => p.id === id);
-    if (problem) {
-      navigate(`/problems/edit/${id}`);
-    }
-    setActiveMenu(null);
-  };
-
-  const handleDelete = (id: string) => {
-    const problem = problems.find(p => p.id === id);
-    if (problem) {
-      setDeleteConfirmation({ id, title: problem.title });
-    }
-    setActiveMenu(null);
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteConfirmation) return;
-
-    console.log('Deleting problem:', deleteConfirmation);
-
+  const handleRemoveFromList = async (problemIdsToRemove: string[]) => {
+    if (!id) return;
     try {
-      await axios.delete(`http://localhost:3000/problems/${deleteConfirmation.id}`);
-      setProblems(problems.filter(p => p.id !== deleteConfirmation.id));
-      setDeleteConfirmation(null);
-    } catch (err) {
-      console.error('Failed to delete problem:', err);
-      setDeleteConfirmation(null);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-
-    const confirmed = window.confirm(`Delete ${selectedIds.size} selected problem(s)?`);
-    if (!confirmed) return;
-
-    try {
-      await Promise.all(
-        Array.from(selectedIds).map(id =>
-          axios.delete(`http://localhost:3000/problems/${id}`)
-        )
-      );
-      setProblems(problems.filter(p => !selectedIds.has(p.id)));
-      setSelectedIds(new Set());
-    } catch (err) {
-      console.error('Failed to delete problems:', err);
+        await axios.delete(`http://localhost:3000/lists/${id}/problems`, {
+            data: { problemIds: problemIdsToRemove }
+        });
+        setProblems(problems.filter(p => !problemIdsToRemove.includes(p.id)));
+        setSelectedIds(new Set());
+        toast.success(`Removed ${problemIdsToRemove.length} problem(s) from list`);
+    } catch (error) {
+        console.error('Failed to remove problems:', error);
+        toast.error('Failed to remove problems');
     }
   };
 
@@ -237,18 +215,33 @@ export default function ProblemsPage() {
     <div className="h-full flex flex-col bg-background text-foreground font-sans">
       <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Problems</h1>
-            <p className="text-muted-foreground mt-1">Sharpen your coding skills with our collection of challenges.</p>
-          </div>
-          <button
-            onClick={() => navigate('/problems/new')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Create Problem
-          </button>
+        <div className="mb-8">
+            <button
+                onClick={() => navigate('/lists')}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Lists
+            </button>
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-4 w-96" />
+                </div>
+            ) : (
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">{list?.name}</h1>
+                    <p className="text-muted-foreground">{list?.description || "No description"}</p>
+                    <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+                        <span className="bg-secondary/30 px-2 py-1 rounded-md border border-white/5">
+                            {problems.length} problems
+                        </span>
+                        <span>
+                            Updated {new Date().toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* Toolbar */}
@@ -259,7 +252,7 @@ export default function ProblemsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search problems..."
+                placeholder="Search in list..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
@@ -295,7 +288,8 @@ export default function ProblemsPage() {
                     transition={{ duration: 0.1 }}
                     className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 p-4"
                   >
-                    <div className="space-y-4">
+                     {/* Reuse filter UI from ProblemsPage - keeping it simple here */}
+                     <div className="space-y-4">
                       {/* Difficulty */}
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Difficulty</h4>
@@ -310,9 +304,7 @@ export default function ProblemsPage() {
                           ))}
                         </div>
                       </div>
-
                       <div className="h-px bg-border" />
-
                       {/* Status */}
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Status</h4>
@@ -327,9 +319,7 @@ export default function ProblemsPage() {
                           ))}
                         </div>
                       </div>
-
                       <div className="h-px bg-border" />
-
                       {/* Tags */}
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Tags</h4>
@@ -523,11 +513,11 @@ export default function ProblemsPage() {
           {!isLoading && processedProblems.length === 0 && (
             <EmptyState
               icon={Filter}
-              title="No problems found"
-              description="Try adjusting your filters or search query."
+              title="No problems in this list"
+              description="Add problems from the main Problems page."
               action={{
-                label: "Clear all filters",
-                onClick: () => { setSearchQuery(''); setFilterDifficulties([]); setFilterStatus([]); setFilterTags([]); }
+                label: "Browse Problems",
+                onClick: () => navigate('/problems')
               }}
               className="py-12"
             />
@@ -535,55 +525,39 @@ export default function ProblemsPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Floating Action Bar */}
       <AnimatePresence>
-        {deleteConfirmation && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+        {selectedIds.size > 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setDeleteConfirmation(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-card border border-border rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 z-10"
-              onClick={(e) => e.stopPropagation()}
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-white/10 rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
             >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <Trash2 className="w-5 h-5 text-destructive" />
+                <div className="flex items-center gap-3 border-r border-white/10 pr-6">
+                    <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                        {selectedIds.size}
+                    </div>
+                    <span className="text-sm font-medium">Selected</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Delete Problem</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Are you sure you want to delete <span className="font-medium text-foreground">"{deleteConfirmation.title}"</span>? This action cannot be undone.
-                  </p>
-                  <div className="flex gap-3 justify-end">
+
+                <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setDeleteConfirmation(null)}
-                      className="px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+                        onClick={() => handleRemoveFromList(Array.from(selectedIds))}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-sm font-medium text-muted-foreground"
                     >
-                      Cancel
+                        <FolderMinus className="w-4 h-4" />
+                        Remove from List
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        confirmDelete();
-                      }}
-                      className="px-4 py-2 text-sm font-medium text-white bg-destructive hover:bg-destructive/90 rounded-lg transition-colors"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium text-muted-foreground"
                     >
-                      Delete
+                        <X className="w-4 h-4" />
+                        Clear
                     </button>
-                  </div>
                 </div>
-              </div>
             </motion.div>
-          </div>
         )}
       </AnimatePresence>
 
@@ -606,23 +580,20 @@ export default function ProblemsPage() {
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors text-left"
-                    onClick={() => handleModify(activeMenu.id)}
-                >
-                    <Edit className="w-3.5 h-3.5" />
-                    Modify
-                </button>
-                <button
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors text-left"
-                    onClick={() => handleDelete(activeMenu.id)}
+                    onClick={() => {
+                        handleRemoveFromList([activeMenu.id]);
+                        setActiveMenu(null);
+                    }}
                 >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Delete
+                    <FolderMinus className="w-3.5 h-3.5" />
+                    Remove
                 </button>
             </motion.div>
           </div>,
           document.body
       )}
+
       {/* Tag Tooltip Portal */}
       {hoveredTagTooltip && createPortal(
         <div
@@ -644,56 +615,6 @@ export default function ProblemsPage() {
         </div>,
         document.body
       )}
-
-      {/* Floating Action Bar */}
-      <AnimatePresence>
-        {selectedIds.size > 0 && (
-            <motion.div
-                initial={{ y: 100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 100, opacity: 0 }}
-                className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-white/10 rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
-            >
-                <div className="flex items-center gap-3 border-r border-white/10 pr-6">
-                    <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
-                        {selectedIds.size}
-                    </div>
-                    <span className="text-sm font-medium">Selected</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setIsAddToListModalOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium"
-                    >
-                        <FolderPlus className="w-4 h-4" />
-                        Add to List
-                    </button>
-                    <button
-                        onClick={handleBulkDelete}
-                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-sm font-medium text-muted-foreground"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                    </button>
-                    <button
-                        onClick={() => setSelectedIds(new Set())}
-                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium text-muted-foreground"
-                    >
-                        <X className="w-4 h-4" />
-                        Clear
-                    </button>
-                </div>
-            </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AddToListModal
-        isOpen={isAddToListModalOpen}
-        onClose={() => setIsAddToListModalOpen(false)}
-        selectedProblemIds={Array.from(selectedIds)}
-      />
     </div>
   );
 }
-
