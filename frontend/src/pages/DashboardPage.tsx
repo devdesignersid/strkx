@@ -293,10 +293,10 @@ export default function DashboardPage() {
       setIsLoading(true);
       try {
         const [statsRes, activityRes, heatmapRes, studyStatsRes] = await Promise.all([
-          axios.get('http://localhost:3000/dashboard/stats'),
-          axios.get('http://localhost:3000/dashboard/activity'),
-          axios.get('http://localhost:3000/dashboard/heatmap'),
-          axios.get('http://localhost:3000/study-stats/today')
+          axios.get('http://localhost:3000/dashboard/stats', { withCredentials: true }),
+          axios.get('http://localhost:3000/dashboard/activity', { withCredentials: true }),
+          axios.get('http://localhost:3000/dashboard/heatmap', { withCredentials: true }),
+          axios.get('http://localhost:3000/study-stats/today', { withCredentials: true })
         ]);
 
         const studySeconds = studyStatsRes.data.totalStudySeconds || 0;

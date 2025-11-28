@@ -67,7 +67,7 @@ export function useProblem(slug: string | undefined) {
     setIsTimerRunning(false);
     endTimeRef.current = null;
 
-    axios.get(`http://localhost:3000/problems/${slug}`)
+    axios.get(`http://localhost:3000/problems/${slug}`, { withCredentials: true })
       .then(res => {
         setProblem(res.data);
         setCode(res.data.starterCode || '// Write your code here');
@@ -80,14 +80,14 @@ export function useProblem(slug: string | undefined) {
 
   const fetchSubmissions = useCallback(() => {
     if (!slug) return;
-    axios.get(`http://localhost:3000/problems/${slug}/submissions`)
+    axios.get(`http://localhost:3000/problems/${slug}/submissions`, { withCredentials: true })
       .then(res => setSubmissions(res.data))
       .catch(err => console.error('Failed to fetch submissions:', err));
   }, [slug]);
 
   const fetchSolutions = useCallback(() => {
     if (!slug) return;
-    axios.get(`http://localhost:3000/problems/${slug}/solutions`)
+    axios.get(`http://localhost:3000/problems/${slug}/solutions`, { withCredentials: true })
       .then(res => setSolutions(res.data))
       .catch(err => console.error('Failed to fetch solutions:', err));
   }, [slug]);
@@ -109,7 +109,7 @@ export function useProblem(slug: string | undefined) {
         language: 'javascript',
         problemSlug: slug,
         mode,
-      });
+      }, { withCredentials: true });
 
       if (mode === 'run') {
         setOutput(res.data);
@@ -235,7 +235,7 @@ export function useProblem(slug: string | undefined) {
       await axios.patch(`http://localhost:3000/problems/${slug}/submissions/${submissionId}/solution`, {
         isSolution: true,
         solutionName: name,
-      });
+      }, { withCredentials: true });
       fetchSubmissions();
       fetchSolutions();
       toast.success('Solution saved!');
@@ -250,7 +250,7 @@ export function useProblem(slug: string | undefined) {
     try {
       await axios.patch(`http://localhost:3000/problems/${slug}/submissions/${submissionId}/solution`, {
         isSolution: false,
-      });
+      }, { withCredentials: true });
       fetchSubmissions();
       fetchSolutions();
       toast.success('Solution removed');

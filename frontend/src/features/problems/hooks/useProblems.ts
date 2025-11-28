@@ -51,7 +51,7 @@ export function useProblems() {
     params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`http://localhost:3000/problems?${params.toString()}`);
+      const res = await axios.get(`http://localhost:3000/problems?${params.toString()}`, { withCredentials: true });
       const { problems: fetchedProblems, hasMore: more } = res.data;
 
       const enriched = fetchedProblems.map((p: any) => ({
@@ -128,7 +128,7 @@ export function useProblems() {
 
   const deleteProblem = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:3000/problems/${id}`);
+      await axios.delete(`http://localhost:3000/problems/${id}`, { withCredentials: true });
       setProblems(problems.filter(p => p.id !== id));
       toast.success('Problem deleted');
     } catch (err) {
@@ -143,7 +143,7 @@ export function useProblems() {
     try {
       await Promise.all(
         Array.from(selectedIds).map(id =>
-          axios.delete(`http://localhost:3000/problems/${id}`)
+          axios.delete(`http://localhost:3000/problems/${id}`, { withCredentials: true })
         )
       );
       setProblems(problems.filter(p => !selectedIds.has(p.id)));
