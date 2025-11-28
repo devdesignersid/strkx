@@ -500,7 +500,7 @@ export default function ListDetailPage() {
           </div>
 
           {/* Load More Button */}
-          {!isLoading && hasMore && (
+          {!isLoading && hasMore && problems.length > 0 && (
             <div className="flex justify-center py-6">
               <button
                 onClick={loadMore}
