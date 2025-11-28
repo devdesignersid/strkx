@@ -64,6 +64,8 @@ export function useProblem(slug: string | undefined) {
     setSolutions([]);
     setIsRunning(false);
     setIsAnalyzing(false);
+    setIsTimerRunning(false);
+    endTimeRef.current = null;
 
     axios.get(`http://localhost:3000/problems/${slug}`)
       .then(res => {

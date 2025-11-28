@@ -8,11 +8,12 @@ import { Difficulty, Prisma } from '@prisma/client';
 export class ProblemsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createProblemDto: CreateProblemDto) {
+  async create(createProblemDto: CreateProblemDto, user: any) {
     const { testCases, ...problemData } = createProblemDto;
     return this.prisma.problem.create({
       data: {
         ...problemData,
+        userId: user.id,
         testCases: {
           create: testCases,
         },
@@ -32,12 +33,11 @@ export class ProblemsService {
     tags?: string,
     sort?: string,
     order?: 'asc' | 'desc',
+    user?: any,
   ) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-
-    const where: Prisma.ProblemWhereInput = {};
+    const where: Prisma.ProblemWhereInput = {
+      userId: user.id,
+    };
 
     // Search
     if (search) {
@@ -163,7 +163,7 @@ export class ProblemsService {
     };
   }
 
-  async findOne(slug: string) {
+  async findOne(slug: string, userId: string) {
     const problem = await this.prisma.problem.findUnique({
       where: { slug },
       include: {
@@ -173,14 +173,14 @@ export class ProblemsService {
       },
     });
 
-    if (!problem) {
+    if (!problem || problem.userId !== userId) {
       throw new NotFoundException(`Problem with slug ${slug} not found`);
     }
 
     return problem;
   }
 
-  async findById(id: string) {
+  async findById(id: string, userId: string) {
     const problem = await this.prisma.problem.findUnique({
       where: { id },
       include: {
@@ -188,14 +188,19 @@ export class ProblemsService {
       },
     });
 
-    if (!problem) {
+    if (!problem || problem.userId !== userId) {
       throw new NotFoundException(`Problem with id ${id} not found`);
     }
 
     return problem;
   }
 
-  async update(id: string, updateProblemDto: UpdateProblemDto) {
+  async update(id: string, updateProblemDto: UpdateProblemDto, userId: string) {
+    const problem = await this.prisma.problem.findUnique({ where: { id } });
+    if (!problem || problem.userId !== userId) {
+      throw new NotFoundException(`Problem with id ${id} not found`);
+    }
+
     const { testCases, ...problemData } = updateProblemDto;
 
     if (testCases) {
@@ -217,7 +222,12 @@ export class ProblemsService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
+    const problem = await this.prisma.problem.findUnique({ where: { id } });
+    if (!problem || problem.userId !== userId) {
+      throw new NotFoundException(`Problem with id ${id} not found`);
+    }
+
     // First, delete related submissions
     await this.prisma.submission.deleteMany({
       where: { problemId: id },
@@ -232,7 +242,7 @@ export class ProblemsService {
     });
   }
 
-  async findSubmissions(slug: string) {
+  async findSubmissions(slug: string, user: any) {
     const problem = await this.prisma.problem.findUnique({
       where: { slug },
     });
@@ -240,10 +250,6 @@ export class ProblemsService {
     if (!problem) {
       throw new NotFoundException(`Problem with slug ${slug} not found`);
     }
-
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
 
     if (!user) return [];
 
@@ -324,7 +330,7 @@ export class ProblemsService {
     });
   }
 
-  async findSolutions(slug: string) {
+  async findSolutions(slug: string, user: any) {
     const problem = await this.prisma.problem.findUnique({
       where: { slug },
     });
@@ -332,10 +338,6 @@ export class ProblemsService {
     if (!problem) {
       throw new NotFoundException(`Problem with slug ${slug} not found`);
     }
-
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
 
     if (!user) return [];
 

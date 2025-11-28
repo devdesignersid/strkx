@@ -28,6 +28,11 @@ model Problem {
   submissions Submission[]
   lists       ProblemsOnLists[]
   interviewQuestions InterviewQuestion[]
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model TestCase {
@@ -78,6 +83,7 @@ model User {
   profilePicture String?
   lastLogin   DateTime?
   submissions     Submission[]
+  problems        Problem[]
   lists           List[]
   dailyStudyLogs  DailyStudyLog[]
   interviewSessions InterviewSession[]

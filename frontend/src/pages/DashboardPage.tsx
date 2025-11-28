@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { subDays, format, isSameDay, addDays, startOfDay, getDay } from 'date-fns';
 import axios from 'axios';
 import { useStudyTimer } from '@/context/StudyTimerContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface ActivityItem {
   id: string;
@@ -272,6 +273,7 @@ const Heatmap = memo(({ data }: { data: HeatmapItem[] }) => {
 });
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     easy: 0,
     medium: 0,
@@ -337,7 +339,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, Demo User</p>
+          <p className="text-muted-foreground mt-1">Welcome back, {user?.name || 'User'}</p>
         </header>
 
         {isLoading ? (
