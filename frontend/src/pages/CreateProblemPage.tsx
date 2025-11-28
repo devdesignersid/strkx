@@ -4,7 +4,11 @@ import axios from 'axios';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Plus, Trash2, Save, ArrowLeft, Loader2, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2 } from 'lucide-react';
+import remarkBreaks from 'remark-breaks';
+import { Plus, Trash2, Save, ArrowLeft, Loader2, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2, Wand2 } from 'lucide-react';
+import { aiService } from '../lib/ai/aiService';
+import { PROMPTS } from '../lib/ai/prompts';
+import { toast } from 'sonner';
 import { clsx } from 'clsx';
 
 export default function CreateProblemPage() {
@@ -12,6 +16,8 @@ export default function CreateProblemPage() {
   const { id } = useParams();
   const isEditMode = !!id;
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -79,6 +85,11 @@ export default function CreateProblemPage() {
     }
   }, [id, isEditMode, navigate]);
 
+  useEffect(() => {
+      aiService.loadFromStorage();
+      setIsAIEnabled(aiService.isEnabled());
+  }, []);
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -97,6 +108,81 @@ export default function CreateProblemPage() {
     const newTestCases = [...testCases];
     newTestCases[index][field] = value;
     setTestCases(newTestCases);
+  };
+
+  const handleAIGenerate = async () => {
+    if (!formData.title) {
+        toast.error('Please enter a title first to generate a problem.');
+        return;
+    }
+
+    if (!aiService.isConfigured()) {
+        toast.error('AI is not configured. Please go to Settings to configure it.');
+        return;
+    }
+
+    setIsGenerating(true);
+    try {
+        const prompt = PROMPTS.PROBLEM_GENERATION.replace('{topic}', formData.title);
+        const response = await aiService.generateCompletion(prompt);
+
+        // Clean up response if it contains markdown code blocks
+        const jsonStr = response.replace(/```json\n?|\n?```/g, '');
+        const generated = JSON.parse(jsonStr);
+
+        setFormData(prev => ({
+            ...prev,
+            description: generated.description || prev.description,
+            tags: Array.isArray(generated.tags) ? generated.tags.join(', ') : prev.tags,
+            // We could also set constraints if we had a field for it, or append to description
+        }));
+
+        if (generated.examples && Array.isArray(generated.examples)) {
+             // Map examples to test cases
+             const newTestCases = generated.examples.map((ex: any) => {
+                 // Sanitize input/output to remove variable names if present (e.g. "nums = [...]" -> "[...]")
+                 const cleanInput = ex.input.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+                 const cleanOutput = ex.output.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+                 return {
+                     input: cleanInput,
+                     expectedOutput: cleanOutput
+                 };
+             });
+             setTestCases(newTestCases);
+
+             // Also append to description as standard LeetCode format
+             let exampleText = '\n\n### Examples\n';
+             generated.examples.forEach((ex: any, i: number) => {
+                 exampleText += `\n\n**Example ${i + 1}:**\n\n`;
+                 exampleText += `**Input:** \`${ex.input}\`\n\n`;
+                 exampleText += `**Output:** \`${ex.output}\`\n\n`;
+                 if (ex.explanation) exampleText += `**Explanation:** ${ex.explanation}\n\n`;
+             });
+
+             setFormData(prev => ({
+                 ...prev,
+                 description: prev.description + exampleText
+             }));
+        }
+
+        if (generated.constraints && Array.isArray(generated.constraints)) {
+            let constraintText = '\n\n### Constraints\n';
+            generated.constraints.forEach((c: string) => {
+                constraintText += `- ${c}\n`;
+            });
+             setFormData(prev => ({
+                 ...prev,
+                 description: prev.description + constraintText
+             }));
+        }
+
+        toast.success('Problem generated successfully!');
+    } catch (error) {
+        console.error('AI Generation failed:', error);
+        toast.error('Failed to generate problem. Please try again.');
+    } finally {
+        setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -123,7 +209,7 @@ export default function CreateProblemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
+    <div className="h-screen bg-background text-foreground font-sans flex flex-col overflow-hidden h-full">
       <header className="h-14 border-b border-white/5 bg-card/50 backdrop-blur-md flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/problems')} className="p-2 hover:bg-white/5 rounded-full transition-colors">
@@ -149,7 +235,8 @@ export default function CreateProblemPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-8">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="p-8 max-w-5xl mx-auto w-full space-y-8">
         {/* Basic Info */}
         <section className="space-y-4">
           <div className="grid grid-cols-2 gap-6">
@@ -163,6 +250,18 @@ export default function CreateProblemPage() {
                 placeholder="E.g. Two Sum"
               />
             </div>
+            {isAIEnabled && (
+                <div className="flex items-end pb-0.5">
+                    <button
+                        onClick={handleAIGenerate}
+                        disabled={isGenerating || !formData.title}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                        Auto-Complete with AI
+                    </button>
+                </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Slug</label>
               <input
@@ -269,7 +368,7 @@ export default function CreateProblemPage() {
               placeholder="Type your problem description here..."
             />
             <div className="h-full bg-card/30 border border-white/5 rounded-md p-4 overflow-y-auto prose prose-invert prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{formData.description}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{formData.description}</ReactMarkdown>
             </div>
           </div>
         </section>
@@ -337,6 +436,7 @@ export default function CreateProblemPage() {
             ))}
           </div>
         </section>
+      </div>
       </div>
     </div>
   );

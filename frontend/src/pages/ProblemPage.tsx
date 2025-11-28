@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import axios from 'axios';
-import { Play, Loader2, CheckCircle2, XCircle, Terminal as TerminalIcon, FileText, Code2, RefreshCw, Maximize2, Minimize2, Send, Pause, RotateCcw, Settings, PanelLeftClose, PanelLeftOpen, PanelBottomClose, PanelBottomOpen, Scan, Clock, Star, TrendingUp, Zap } from 'lucide-react';
+import { Play, Loader2, CheckCircle2, XCircle, Terminal as TerminalIcon, FileText, Code2, RefreshCw, Maximize2, Minimize2, Send, Pause, RotateCcw, Settings, PanelLeftClose, PanelLeftOpen, PanelBottomClose, PanelBottomOpen, Scan, Clock, Star, TrendingUp, Zap, Lightbulb, Sparkles, BrainCircuit } from 'lucide-react';
+import { aiService } from '@/lib/ai/aiService';
+import { PROMPTS } from '@/lib/ai/prompts';
 import { cn } from '@/lib/utils';
 import * as monaco from 'monaco-editor';
 import { motion } from 'framer-motion';
@@ -13,6 +15,7 @@ import { MotivationManager } from '@/lib/MotivationManager';
 import EmptyState from '@/components/ui/EmptyState';
 import { toast } from 'sonner';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface Problem {
   id: string;
@@ -45,10 +48,13 @@ export default function ProblemPage() {
   const [code, setCode] = useState('');
   const [output, setOutput] = useState<ExecutionResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'solutions'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'solutions' | 'ai_analysis'>('description');
   const [isFocused, setIsFocused] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [solutionModal, setSolutionModal] = useState<{ submissionId: string; currentName: string | null } | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAIConfirmation, setShowAIConfirmation] = useState(false);
 
   const descriptionPanelRef = useRef<ImperativePanelHandle>(null);
   const consolePanelRef = useRef<ImperativePanelHandle>(null);
@@ -59,6 +65,9 @@ export default function ProblemPage() {
   const [timeLeft, setTimeLeft] = useState(45 * 60); // Default 45 mins
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [autocompleteEnabled, setAutocompleteEnabled] = useState(true);
+  const [isRequestingHint, setIsRequestingHint] = useState(false);
+  const [isCompletingCode, setIsCompletingCode] = useState(false);
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   // ... (effects remain same)
@@ -128,8 +137,47 @@ export default function ProblemPage() {
         quickSuggestions: autocompleteEnabled,
         suggestOnTriggerCharacters: autocompleteEnabled,
       });
+
     }
   }, [autocompleteEnabled]);
+
+  useEffect(() => {
+      aiService.loadFromStorage();
+      setIsAIEnabled(aiService.isEnabled());
+  }, []);
+
+  const handleAIAnalyze = async () => {
+    if (!aiService.isConfigured()) {
+        toast.error('AI is not configured. Please go to Settings.', { duration: 3000 });
+        return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+        const prompt = PROMPTS.SOLUTION_EVALUATION
+            .replace('{problemTitle}', problem?.title || '')
+            .replace('{userCode}', code);
+
+        const response = await aiService.generateCompletion(prompt);
+        const jsonStr = response.replace(/```json\n?|```\n?|\n?```/g, '').trim();
+
+        try {
+            const analysis = JSON.parse(jsonStr);
+            setAiAnalysis(analysis);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.log('Raw JSON String:', jsonStr);
+            toast.error('Failed to parse AI response. See console.', { duration: 3000 });
+        }
+    } catch (error) {
+        console.error('Failed to analyze solution:', error);
+        toast.error('Failed to analyze solution', { duration: 3000 });
+    } finally {
+        setIsAnalyzing(false);
+    }
+  };
+
+
 
   const handleRun = async (mode: 'run' | 'submit' = 'run') => {
     if (!problem) return;
@@ -173,7 +221,8 @@ export default function ProblemPage() {
         });
       } else {
         toast.error('Runtime Error. Check console for details.', {
-          icon: <XCircle className="w-4 h-4" />
+          icon: <XCircle className="w-4 h-4" />,
+          duration: 3000
         });
       }
     } finally {
@@ -230,7 +279,10 @@ interface Solution {
   }, [slug]);
 
   const handleLoadSubmission = (submission: Submission) => {
-    setCode(submission.code);
+    if (editorRef.current) {
+        editorRef.current.setValue(submission.code);
+        setCode(submission.code);
+    }
   };
 
   const handleMarkAsSolution = async (submissionId: string, currentStatus: boolean, currentName: string | null) => {
@@ -279,8 +331,16 @@ interface Solution {
   }, [activeTab, fetchSubmissions, fetchSolutions]);
 
   const handleResetCode = () => {
-    if (problem?.starterCode) {
-      setCode(problem.starterCode);
+    console.log('Reset Code Clicked');
+    console.log('Problem:', problem);
+    console.log('Editor Ref:', editorRef.current);
+    if (problem?.starterCode && editorRef.current) {
+      const starter = problem.starterCode;
+      console.log('Resetting to:', starter);
+      editorRef.current.setValue(starter);
+      setCode(starter);
+    } else {
+        console.warn('Cannot reset code: Missing problem data or editor ref');
     }
   };
 
@@ -342,6 +402,93 @@ interface Solution {
           setIsFocused(false);
       }
   };
+
+  const handleGetHint = async () => {
+    if (!aiService.isConfigured()) {
+        toast.error('AI is not configured. Please go to Settings.', { duration: 3000 });
+        return;
+    }
+
+    setIsRequestingHint(true);
+    try {
+        const prompt = PROMPTS.SOLUTION_HINT
+            .replace('{problemDescription}', problem?.description || '')
+            .replace('{userCode}', code);
+
+        const hint = await aiService.generateCompletion(prompt);
+
+        toast.info('AI Hint', {
+            description: hint,
+            duration: 10000, // Show for longer
+            icon: <Lightbulb className="w-4 h-4 text-yellow-400" />,
+        });
+    } catch (error) {
+        console.error('Failed to get hint:', error);
+        toast.error('Failed to get hint', { duration: 3000 });
+    } finally {
+        setIsRequestingHint(false);
+    }
+  };
+
+  const handleCompleteCode = () => {
+    if (!aiService.isConfigured()) {
+        toast.error('AI is not configured. Please go to Settings.', { duration: 3000 });
+        return;
+    }
+    setShowAIConfirmation(true);
+  };
+
+  const confirmAICompletion = async () => {
+    setShowAIConfirmation(false);
+    if (!editorRef.current) return;
+
+    // Use full code context
+    const currentCode = editorRef.current.getValue();
+
+    setIsCompletingCode(true);
+    try {
+        const prompt = PROMPTS.SOLUTION_COMPLETION
+            .replace('{problemDescription}', problem?.description || '')
+            .replace('{userCode}', currentCode);
+
+        const completion = await aiService.generateCompletion(prompt);
+
+        // Clean up code block markers if present
+        const cleanCode = completion.replace(/```javascript\n?|```typescript\n?|```\n?|\n?```/g, '');
+
+        // Replace entire content
+        editorRef.current.setValue(cleanCode);
+        setCode(cleanCode);
+
+        toast.success('Code completed!');
+    } catch (error) {
+        console.error('Failed to complete code:', error);
+        toast.error('Failed to complete code', { duration: 3000 });
+    } finally {
+        setIsCompletingCode(false);
+    }
+  };
+
+  const editorOptions = useMemo(() => ({
+    minimap: { enabled: false },
+    fontSize: 14,
+    lineNumbers: 'on' as const,
+    roundedSelection: false,
+    scrollBeyondLastLine: false,
+    readOnly: false,
+    automaticLayout: true,
+    padding: { top: 16, bottom: 16 },
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontLigatures: true,
+    cursorBlinking: 'smooth',
+    cursorSmoothCaretAnimation: 'on',
+    smoothScrolling: true,
+    contextmenu: true,
+    quickSuggestions: autocompleteEnabled,
+    suggestOnTriggerCharacters: autocompleteEnabled,
+    snippetSuggestions: autocompleteEnabled ? 'inline' : 'none',
+    wordBasedSuggestions: autocompleteEnabled ? 'currentDocument' : 'off',
+  }), [autocompleteEnabled]);
 
   if (!problem) return (
     <div className="flex items-center justify-center h-full text-muted-foreground bg-background">
@@ -418,6 +565,14 @@ interface Solution {
                 >
                   Solutions
                 </button>
+                {isAIEnabled && (
+                    <button
+                    onClick={() => setActiveTab('ai_analysis')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'ai_analysis' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                    AI Analysis
+                    </button>
+                )}
               </div>
               <button
                 onClick={toggleDescription}
@@ -435,7 +590,7 @@ interface Solution {
                   animate="animate"
                   exit="exit"
                 >
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description || 'No description available.'}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{problem.description || 'No description available.'}</ReactMarkdown>
                 </motion.div>
               )}
 
@@ -546,7 +701,12 @@ interface Solution {
                     solutions.map((sol) => (
                       <div
                         key={sol.id}
-                        onClick={() => setCode(sol.code)}
+                        onClick={() => {
+                            if (editorRef.current) {
+                                editorRef.current.setValue(sol.code);
+                                setCode(sol.code);
+                            }
+                        }}
                         className="p-3 rounded-md bg-gradient-to-r from-amber-500/5 to-transparent border border-amber-500/20 hover:border-amber-500/40 hover:from-amber-500/10 transition-all cursor-pointer group"
                       >
                         <div className="flex items-center justify-between mb-1.5">
@@ -583,6 +743,85 @@ interface Solution {
                   )}
                 </motion.div>
               )}
+
+              {activeTab === 'ai_analysis' && (
+                <motion.div
+                  variants={fadeIn}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="space-y-6"
+                >
+                    {!aiAnalysis && !isAnalyzing ? (
+                        <EmptyState
+                            icon={BrainCircuit}
+                            title="AI Solution Analysis"
+                            description="Get detailed feedback on your solution's time complexity, space complexity, and code quality."
+                            action={{
+                                label: "Analyze My Code",
+                                onClick: handleAIAnalyze
+                            }}
+                            className="py-12"
+                        />
+                    ) : isAnalyzing ? (
+                        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                            <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                            <p className="text-muted-foreground">Analyzing your solution...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-lg bg-card border border-border">
+                                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Time Complexity</h4>
+                                    <p className="text-lg font-mono text-foreground">{aiAnalysis.timeComplexity}</p>
+                                </div>
+                                <div className="p-4 rounded-lg bg-card border border-border">
+                                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Space Complexity</h4>
+                                    <p className="text-lg font-mono text-foreground">{aiAnalysis.spaceComplexity}</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 rounded-lg bg-card border border-border">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-semibold text-foreground">Analysis Score</h3>
+                                    <div className={cn(
+                                        "px-3 py-1 rounded-full text-sm font-bold",
+                                        aiAnalysis.score >= 8 ? "bg-green-500/10 text-green-500" :
+                                        aiAnalysis.score >= 5 ? "bg-yellow-500/10 text-yellow-500" :
+                                        "bg-red-500/10 text-red-500"
+                                    )}>
+                                        {aiAnalysis.score}/10
+                                    </div>
+                                </div>
+                                <div className="prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiAnalysis.feedback}</ReactMarkdown>
+                                </div>
+                            </div>
+
+                            {aiAnalysis.suggestions && aiAnalysis.suggestions.length > 0 && (
+                                <div className="space-y-2">
+                                    <h3 className="font-semibold text-foreground">Suggestions</h3>
+                                    <ul className="space-y-2">
+                                        {aiAnalysis.suggestions.map((suggestion: string, i: number) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground bg-secondary/30 p-3 rounded-md">
+                                                <Lightbulb className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
+                                                <span>{suggestion}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleAIAnalyze}
+                                className="w-full py-2 rounded-md border border-border hover:bg-secondary/50 transition-colors text-sm font-medium text-muted-foreground"
+                            >
+                                Re-analyze
+                            </button>
+                        </div>
+                    )}
+                </motion.div>
+              )}
             </div>
           </Panel>
 
@@ -590,9 +829,9 @@ interface Solution {
 
           {/* Right Panel: Editor & Console */}
           <Panel defaultSize={65} minSize={30} collapsible>
-            <PanelGroup direction="vertical">
+            <PanelGroup direction="vertical" className="h-full">
               {/* Editor */}
-              <Panel defaultSize={70} minSize={20} collapsible className="flex flex-col bg-[#1e1e1e] relative group">
+              <Panel defaultSize={70} minSize={20} collapsible className="flex flex-col bg-[#1e1e1e] relative group overflow-hidden">
                  <div className="h-10 min-h-[2.5rem] shrink-0 border-b border-white/5 bg-[#252526] flex items-center justify-between px-4">
                     <div className="flex items-center gap-3">
                         {isDescriptionCollapsed && (
@@ -639,6 +878,27 @@ interface Solution {
                             </button>
                          </div>
                        </div>
+
+                       {isAIEnabled && (
+                           <div className="flex items-center gap-1 border-l border-white/5 pl-1">
+                              <button
+                                onClick={handleGetHint}
+                                disabled={isRequestingHint}
+                                className="p-1.5 hover:bg-white/5 rounded text-muted-foreground hover:text-yellow-400 transition-colors"
+                                title="Get AI Hint"
+                              >
+                                {isRequestingHint ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                onClick={handleCompleteCode}
+                                disabled={isCompletingCode}
+                                className="p-1.5 hover:bg-white/5 rounded text-muted-foreground hover:text-purple-400 transition-colors"
+                                title="AI Complete Code"
+                              >
+                                {isCompletingCode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                              </button>
+                           </div>
+                       )}
 
                       <button
                         onClick={() => setAutocompleteEnabled(!autocompleteEnabled)}
@@ -692,7 +952,7 @@ interface Solution {
                       )}
                     </div>
                  </div>
-                 <div className="flex-1 pt-2 relative">
+                 <div className="flex-1 pt-2 relative min-h-0">
                     <Suspense fallback={
                       <div className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e] text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -700,33 +960,15 @@ interface Solution {
                       </div>
                     }>
                       <Editor
+                        key={slug} // Force re-mount on problem change
                         height="100%"
                         defaultLanguage="javascript"
                         theme="vscode-dark"
-                        value={code}
+                        defaultValue={problem.starterCode || '// Write your code here'}
                         onChange={(value) => setCode(value || '')}
                         beforeMount={handleEditorWillMount}
                         onMount={handleEditorDidMount}
-                        options={{
-                          minimap: { enabled: false },
-                          fontSize: 14,
-                          lineNumbers: 'on',
-                          roundedSelection: false,
-                          scrollBeyondLastLine: false,
-                          readOnly: false,
-                          automaticLayout: true,
-                          padding: { top: 16, bottom: 16 },
-                          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                          fontLigatures: true,
-                          cursorBlinking: 'smooth',
-                          cursorSmoothCaretAnimation: 'on',
-                          smoothScrolling: true,
-                          contextmenu: true,
-                          quickSuggestions: autocompleteEnabled,
-                          suggestOnTriggerCharacters: autocompleteEnabled,
-                          snippetSuggestions: autocompleteEnabled ? 'inline' : 'none',
-                          wordBasedSuggestions: autocompleteEnabled ? 'currentDocument' : 'off',
-                        }}
+                        options={editorOptions}
                       />
                     </Suspense>
                  </div>
@@ -858,6 +1100,50 @@ interface Solution {
           </Panel>
         </PanelGroup>
       </div>
+
+      {/* AI Completion Confirmation Modal */}
+      {showAIConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowAIConfirmation(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative bg-card border border-white/10 rounded-lg shadow-2xl p-6 max-w-md w-full"
+          >
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-1">AI Code Completion</h3>
+                <p className="text-sm text-muted-foreground">
+                  This will replace your current code with a complete solution generated by AI.
+                  <br /><br />
+                  <span className="text-yellow-400/90 text-xs">Warning: Any unsaved changes will be lost.</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowAIConfirmation(false)}
+                className="px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAICompletion}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+              >
+                Generate Solution
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Solution Naming Modal */}
       {solutionModal && (

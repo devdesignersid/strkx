@@ -94,7 +94,12 @@ export class ExecutionService {
       if (typeof testCase.input === 'string') {
         // Convert JavaScript object notation to JSON by adding quotes to unquoted keys
         // This regex finds keys like "key:" and converts them to "key":
-        const jsonString = testCase.input.replace(/(\w+):/g, '"$1":');
+        // Convert JavaScript object notation to JSON by adding quotes to unquoted keys
+        // This regex finds keys like "key:" and converts them to "key":
+        let jsonString = testCase.input.replace(/(\w+):/g, '"$1":');
+
+        // Sanitize: Remove variable assignment if present (e.g. "nums = [...]" -> "[...]")
+        jsonString = jsonString.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
         try {
           inputData = JSON.parse(jsonString);
         } catch (err) {
@@ -108,9 +113,18 @@ export class ExecutionService {
 
 
       // Prepare arguments for the function call
-      const args = (typeof inputData === 'object' && inputData !== null)
-        ? Object.values(inputData)
-        : [inputData];
+      // Prepare arguments for the function call
+      let args: any[];
+      if (Array.isArray(inputData)) {
+          // If input is an array, treat it as a single argument (e.g. nums for threeSum)
+          args = [inputData];
+      } else if (typeof inputData === 'object' && inputData !== null) {
+          // If it's an object (and not array), assume it's a map of named arguments
+          args = Object.values(inputData);
+      } else {
+          // Primitive value
+          args = [inputData];
+      }
 
       // Hardened Execution Sandbox
       try {
