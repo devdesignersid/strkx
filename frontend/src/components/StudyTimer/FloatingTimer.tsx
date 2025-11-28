@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, X, RotateCcw, Clock } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock } from 'lucide-react';
 import { useStudyTimer } from '../../context/StudyTimerContext';
 
 const FloatingTimer: React.FC = () => {
-  const { time, isActive, isPaused, toggleTimer, formatTime, isEnabled, resetTimer, stopTimer } = useStudyTimer();
+  const { time, isActive, isPaused, toggleTimer, formatTime, isEnabled, resetTimer } = useStudyTimer();
   const [isHovered, setIsHovered] = useState(false);
 
   if (!isEnabled) return null;
@@ -90,12 +90,7 @@ const FloatingTimer: React.FC = () => {
                 <RotateCcw className="w-4 h-4" />
               </button>
 
-              <button
-                onClick={(e) => { e.stopPropagation(); stopTimer(); }}
-                className="p-1.5 rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-500 transition-colors"
-              >
-                <X className="w-4 h-4 fill-current" />
-              </button>
+
             </div>
           </motion.div>
         )}

@@ -60,6 +60,7 @@ export default function ProblemsPage() {
   // Fetch Problems Function
   const fetchProblems = async (page: number, isReset: boolean = false) => {
     if (isReset) setIsLoading(true);
+    setIsLoadingMore(true); // Indicate loading more for subsequent pages
 
     const params = new URLSearchParams();
     params.append('page', page.toString());
