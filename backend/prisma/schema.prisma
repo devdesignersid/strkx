@@ -27,6 +27,7 @@ model Problem {
   testCases   TestCase[]
   submissions Submission[]
   lists       ProblemsOnLists[]
+  interviewQuestions InterviewQuestion[]
 }
 
 model TestCase {
@@ -60,6 +61,9 @@ model Submission {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
+  interviewQuestionId String?
+  interviewQuestion   InterviewQuestion? @relation(fields: [interviewQuestionId], references: [id])
+
   @@index([userId])
   @@index([problemId])
   @@index([status])
@@ -73,6 +77,7 @@ model User {
   submissions     Submission[]
   lists           List[]
   dailyStudyLogs  DailyStudyLog[]
+  interviewSessions InterviewSession[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 }
@@ -118,5 +123,57 @@ model ProblemsOnLists {
 
   @@id([listId, problemId])
   @@index([listId])
+  @@index([problemId])
+}
+
+model InterviewSession {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  status        String   @default("ACTIVE") // ACTIVE, COMPLETED, ABANDONED
+
+  // Filters used to create this session
+  difficulty    String[] // Easy, Medium, Hard
+  statusFilter  String[] // Solved, Unsolved, etc.
+  tags          String[]
+  lists         String[]
+  questionCount Int
+
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+
+  questions     InterviewQuestion[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model InterviewQuestion {
+  id                 String           @id @default(uuid())
+  interviewSessionId String
+  interviewSession   InterviewSession @relation(fields: [interviewSessionId], references: [id], onDelete: Cascade)
+
+  problemId          String
+  problem            Problem          @relation(fields: [problemId], references: [id])
+
+  orderIndex         Int
+
+  startTime          DateTime?
+  endTime            DateTime?
+
+  status             String           @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, SKIPPED
+  outcome            String?          // PASSED, FAILED, PARTIAL
+
+  autoSubmitted      Boolean          @default(false)
+
+  submissions        Submission[]
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([interviewSessionId])
   @@index([problemId])
 }

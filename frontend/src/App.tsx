@@ -7,6 +7,9 @@ import CreateProblemPage from './pages/CreateProblemPage';
 import ListsPage from './pages/ListsPage';
 import ListDetailPage from './pages/ListDetailPage';
 import SettingsPage from './pages/SettingsPage';
+import MockInterviewSetup from './pages/MockInterviewSetup';
+import MockInterviewSession from './pages/MockInterviewSession';
+import MockInterviewSummary from './pages/MockInterviewSummary';
 import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
 import { NetworkStatus } from '@/components/ui/NetworkStatus';
@@ -40,6 +43,9 @@ function App() {
             <Route path="lists" element={<ListsPage />} />
             <Route path="lists/:id" element={<ListDetailPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="mock-interview" element={<MockInterviewSetup />} />
+            <Route path="mock-interview/session/:sessionId" element={<MockInterviewSession />} />
+            <Route path="mock-interview/session/:sessionId/summary" element={<MockInterviewSummary />} />
           </Route>
         </Routes>
         <FloatingTimer />

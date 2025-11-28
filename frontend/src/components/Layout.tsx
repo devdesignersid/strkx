@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List } from 'lucide-react';
+import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List, Brain } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout() {
@@ -10,6 +10,7 @@ export default function Layout() {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/problems', icon: Code2, label: 'Problems' },
     { path: '/lists', icon: List, label: 'Lists' },
+    { path: '/mock-interview', icon: Brain, label: 'Mock Interview' },
   ];
 
   return (

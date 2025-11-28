@@ -6,6 +6,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ListsModule } from './lists/lists.module';
 import { UserModule } from './user/user.module';
 import { StudyStatsModule } from './study-stats/study-stats.module';
+import { InterviewSessionsModule } from './interview-sessions/interview-sessions.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { StudyStatsModule } from './study-stats/study-stats.module';
     ListsModule,
     UserModule,
     StudyStatsModule,
+    InterviewSessionsModule,
   ],
   controllers: [],
   providers: [],
