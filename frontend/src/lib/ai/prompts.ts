@@ -44,21 +44,24 @@ Generate the **FULL COMPLETE SOLUTION CODE** for this problem.
 `,
   SOLUTION_EVALUATION: `
 Analyze the following solution for the problem: "{problemTitle}".
+Problem Description:
+{problemDescription}
+
 Code:
 {userCode}
 
-Evaluate for:
-1. Time Complexity
-2. Space Complexity
-3. Code Quality/Readability
-4. Correctness (potential edge cases)
+Evaluate based on the following rubric (Total 100 points):
+1. Correctness (40 points): Does it solve the problem correctly including edge cases?
+2. Time Complexity (20 points): Is it optimal?
+3. Space Complexity (20 points): Is it optimal?
+4. Code Quality & Best Practices (20 points): Variable naming, readability, modularity.
 
 Return JSON:
 {
   "timeComplexity": "O(...)",
   "spaceComplexity": "O(...)",
-  "score": 8, // 1-10
-  "feedback": "Markdown feedback. Use \\n for newlines. Do NOT use literal newlines.",
+  "score": 85, // 0-100 based on the rubric
+  "feedback": "Markdown feedback explaining the score breakdown. Use \\n for newlines.",
   "suggestions": ["suggestion 1", "suggestion 2"]
 }
 
