@@ -71,20 +71,50 @@ export default function ProblemPage() {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   // ... (effects remain same)
+  const endTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    let interval: number;
+
     if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
+      // If we just started (or resumed), calculate the target end time
+      if (!endTimeRef.current) {
+        endTimeRef.current = Date.now() + timeLeft * 1000;
+      }
+
+      interval = window.setInterval(() => {
+        const now = Date.now();
+        if (endTimeRef.current) {
+          const remaining = Math.ceil((endTimeRef.current - now) / 1000);
+
+          if (remaining <= 0) {
+            setTimeLeft(0);
+            setIsTimerRunning(false);
+            endTimeRef.current = null;
+          } else {
+            setTimeLeft(remaining);
+          }
+        }
       }, 1000);
-    } else if (timeLeft === 0) {
-      setIsTimerRunning(false);
+    } else {
+      // Paused or stopped
+      endTimeRef.current = null;
     }
+
     return () => clearInterval(interval);
-  }, [isTimerRunning, timeLeft]);
+  }, [isTimerRunning]);
 
   useEffect(() => {
     if (slug) {
+      // Reset state for new problem
+      setProblem(null);
+      setOutput(null);
+      setAiAnalysis(null);
+      setSubmissions([]);
+      setSolutions([]);
+      setIsRunning(false);
+      setIsAnalyzing(false);
+
       axios.get(`http://localhost:3000/problems/${slug}`)
         .then(res => {
           setProblem(res.data);
@@ -166,7 +196,6 @@ export default function ProblemPage() {
             setAiAnalysis(analysis);
         } catch (parseError) {
             console.error('JSON Parse Error:', parseError);
-            console.log('Raw JSON String:', jsonStr);
             toast.error('Failed to parse AI response. See console.', { duration: 3000 });
         }
     } catch (error) {
@@ -331,12 +360,8 @@ interface Solution {
   }, [activeTab, fetchSubmissions, fetchSolutions]);
 
   const handleResetCode = () => {
-    console.log('Reset Code Clicked');
-    console.log('Problem:', problem);
-    console.log('Editor Ref:', editorRef.current);
     if (problem?.starterCode && editorRef.current) {
       const starter = problem.starterCode;
-      console.log('Resetting to:', starter);
       editorRef.current.setValue(starter);
       setCode(starter);
     } else {
@@ -480,14 +505,14 @@ interface Solution {
     padding: { top: 16, bottom: 16 },
     fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
     fontLigatures: true,
-    cursorBlinking: 'smooth',
-    cursorSmoothCaretAnimation: 'on',
+    cursorBlinking: 'smooth' as const,
+    cursorSmoothCaretAnimation: 'on' as const,
     smoothScrolling: true,
     contextmenu: true,
     quickSuggestions: autocompleteEnabled,
     suggestOnTriggerCharacters: autocompleteEnabled,
-    snippetSuggestions: autocompleteEnabled ? 'inline' : 'none',
-    wordBasedSuggestions: autocompleteEnabled ? 'currentDocument' : 'off',
+    snippetSuggestions: (autocompleteEnabled ? 'inline' : 'none') as 'inline' | 'none' | 'bottom' | 'top',
+    wordBasedSuggestions: (autocompleteEnabled ? 'currentDocument' : 'off') as 'currentDocument' | 'off' | 'matchingDocuments' | 'allDocuments',
   }), [autocompleteEnabled]);
 
   if (!problem) return (
@@ -851,17 +876,37 @@ interface Solution {
 
                     <div className="flex items-center gap-3">
                        {/* Timer Controls */}
-                       <div className={cn(
-                         "flex items-center gap-2 rounded-full px-1 py-0.5 border border-white/5 transition-colors",
-                         timeLeft < 300 ? "bg-red-500/10 border-red-500/20" : "bg-white/5"
+                       <motion.div
+                         animate={{
+                           backgroundColor: timeLeft < 300 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                           borderColor: timeLeft < 300 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.05)',
+                           boxShadow: timeLeft < 60 ? '0 0 15px rgba(239, 68, 68, 0.4)' : timeLeft < 300 ? '0 0 8px rgba(239, 68, 68, 0.2)' : 'none',
+                         }}
+                         transition={{ duration: 0.5 }}
+                         className={cn(
+                         "flex items-center gap-2 rounded-full px-1 py-0.5 border transition-colors relative overflow-hidden",
                        )}>
+                         {/* Subconscious Gradient Background */}
+                         <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0"
+                            animate={{
+                                opacity: timeLeft < 300 ? [0.2, 0.5, 0.2] : 0,
+                                x: ['-100%', '100%']
+                            }}
+                            transition={{
+                                duration: timeLeft < 60 ? 1 : 3,
+                                repeat: Infinity,
+                                ease: "linear"
+                            }}
+                         />
+
                          <div className={cn(
-                           "flex items-center gap-2 px-2 text-[10px] font-mono min-w-[50px] justify-center",
-                           timeLeft < 300 ? "text-red-400" : "text-muted-foreground"
+                           "flex items-center gap-2 px-2 text-[10px] font-mono min-w-[50px] justify-center z-10",
+                           timeLeft < 300 ? "text-red-400 font-bold" : "text-muted-foreground"
                          )}>
                            {formatTime(timeLeft)}
                          </div>
-                         <div className="flex items-center gap-1 border-l border-white/5 pl-1">
+                         <div className="flex items-center gap-1 border-l border-white/5 pl-1 z-10">
                             <button
                               onClick={toggleTimer}
                               className="p-1 rounded-full hover:bg-white/10 text-muted-foreground hover:text-primary transition-colors"
@@ -877,7 +922,7 @@ interface Solution {
                               <RotateCcw className="w-3 h-3" />
                             </button>
                          </div>
-                       </div>
+                       </motion.div>
 
                        {isAIEnabled && (
                            <div className="flex items-center gap-1 border-l border-white/5 pl-1">

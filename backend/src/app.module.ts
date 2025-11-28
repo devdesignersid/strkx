@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ListsModule } from './lists/lists.module';
 import { UserModule } from './user/user.module';
+import { StudyStatsModule } from './study-stats/study-stats.module';
 
 @Module({
   imports: [
@@ -13,7 +14,9 @@ import { UserModule } from './user/user.module';
     ExecutionModule,
     DashboardModule,
     ListsModule,
+    ListsModule,
     UserModule,
+    StudyStatsModule,
   ],
   controllers: [],
   providers: [],

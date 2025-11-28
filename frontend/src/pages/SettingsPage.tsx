@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, Bot, Check, X, Loader2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity } from 'lucide-react';
+import { useStudyTimer } from '../context/StudyTimerContext';
 import { aiService } from '../lib/ai/aiService';
 import type { AIProviderMetadata } from '../lib/ai/types';
 import axios from 'axios';
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function SettingsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const { isEnabled: isTimerEnabled, toggleEnabled, triggerTestReminder } = useStudyTimer();
 
   // AI Settings State
   const [providers] = useState<AIProviderMetadata[]>(aiService.getAvailableProviders());
@@ -202,6 +204,57 @@ export default function SettingsPage() {
                                     ) : (
                                         'Save & Test Connection'
                                     )}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+
+        {/* Focus Utility Configuration */}
+        <div className="mb-8 border border-border rounded-lg p-6 bg-card">
+            <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-green-500/10">
+                        <Activity className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-semibold text-foreground mb-1">Focus Utility</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Manage study timer, auto-pause, and health reminders.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Toggle Switch */}
+                <button
+                    onClick={() => toggleEnabled(!isTimerEnabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-card ${isTimerEnabled ? 'bg-green-500' : 'bg-secondary'}`}
+                >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isTimerEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+            </div>
+
+            <AnimatePresence>
+                {isTimerEnabled && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="space-y-4 max-w-xl pt-2">
+                            <div className="p-4 rounded-md bg-secondary/30 border border-white/5">
+                                <h3 className="text-sm font-medium text-foreground mb-2">Reminders</h3>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                    We'll remind you to follow the 20-20-20 rule, stay hydrated, and stretch.
+                                </p>
+                                <button
+                                    onClick={() => triggerTestReminder('20-20-20')}
+                                    className="px-3 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-xs font-medium transition-colors border border-white/10"
+                                >
+                                    Test Reminder
                                 </button>
                             </div>
                         </div>

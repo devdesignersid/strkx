@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { subDays, format, isSameDay, addDays, startOfDay, getDay } from 'date-fns';
 import axios from 'axios';
+import { useStudyTimer } from '@/context/StudyTimerContext';
 
 interface ActivityItem {
   id: string;
@@ -21,75 +22,100 @@ interface HeatmapItem {
   count: number;
 }
 
-const StatsCard = memo(({ stats }: { stats: any }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    {/* Solved Card */}
-    <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-primary/50 transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Total Solved</div>
-          <div className="text-4xl font-bold tracking-tight text-foreground">{stats.solved}</div>
-        </div>
-        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-          <TrendingUp className="w-5 h-5" />
-        </div>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-        <span className={cn("font-medium flex items-center gap-0.5", stats.weeklyChange >= 0 ? "text-green-500" : "text-red-500")}>
-          {stats.weeklyChange > 0 ? '+' : ''}{stats.weeklyChange}% <span className="text-muted-foreground">vs last week</span>
-        </span>
-      </div>
-    </div>
+const StatsCard = memo(({ stats }: { stats: any }) => {
+  const { isEnabled } = useStudyTimer();
 
-    {/* Easy Card */}
-    <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-green-500/50 transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Easy</div>
-          <div className="text-4xl font-bold tracking-tight text-foreground">{stats.easy}</div>
+  return (
+    <div className={cn(
+      "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8",
+      isEnabled ? "lg:grid-cols-5" : "lg:grid-cols-4"
+    )}>
+      {/* Study Time Card */}
+      {isEnabled && (
+        <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Focus Time</div>
+              <div className="text-4xl font-bold tracking-tight text-foreground">{stats.studyTime || '0m'}</div>
+            </div>
+            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+              <Activity className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+            <span className="text-blue-500 font-medium">Today</span>
+          </div>
         </div>
-        <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
-          <CheckCircle2 className="w-5 h-5" />
-        </div>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-        <span className="text-green-500 font-medium">Great Start</span>
-      </div>
-    </div>
+      )}
 
-    {/* Medium Card */}
-    <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-yellow-500/50 transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Medium</div>
-          <div className="text-4xl font-bold tracking-tight text-foreground">{stats.medium}</div>
+      {/* Solved Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-primary/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Total Solved</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.solved}</div>
+          </div>
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <TrendingUp className="w-5 h-5" />
+          </div>
         </div>
-        <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
-          <TrendingUp className="w-5 h-5" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className={cn("font-medium flex items-center gap-0.5", stats.weeklyChange >= 0 ? "text-green-500" : "text-red-500")}>
+            {stats.weeklyChange > 0 ? '+' : ''}{stats.weeklyChange}% <span className="text-muted-foreground">vs last week</span>
+          </span>
         </div>
       </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-        <span className="text-yellow-500 font-medium">Keep Going</span>
-      </div>
-    </div>
 
-    {/* Hard Card */}
-    <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-red-500/50 transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Hard</div>
-          <div className="text-4xl font-bold tracking-tight text-foreground">{stats.hard}</div>
+      {/* Easy Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-green-500/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Easy</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.easy}</div>
+          </div>
+          <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
-        <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
-          <Activity className="w-5 h-5" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className="text-green-500 font-medium">Great Start</span>
         </div>
       </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-        <span className="text-red-500 font-medium">Mastery</span>
+
+      {/* Medium Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-yellow-500/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Medium</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.medium}</div>
+          </div>
+          <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className="text-yellow-500 font-medium">Keep Going</span>
+        </div>
+      </div>
+
+      {/* Hard Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-red-500/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Hard</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.hard}</div>
+          </div>
+          <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+            <Activity className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className="text-red-500 font-medium">Mastery</span>
+        </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 
 const Heatmap = memo(({ data }: { data: HeatmapItem[] }) => {
   const [hoveredDay, setHoveredDay] = useState<{ date: Date; count: number; x: number; y: number } | null>(null);
@@ -253,6 +279,7 @@ export default function DashboardPage() {
     solved: 0,
     ranking: 0,
     weeklyChange: 0,
+    studyTime: '0m',
   });
 
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
@@ -263,13 +290,22 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [statsRes, activityRes, heatmapRes] = await Promise.all([
+        const [statsRes, activityRes, heatmapRes, studyStatsRes] = await Promise.all([
           axios.get('http://localhost:3000/dashboard/stats'),
           axios.get('http://localhost:3000/dashboard/activity'),
-          axios.get('http://localhost:3000/dashboard/heatmap')
+          axios.get('http://localhost:3000/dashboard/heatmap'),
+          axios.get('http://localhost:3000/study-stats/today')
         ]);
 
-        setStats(statsRes.data);
+        const studySeconds = studyStatsRes.data.totalStudySeconds || 0;
+        const hours = Math.floor(studySeconds / 3600);
+        const minutes = Math.floor((studySeconds % 3600) / 60);
+        const studyTimeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+        setStats({
+          ...statsRes.data,
+          studyTime: studyTimeStr
+        });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setRecentActivity(activityRes.data.map((item: any) => ({
@@ -305,8 +341,8 @@ export default function DashboardPage() {
         </header>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>

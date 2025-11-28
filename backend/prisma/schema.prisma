@@ -70,10 +70,26 @@ model User {
   id          String       @id @default(uuid())
   email       String       @unique
   name        String?
-  submissions Submission[]
-  lists       List[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  submissions     Submission[]
+  lists           List[]
+  dailyStudyLogs  DailyStudyLog[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model DailyStudyLog {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  date              DateTime @db.Date // Store as date only (YYYY-MM-DD)
+  totalStudySeconds Int      @default(0)
+  sessionCount      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, date]) // Ensure one log per user per day
+  @@index([userId])
+  @@index([date])
 }
 
 model List {

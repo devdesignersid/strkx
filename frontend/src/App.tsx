@@ -10,6 +10,8 @@ import SettingsPage from './pages/SettingsPage';
 import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
 import { NetworkStatus } from '@/components/ui/NetworkStatus';
+import FloatingTimer from './components/StudyTimer/FloatingTimer';
+import ReminderSystem from './components/StudyTimer/ReminderSystem';
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
+        <FloatingTimer />
+        <ReminderSystem />
       </BrowserRouter>
     </GlobalErrorBoundary>
   );
