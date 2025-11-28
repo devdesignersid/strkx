@@ -3,6 +3,15 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const user = await prisma.user.upsert({
+    where: { email: 'demo@example.com' },
+    update: {},
+    create: {
+      email: 'demo@example.com',
+      name: 'Demo User',
+    },
+  });
+
   const twoSum = await prisma.problem.upsert({
     where: { slug: 'two-sum' },
     update: {},
@@ -49,6 +58,7 @@ Output: [0,1]
 var twoSum = function(nums, target) {
 
 };`,
+      userId: user.id,
       testCases: {
         create: [
           {
@@ -65,15 +75,6 @@ var twoSum = function(nums, target) {
           },
         ],
       },
-    },
-  });
-
-  const user = await prisma.user.upsert({
-    where: { email: 'demo@example.com' },
-    update: {},
-    create: {
-      email: 'demo@example.com',
-      name: 'Demo User',
     },
   });
 
