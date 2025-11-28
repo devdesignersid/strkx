@@ -21,10 +21,7 @@ export class StudyStatsService {
           increment: secondsToAdd,
         },
         sessionCount: {
-          increment: 1, // Increment session count on each sync batch? Or maybe just once per "session"?
-                        // For now, let's assume client handles session definition or we just count syncs as activity.
-                        // Actually, better to just increment seconds. Session count might be better handled by explicit start/stop.
-                        // Let's just increment seconds for now.
+          increment: 1,
         },
       },
       create: {
@@ -32,6 +29,24 @@ export class StudyStatsService {
         date: today,
         totalStudySeconds: secondsToAdd,
         sessionCount: 1,
+      },
+    });
+  }
+
+  async resetTodayStats(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return this.prisma.dailyStudyLog.update({
+      where: {
+        userId_date: {
+          userId,
+          date: today,
+        },
+      },
+      data: {
+        totalStudySeconds: 0,
+        sessionCount: 0,
       },
     });
   }

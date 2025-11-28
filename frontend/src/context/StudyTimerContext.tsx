@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import axios from 'axios';
 
 interface StudyTimerContextType {
   time: number; // in seconds
@@ -12,6 +13,7 @@ interface StudyTimerContextType {
   toggleEnabled: (enabled: boolean) => void;
   triggerTestReminder: (type: string) => void;
   clearTestReminder: () => void;
+  resetTimer: () => void;
 }
 
 const StudyTimerContext = createContext<StudyTimerContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Refs for state that shouldn't trigger re-renders or needs to be accessed in intervals
   const timeRef = useRef(0);
   const lastTickRef = useRef(Date.now());
+  const lastSyncedTimeRef = useRef(0);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
   // Constants
@@ -65,20 +68,40 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Initialize BroadcastChannel
     channelRef.current = new BroadcastChannel('study_timer_channel');
 
-    // Load from local storage
-    const savedTime = localStorage.getItem('study_time_today');
-    const savedDate = localStorage.getItem('study_date');
-    const today = new Date().toISOString().split('T')[0];
+    const fetchInitialTime = async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/study-stats/today');
+        const serverTime = res.data.totalStudySeconds || 0;
 
-    if (savedDate === today && savedTime) {
-      setTime(parseInt(savedTime, 10));
-      timeRef.current = parseInt(savedTime, 10);
-    } else {
-      // New day or first run
-      setTime(0);
-      timeRef.current = 0;
-      localStorage.setItem('study_date', today);
-    }
+        setTime(serverTime);
+        timeRef.current = serverTime;
+        lastSyncedTimeRef.current = serverTime;
+
+        // Update local storage to match server
+        const today = new Date().toISOString().split('T')[0];
+        localStorage.setItem('study_date', today);
+        localStorage.setItem('study_time_today', serverTime.toString());
+      } catch (error) {
+        console.error('Failed to fetch initial study time:', error);
+        // Fallback to local storage if server fails
+        const savedTime = localStorage.getItem('study_time_today');
+        const savedDate = localStorage.getItem('study_date');
+        const today = new Date().toISOString().split('T')[0];
+
+        if (savedDate === today && savedTime) {
+          setTime(parseInt(savedTime, 10));
+          timeRef.current = parseInt(savedTime, 10);
+          lastSyncedTimeRef.current = parseInt(savedTime, 10);
+        } else {
+          setTime(0);
+          timeRef.current = 0;
+          lastSyncedTimeRef.current = 0;
+          localStorage.setItem('study_date', today);
+        }
+      }
+    };
+
+    fetchInitialTime();
 
     // Listen for messages
     channelRef.current.onmessage = (event) => {
@@ -125,6 +148,16 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
           });
 
+          // Periodic Backend Sync (every 60s)
+          // We sync the DELTA since the last sync to avoid double counting
+          if (timeRef.current > 0 && timeRef.current % 60 === 0) {
+             const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
+             if (timeSinceLastSync > 0) {
+               syncToBackend(timeSinceLastSync);
+               lastSyncedTimeRef.current = timeRef.current;
+             }
+          }
+
           // Check for midnight reset
           const today = new Date().toISOString().split('T')[0];
           const storedDate = localStorage.getItem('study_date');
@@ -136,7 +169,23 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }, 1000);
     }
 
-    return () => clearInterval(interval);
+    // Sync on tab close
+    const handleBeforeUnload = () => {
+      if (isActive && !isPaused) {
+        const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
+        if (timeSinceLastSync > 0) {
+           syncToBackend(timeSinceLastSync);
+           // No need to update ref as we are unloading
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [isActive, isPaused, isEnabled]);
 
   // Activity Tracking
@@ -201,12 +250,41 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const stopTimer = () => {
     setIsActive(false);
     setIsPaused(false);
-    syncToBackend(timeRef.current);
+    const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
+    if (timeSinceLastSync > 0) {
+      syncToBackend(timeSinceLastSync);
+      lastSyncedTimeRef.current = timeRef.current;
+    }
   };
 
   const syncToBackend = async (seconds: number) => {
-    // Placeholder for backend sync
-    console.log('Syncing to backend:', seconds);
+    try {
+      await axios.post('http://localhost:3000/study-stats/sync', {
+        studySeconds: seconds,
+      });
+      console.log('Synced to backend:', seconds);
+    } catch (error) {
+      console.error('Failed to sync study stats:', error);
+    }
+  };
+
+  const resetTimer = async () => {
+    setIsActive(false);
+    setIsPaused(false);
+    setTime(0);
+    timeRef.current = 0;
+    lastSyncedTimeRef.current = 0;
+
+    // Update local storage
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('study_time_today', '0');
+
+    try {
+      await axios.post('http://localhost:3000/study-stats/reset');
+      console.log('Timer reset successfully');
+    } catch (error) {
+      console.error('Failed to reset timer:', error);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -229,7 +307,8 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     formatTime,
     toggleEnabled,
     triggerTestReminder,
-    clearTestReminder
+    clearTestReminder,
+    resetTimer
   }), [time, isActive, isPaused, isEnabled, testReminder]);
 
   return (
