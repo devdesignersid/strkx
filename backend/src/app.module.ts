@@ -7,10 +7,12 @@ import { ListsModule } from './lists/lists.module';
 import { UserModule } from './user/user.module';
 import { StudyStatsModule } from './study-stats/study-stats.module';
 import { InterviewSessionsModule } from './interview-sessions/interview-sessions.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     PrismaModule,
+    AuthModule,
     ProblemsModule,
     ExecutionModule,
     DashboardModule,

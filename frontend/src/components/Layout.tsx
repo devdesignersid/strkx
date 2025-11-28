@@ -1,6 +1,8 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List, Brain } from 'lucide-react';
 import { useState } from 'react';
+import FloatingTimer from './StudyTimer/FloatingTimer';
+import ReminderSystem from './StudyTimer/ReminderSystem';
 
 export default function Layout() {
   const location = useLocation();
@@ -105,6 +107,8 @@ export default function Layout() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <FloatingTimer />
+      <ReminderSystem />
     </div>
   );
 }

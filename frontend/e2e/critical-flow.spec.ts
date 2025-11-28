@@ -1,6 +1,32 @@
 import { test, expect } from '@playwright/test';
 
-test('critical user journey: view problem', async ({ page }) => {
+test('critical user journey: view problem', async ({ page, request }) => {
+  // 0. Login using bypass
+  const loginResponse = await request.post('http://localhost:3000/auth/test-login', {
+    data: { email: 'test@example.com' }
+  });
+  expect(loginResponse.ok()).toBeTruthy();
+
+  // Get cookies from response and add to context
+  const headers = loginResponse.headers();
+  const setCookie = headers['set-cookie'];
+  if (setCookie) {
+      const cookies = setCookie.split('\n').map(c => {
+          const [nameValue, ...rest] = c.split(';');
+          const [name, value] = nameValue.split('=');
+          return {
+              name,
+              value,
+              domain: 'localhost',
+              path: '/',
+              httpOnly: true,
+              secure: false, // We are on localhost
+              sameSite: 'Lax' as const,
+          };
+      });
+      await page.context().addCookies(cookies);
+  }
+
   // 1. Navigate to home (should redirect to dashboard or problems)
   await page.goto('/');
 

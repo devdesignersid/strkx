@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity } from 'lucide-react';
+import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity, User, LogOut } from 'lucide-react';
 import { useStudyTimer } from '../context/StudyTimerContext';
+import { useAuth } from '../context/AuthContext';
 import { aiService } from '../lib/ai/aiService';
 import type { AIProviderMetadata } from '../lib/ai/types';
 import axios from 'axios';
@@ -12,6 +13,7 @@ export default function SettingsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const { isEnabled: isTimerEnabled, toggleEnabled, triggerTestReminder } = useStudyTimer();
+  const { user, logout } = useAuth();
 
   // AI Settings State
   const [providers] = useState<AIProviderMetadata[]>(aiService.getAvailableProviders());
@@ -101,6 +103,53 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">
             Manage your account and application preferences
           </p>
+        </div>
+
+        {/* Account Settings */}
+        <div className="mb-8 border border-border rounded-lg p-6 bg-card">
+            <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                        <User className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-semibold text-foreground mb-1">Account</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Manage your profile and session.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-white/5">
+                    {user?.profilePicture ? (
+                        <img
+                            src={user.profilePicture}
+                            alt={user.name}
+                            className="w-12 h-12 rounded-full border border-border"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl border border-white/10">
+                            {user?.name?.charAt(0) || 'U'}
+                        </div>
+                    )}
+                    <div className="flex-1">
+                        <h3 className="font-medium text-foreground">{user?.name || 'User'}</h3>
+                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    </div>
+                </div>
+
+                <div className="flex justify-end">
+                    <button
+                        onClick={logout}
+                        className="px-4 py-2 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors font-medium text-sm flex items-center gap-2"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                    </button>
+                </div>
+            </div>
         </div>
 
         {/* AI Configuration */}
