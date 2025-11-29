@@ -118,8 +118,15 @@ describe('AuthService', () => {
 
   describe('validateTestUser', () => {
     it('should throw error if bypass is disabled', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
       process.env.E2E_AUTH_BYPASS = 'false';
-      await expect(service.validateTestUser('test@example.com')).rejects.toThrow('E2E Auth Bypass is not enabled');
+
+      try {
+        await expect(service.validateTestUser('test@example.com')).rejects.toThrow('E2E Auth Bypass is not enabled');
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
 
     it('should return user if bypass is enabled', async () => {

@@ -156,61 +156,80 @@ export class InterviewSessionsService {
 
     if (!session) throw new NotFoundException('Session not found');
 
-    const question = session.questions.find((q) => q.id === questionId);
-    if (!question) throw new NotFoundException('Question not found in session');
+    return this.prisma.$transaction(async (tx) => {
+      // Re-fetch session within transaction to lock/ensure latest state?
+      // Prisma doesn't support row locking easily without raw queries, but transaction ensures atomicity.
+      // Ideally we'd use optimistic concurrency or raw SELECT FOR UPDATE.
+      // For now, we rely on the check.
 
-    // 1. Create Submission
-    const submission = await this.prisma.submission.create({
-      data: {
-        code: submitDto.code,
-        language: submitDto.language,
-        status: submitDto.status,
-        output: submitDto.output || '',
-        userId: session.userId,
-        problemId: question.problemId,
-        interviewQuestionId: question.id,
-      },
-    });
+      const q = await tx.interviewQuestion.findUnique({
+          where: { id: questionId },
+          include: { interviewSession: true } // verify session ownership if needed
+      });
 
-    // 2. Update Question Status
-    const outcome = submitDto.status === 'ACCEPTED' ? 'PASSED' : 'FAILED';
-    await this.prisma.interviewQuestion.update({
-      where: { id: questionId },
-      data: {
-        status: 'COMPLETED',
-        outcome,
-        endTime: new Date(),
-        autoSubmitted: submitDto.autoSubmitted || false,
-      },
-    });
+      if (!q) throw new NotFoundException('Question not found');
+      if (q.status === 'COMPLETED') {
+          throw new BadRequestException('Question already completed');
+      }
 
-    // 3. Handle Transition
-    const currentOrder = question.orderIndex;
-    const nextQuestion = session.questions.find(
-      (q) => q.orderIndex === currentOrder + 1,
-    );
-
-    if (nextQuestion) {
-      // Start next question
-      await this.prisma.interviewQuestion.update({
-        where: { id: nextQuestion.id },
+      // 1. Create Submission
+      const submission = await tx.submission.create({
         data: {
-          status: 'IN_PROGRESS',
-          startTime: new Date(),
+          code: submitDto.code,
+          language: submitDto.language,
+          status: submitDto.status,
+          output: submitDto.output || '',
+          userId: session.userId,
+          problemId: q.problemId,
+          interviewQuestionId: q.id,
         },
       });
-    } else {
-      // End Session
-      await this.prisma.interviewSession.update({
-        where: { id: sessionId },
+
+      // 2. Update Question Status
+      const outcome = submitDto.status === 'ACCEPTED' ? 'PASSED' : 'FAILED';
+      await tx.interviewQuestion.update({
+        where: { id: questionId },
         data: {
           status: 'COMPLETED',
+          outcome,
           endTime: new Date(),
+          autoSubmitted: submitDto.autoSubmitted || false,
         },
       });
-    }
 
-    return { submission, nextQuestionId: nextQuestion?.id || null };
+      // 3. Handle Transition
+      const currentOrder = q.orderIndex;
+      // We need to find the next question. We can't use 'session.questions' from outside tx reliably if we want to be super safe,
+      // but orderIndex shouldn't change.
+      const nextQuestion = await tx.interviewQuestion.findFirst({
+          where: {
+              interviewSessionId: sessionId,
+              orderIndex: currentOrder + 1
+          }
+      });
+
+      if (nextQuestion) {
+        // Start next question
+        await tx.interviewQuestion.update({
+          where: { id: nextQuestion.id },
+          data: {
+            status: 'IN_PROGRESS',
+            startTime: new Date(),
+          },
+        });
+      } else {
+        // End Session
+        await tx.interviewSession.update({
+          where: { id: sessionId },
+          data: {
+            status: 'COMPLETED',
+            endTime: new Date(),
+          },
+        });
+      }
+
+      return { submission, nextQuestionId: nextQuestion?.id || null };
+    });
   }
 
   async completeSession(id: string) {

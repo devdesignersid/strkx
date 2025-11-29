@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEnum,
   IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -50,6 +51,7 @@ export class CreateProblemDto {
   tags?: string[];
 
   @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => CreateTestCaseDto)
   testCases: CreateTestCaseDto[];
 }

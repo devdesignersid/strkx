@@ -21,8 +21,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     try {
-      const user = await this.authService.validateGoogleUser(profile);
-      done(null, user);
+      // Add 5s timeout
+      const user = await Promise.race([
+        this.authService.validateGoogleUser(profile),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Google validation timed out')), 5000)
+        ),
+      ]);
+      done(null, user as any);
     } catch (error) {
       done(error, false);
     }
