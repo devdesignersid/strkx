@@ -25,8 +25,8 @@ function shouldShowToast(key: string): boolean {
 // Custom styles for different toast types
 const styles = {
   success: {
-    icon: <CheckCircle2 className="w-5 h-5 text-[#40cf8f]" />,
-    className: 'border-[#40cf8f]/20 bg-[#40cf8f]/10',
+    icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+    className: 'border-green-500/20 bg-green-500/10',
   },
   error: {
     icon: <XCircle className="w-5 h-5 text-red-500" />,
@@ -42,7 +42,7 @@ const styles = {
   },
   loading: {
     icon: <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />,
-    className: 'border-white/10 bg-secondary/50',
+    className: 'border-border bg-secondary/50',
   },
 };
 

@@ -75,6 +75,12 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                       <code className="bg-red-500/10 text-red-400 px-2 py-1 rounded block text-xs">
                         {result.actualOutput === undefined ? 'undefined' : (result.actualOutput === null ? 'null' : (result.actualOutput === '' ? 'Empty String' : result.actualOutput))}
                       </code>
+                      {result.error && (
+                        <div className="mt-2 text-red-400 text-xs bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
+                          <span className="font-semibold mr-1">Error:</span>
+                          {result.error}
+                        </div>
+                      )}
                     </div>
                   )}
                   {result.logs && result.logs.length > 0 && (
@@ -83,7 +89,7 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                          <TerminalIcon className="w-3 h-3" />
                          <span>Console Output</span>
                       </div>
-                      <div className="bg-black/50 border border-white/5 px-3 py-2 rounded-md block text-xs font-mono text-foreground/90 space-y-1 overflow-x-auto">
+                      <div className="bg-black/50 border border-white/5 px-3 py-2 rounded-md block text-xs font-mono text-white/90 space-y-1 overflow-x-auto">
                         {result.logs.map((log, j) => (
                           <div key={j} className="whitespace-pre-wrap break-all">{log}</div>
                         ))}

@@ -37,7 +37,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // P2025: Record not found
       if (exception.code === 'P2002') {
         status = HttpStatus.CONFLICT;
-        message = 'Unique constraint violation';
+        const target = (exception.meta?.target as string[])?.join(', ');
+        message = target
+          ? `Unique constraint violation: ${target} already exists`
+          : 'Unique constraint violation';
         error = 'Conflict';
       } else if (exception.code === 'P2025') {
         status = HttpStatus.NOT_FOUND;

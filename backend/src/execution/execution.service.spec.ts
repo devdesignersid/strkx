@@ -147,5 +147,59 @@ describe('ExecutionService', () => {
       await expect(service.execute({ code: '', problemSlug: 'unknown', mode: 'run' }, mockUser))
         .rejects.toThrow(NotFoundException);
     });
+    it('should capture console logs', async () => {
+      mockPrismaService.problem.findUnique.mockResolvedValue(problem);
+
+      const code = `
+        function twoSum(nums, target) {
+          console.log('Hello from sandbox');
+          return [0, 1];
+        }
+      `;
+
+      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+
+      expect(result.results[0].logs).toBeDefined();
+      expect(result.results[0].logs).toContain('Hello from sandbox');
+    });
+
+    it('should capture console.error logs', async () => {
+      mockPrismaService.problem.findUnique.mockResolvedValue(problem);
+
+      const code = `
+        function twoSum(nums, target) {
+          console.error('Error log');
+          return [0, 1];
+        }
+      `;
+
+      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+
+      expect(result.results[0].logs).toBeDefined();
+      expect(result.results[0].logs.some(l => l.includes('[ERROR] Error log'))).toBe(true);
+    });
+
+    it('should handle single array argument heuristic', async () => {
+      mockPrismaService.problem.findUnique.mockResolvedValue(problem);
+
+      // Input is [1, 2, 3] -> args = [1, 2, 3]
+      // Function expects 1 arg -> solution([1, 2, 3])
+      const code = `
+        function solution(nums) {
+          return nums.length;
+        }
+      `;
+
+      const singleArgProblem = {
+        ...problem,
+        testCases: [{ id: 't3', input: '[1, 2, 3]', expectedOutput: '3' }]
+      };
+      mockPrismaService.problem.findUnique.mockResolvedValue(singleArgProblem);
+
+      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+
+      expect(result.passed).toBe(true);
+      expect(result.results[0].actualOutput).toBe('3');
+    });
   });
 });

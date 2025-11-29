@@ -16,11 +16,9 @@ export enum Difficulty {
 
 export class CreateTestCaseDto {
   @IsString()
-  @IsNotEmpty()
   input: string;
 
   @IsString()
-  @IsNotEmpty()
   expectedOutput: string;
 }
 

@@ -46,14 +46,23 @@ export class ExecutionService {
       const sandbox = {
         console: {
           log: (...args: any[]) => {
-            if (logs.length < 100) { // Limit logs per test case
-              logs.push(
-                args
-                  .map((a) =>
-                    typeof a === 'object' ? JSON.stringify(a) : String(a),
-                  )
-                  .join(' '),
-              );
+            if (logs.length < 100) {
+              logs.push(args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
+            }
+          },
+          error: (...args: any[]) => {
+            if (logs.length < 100) {
+              logs.push('[ERROR] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
+            }
+          },
+          warn: (...args: any[]) => {
+            if (logs.length < 100) {
+              logs.push('[WARN] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
+            }
+          },
+          info: (...args: any[]) => {
+            if (logs.length < 100) {
+              logs.push('[INFO] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
             }
           },
         },
@@ -145,7 +154,13 @@ export class ExecutionService {
           ${code}
           try {
              if (typeof ${functionName} === 'function') {
-               result = ${functionName}(...args);
+               // Heuristic: If function expects 1 argument but we have multiple,
+               // and the user likely meant to pass an array as the single argument.
+               if (${functionName}.length === 1 && args.length > 1) {
+                  result = ${functionName}(args);
+               } else {
+                  result = ${functionName}(...args);
+               }
              } else {
                throw new Error('Function ${functionName} not found');
              }

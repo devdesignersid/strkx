@@ -32,28 +32,11 @@ function App() {
             richColors={false}
             closeButton
             toastOptions={{
-              style: {
-                background: '#121212', // Darker background
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#EDEDED',
-                fontFamily: 'var(--font-sans)',
-                fontSize: '0.875rem',
-                padding: '1rem',
-                borderRadius: '0.75rem',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-              },
-              className: 'font-sans antialiased group',
-              descriptionClassName: 'text-muted-foreground text-xs mt-1 font-medium',
-              actionButtonStyle: {
-                background: '#40cf8f',
-                color: '#000',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-              },
-              cancelButtonStyle: {
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                fontSize: '0.75rem',
+              classNames: {
+                toast: 'bg-card text-foreground border-border shadow-lg',
+                description: 'text-muted-foreground',
+                actionButton: 'bg-primary text-primary-foreground',
+                cancelButton: 'bg-muted text-muted-foreground',
               },
             }}
           />
