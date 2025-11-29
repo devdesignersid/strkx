@@ -9,10 +9,14 @@ import '@fontsource/jetbrains-mono/400.css';
 import App from './App.tsx'
 import { StudyTimerProvider } from './context/StudyTimerContext.tsx';
 
+import ErrorBoundary from './components/ErrorBoundary.tsx';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StudyTimerProvider>
-      <App />
-    </StudyTimerProvider>
+    <ErrorBoundary>
+      <StudyTimerProvider>
+        <App />
+      </StudyTimerProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

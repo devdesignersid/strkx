@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { LoggerModule } from 'nestjs-pino';
 import { ProblemsModule } from './problems/problems.module';
 import { ExecutionModule } from './execution/execution.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -17,6 +18,16 @@ import { AppController } from './app.controller';
 
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: process.env.NODE_ENV !== 'production' ? {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+        } : undefined,
+      },
+    }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
       limit: 100,
