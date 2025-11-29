@@ -37,7 +37,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
   const fetchLists = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/lists');
+      const res = await axios.get('http://localhost:3000/lists', { withCredentials: true });
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
@@ -51,7 +51,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
     if (!newListName.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await axios.post('http://localhost:3000/lists', { name: newListName });
+      const res = await axios.post('http://localhost:3000/lists', { name: newListName }, { withCredentials: true });
       setLists([res.data, ...lists]);
       setNewListName('');
       setIsCreating(false);
@@ -79,7 +79,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
       await Promise.all(Array.from(selectedListIds).map(listId =>
         axios.post(`http://localhost:3000/lists/${listId}/problems`, {
           problemIds: selectedProblemIds
-        })
+        }, { withCredentials: true })
       ));
 
       toast.success(`Added ${selectedProblemIds.length} problems to ${selectedListIds.size} lists`);

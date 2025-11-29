@@ -30,7 +30,7 @@ const MockInterviewSummary: React.FC = () => {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/interview-sessions/${sessionId}`)
+    fetch(`http://localhost:3000/interview-sessions/${sessionId}`, { credentials: 'include' })
       .then(res => res.json())
       .then((data: SessionSummary) => {
         setSummary(data);

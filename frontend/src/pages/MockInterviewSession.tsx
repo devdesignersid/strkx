@@ -54,7 +54,7 @@ const MockInterviewSession: React.FC = () => {
   // Fetch Session
   useEffect(() => {
     if (!sessionId) return;
-    fetch(`http://localhost:3000/interview-sessions/${sessionId}`)
+    fetch(`http://localhost:3000/interview-sessions/${sessionId}`, { credentials: 'include' })
       .then(res => res.json())
       .then((data: Session) => {
         setSession(data);
@@ -139,6 +139,7 @@ const MockInterviewSession: React.FC = () => {
             const execRes = await fetch('http://localhost:3000/execution', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({
                     code,
                     language: 'javascript',
@@ -158,6 +159,7 @@ const MockInterviewSession: React.FC = () => {
         const res = await fetch(`http://localhost:3000/interview-sessions/${sessionId}/questions/${question.id}/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
                 code,
                 language: 'javascript',

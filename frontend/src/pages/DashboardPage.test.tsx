@@ -3,14 +3,21 @@ import DashboardPage from './DashboardPage';
 import { describe, it, expect } from 'vitest';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
+import { AuthProvider } from '@/context/AuthContext';
 
 describe('DashboardPage', () => {
-  it('renders loading state initially', () => {
-    render(<DashboardPage />);
+  it('renders loading state initially', async () => {
+    render(
+      <AuthProvider>
+        <DashboardPage />
+      </AuthProvider>
+    );
     // Check for skeletons or loading indicators
     // Skeletons usually don't have text, but we can check for class names or just that content is missing
     // Or we can check that "Welcome back" is there
-    expect(screen.getByText('Welcome back, Demo User')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Welcome back, Demo User')).toBeInTheDocument();
+    });
   });
 
   it('renders stats and activity after load', async () => {
@@ -45,7 +52,11 @@ describe('DashboardPage', () => {
       })
     );
 
-    render(<DashboardPage />);
+    render(
+      <AuthProvider>
+        <DashboardPage />
+      </AuthProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Total Solved')).toBeInTheDocument();
@@ -78,7 +89,11 @@ describe('DashboardPage', () => {
       })
     );
 
-    render(<DashboardPage />);
+    render(
+      <AuthProvider>
+        <DashboardPage />
+      </AuthProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('No recent activity')).toBeInTheDocument();

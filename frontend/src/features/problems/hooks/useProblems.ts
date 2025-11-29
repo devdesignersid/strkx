@@ -83,6 +83,18 @@ export function useProblems() {
     return () => clearTimeout(timer);
   }, [fetchProblems]);
 
+  // Refetch problems when page becomes visible (e.g., navigating back from problem page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProblems(1, true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchProblems]);
+
   const loadMore = async () => {
     if (isLoadingMore || !hasMore) return;
     await fetchProblems(currentPage + 1, false);

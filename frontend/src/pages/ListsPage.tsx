@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Search, Folder, Trash2, Clock, List as ListIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Modal } from '@/components/ui/Modal';
 
 interface List {
   id: string;
@@ -25,6 +26,11 @@ export default function ListsPage() {
   const [newListName, setNewListName] = useState('');
   const [newListDesc, setNewListDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ open: boolean; listId: string | null; listName: string }>({
+    open: false,
+    listId: null,
+    listName: ''
+  });
 
   useEffect(() => {
     fetchLists();
@@ -33,7 +39,7 @@ export default function ListsPage() {
   const fetchLists = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/lists');
+      const res = await axios.get('http://localhost:3000/lists', { withCredentials: true });
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
@@ -52,7 +58,7 @@ export default function ListsPage() {
       const res = await axios.post('http://localhost:3000/lists', {
         name: newListName,
         description: newListDesc
-      });
+      }, { withCredentials: true });
       setLists([res.data, ...lists]);
       setIsCreateModalOpen(false);
       setNewListName('');
@@ -66,17 +72,23 @@ export default function ListsPage() {
     }
   };
 
-  const handleDeleteList = async (e: React.MouseEvent, id: string) => {
+  const handleDeleteList = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this list?')) return;
+    setDeleteConfirmModal({ open: true, listId: id, listName: name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmModal.listId) return;
 
     try {
-      await axios.delete(`http://localhost:3000/lists/${id}`);
-      setLists(lists.filter(l => l.id !== id));
+      await axios.delete(`http://localhost:3000/lists/${deleteConfirmModal.listId}`, { withCredentials: true });
+      setLists(lists.filter(l => l.id !== deleteConfirmModal.listId));
       toast.success('List deleted');
     } catch (error) {
       console.error('Failed to delete list:', error);
       toast.error('Failed to delete list');
+    } finally {
+      setDeleteConfirmModal({ open: false, listId: null, listName: '' });
     }
   };
 
@@ -157,7 +169,7 @@ export default function ListsPage() {
                         {new Date(list.updatedAt).toLocaleDateString()}
                     </div>
                     <button
-                        onClick={(e) => handleDeleteList(e, list.id)}
+                        onClick={(e) => handleDeleteList(e, list.id, list.name)}
                         className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
                         title="Delete List"
                     >
@@ -267,6 +279,30 @@ export default function ListsPage() {
           </motion.div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteConfirmModal.open}
+        onClose={() => setDeleteConfirmModal({ open: false, listId: null, listName: '' })}
+        title="Delete List"
+        description={`Are you sure you want to delete "${deleteConfirmModal.listName}"? This action cannot be undone.`}
+        footer={
+          <>
+            <button
+              onClick={() => setDeleteConfirmModal({ open: false, listId: null, listName: '' })}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 bg-destructive text-destructive-foreground text-sm font-medium rounded-lg hover:bg-destructive/90 transition-colors"
+            >
+              Delete
+            </button>
+          </>
+        }
+      />
     </div>
   );
 }

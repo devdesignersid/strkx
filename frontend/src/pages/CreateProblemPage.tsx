@@ -10,6 +10,7 @@ import { aiService } from '../lib/ai/aiService';
 import { PROMPTS } from '../lib/ai/prompts';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { Modal } from '../components/ui/Modal';
 
 export default function CreateProblemPage() {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ export default function CreateProblemPage() {
   ]);
 
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const insertMarkdown = (prefix: string, suffix: string = '') => {
     const textarea = document.getElementById('description-editor') as HTMLTextAreaElement;
@@ -59,7 +62,7 @@ export default function CreateProblemPage() {
     if (isEditMode && id) {
       setIsLoading(true);
       // Use the GET endpoint that accepts ID parameter
-      axios.get(`http://localhost:3000/problems/id/${id}`)
+      axios.get(`http://localhost:3000/problems/id/${id}`, { withCredentials: true })
         .then(res => {
           const problem = res.data;
           setFormData({
@@ -132,8 +135,10 @@ export default function CreateProblemPage() {
 
         setFormData(prev => ({
             ...prev,
-            description: generated.description || prev.description,
+            difficulty: generated.difficulty || prev.difficulty,
+            description: generated.description ? generated.description.replace(/\\n/g, '\n') : prev.description,
             tags: Array.isArray(generated.tags) ? generated.tags.join(', ') : prev.tags,
+            starterCode: generated.starterCode ? generated.starterCode.replace(/\\n/g, '\n') : prev.starterCode,
             // We could also set constraints if we had a field for it, or append to description
         }));
 
@@ -141,8 +146,8 @@ export default function CreateProblemPage() {
              // Map examples to test cases
              const newTestCases = generated.examples.map((ex: any) => {
                  // Sanitize input/output to remove variable names if present (e.g. "nums = [...]" -> "[...]")
-                 const cleanInput = ex.input.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
-                 const cleanOutput = ex.output.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+                 const cleanInput = String(ex.input).replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+                 const cleanOutput = String(ex.output).replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
                  return {
                      input: cleanInput,
                      expectedOutput: cleanOutput
@@ -195,14 +200,15 @@ export default function CreateProblemPage() {
       };
 
       if (isEditMode && id) {
-        await axios.patch(`http://localhost:3000/problems/${id}`, payload);
+        await axios.patch(`http://localhost:3000/problems/${id}`, payload, { withCredentials: true });
       } else {
-        await axios.post('http://localhost:3000/problems', payload);
+        await axios.post('http://localhost:3000/problems', payload, { withCredentials: true });
       }
       navigate('/problems');
     } catch (error) {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} problem:`, error);
-      alert(`Failed to ${isEditMode ? 'update' : 'create'} problem`);
+      setErrorMessage(`Failed to ${isEditMode ? 'update' : 'create'} problem. Please check your input and try again.`);
+      setErrorModalOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -438,6 +444,22 @@ export default function CreateProblemPage() {
         </section>
       </div>
       </div>
+
+
+      <Modal
+        isOpen={errorModalOpen}
+        onClose={() => setErrorModalOpen(false)}
+        title="Error"
+        description={errorMessage}
+        footer={
+          <button
+            onClick={() => setErrorModalOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+          >
+            Close
+          </button>
+        }
+      />
     </div>
   );
 }

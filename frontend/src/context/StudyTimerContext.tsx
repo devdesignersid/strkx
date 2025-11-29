@@ -70,7 +70,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     const fetchInitialTime = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/study-stats/today');
+        const res = await axios.get('http://localhost:3000/study-stats/today', { withCredentials: true });
         const serverTime = res.data.totalStudySeconds || 0;
 
         setTime(serverTime);
@@ -260,8 +260,9 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const syncToBackend = async (seconds: number) => {
     try {
       await axios.post('http://localhost:3000/study-stats/sync', {
-        studySeconds: seconds,
-      });
+        totalTime: todayStats.totalTime,
+        problemsSolved: todayStats.problemsSolved,
+      }, { withCredentials: true });
       console.log('Synced to backend:', seconds);
     } catch (error) {
       console.error('Failed to sync study stats:', error);
@@ -280,7 +281,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     localStorage.setItem('study_time_today', '0');
 
     try {
-      await axios.post('http://localhost:3000/study-stats/reset');
+      await axios.post('http://localhost:3000/study-stats/reset', {}, { withCredentials: true });
       console.log('Timer reset successfully');
     } catch (error) {
       console.error('Failed to reset timer:', error);

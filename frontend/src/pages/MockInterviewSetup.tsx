@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Clock, Brain, Filter, List as ListIcon, Hash } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface List {
   id: string;
@@ -22,7 +23,7 @@ const MockInterviewSetup: React.FC = () => {
 
   useEffect(() => {
     // Fetch lists for filter
-    fetch('http://localhost:3000/lists')
+    fetch('http://localhost:3000/lists', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setLists(data))
       .catch(err => console.error('Failed to fetch lists', err));
@@ -36,6 +37,7 @@ const MockInterviewSetup: React.FC = () => {
       const res = await fetch('http://localhost:3000/interview-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           difficulty,
           status,
@@ -47,7 +49,7 @@ const MockInterviewSetup: React.FC = () => {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.message || 'Failed to start interview');
+        toast.error(err.message || 'Failed to start interview');
         setLoading(false);
         return;
       }
@@ -56,7 +58,7 @@ const MockInterviewSetup: React.FC = () => {
       navigate(`/mock-interview/session/${session.id}`);
     } catch (error) {
       console.error(error);
-      alert('An error occurred');
+      toast.error('An error occurred');
       setLoading(false);
     }
   };

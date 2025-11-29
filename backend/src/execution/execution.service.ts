@@ -7,7 +7,7 @@ import * as vm from 'vm';
 export class ExecutionService {
   constructor(private prisma: PrismaService) {}
 
-  async execute(executeCodeDto: ExecuteCodeDto) {
+  async execute(executeCodeDto: ExecuteCodeDto, user?: any) {
     const { code, problemSlug } = executeCodeDto;
 
     const problem = await this.prisma.problem.findUnique({
@@ -91,6 +91,7 @@ export class ExecutionService {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       let inputData;
+      let args: any[] = [];
       if (typeof testCase.input === 'string') {
         // Convert JavaScript object notation to JSON by adding quotes to unquoted keys
         // This regex finds keys like "key:" and converts them to "key":
@@ -99,31 +100,41 @@ export class ExecutionService {
         let jsonString = testCase.input.replace(/(\w+):/g, '"$1":');
 
         // Sanitize: Remove variable assignment if present (e.g. "nums = [...]" -> "[...]")
-        jsonString = jsonString.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+        // We use a global replace to handle multiple assignments like "nums = [...], target = ..."
+        jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
+
         try {
           inputData = JSON.parse(jsonString);
+
+          // If successful, we assume it's a single argument
+          if (Array.isArray(inputData)) {
+             args = [inputData];
+          } else if (typeof inputData === 'object' && inputData !== null) {
+             // If it's an object, we might want to treat values as args, but it's ambiguous.
+             // For now, treat as single object argument unless it matches specific structure?
+             // Let's stick to treating it as single arg for safety, or Object.values if user intended named args.
+             // Given the ambiguity, treating as single arg is safer for JSON inputs.
+             args = [inputData];
+          } else {
+             args = [inputData];
+          }
         } catch (err) {
-          console.error('Failed to parse testCase.input:', testCase.input);
-          console.error('Converted to:', jsonString);
-          throw err;
+          // If parsing failed, it might be multiple arguments separated by commas (e.g. "1, 2" or "[1,2], 3")
+          // Try wrapping in brackets
+          try {
+            const wrappedJson = `[${jsonString}]`;
+            inputData = JSON.parse(wrappedJson);
+            // If this succeeds, inputData is an array of arguments
+            args = inputData;
+          } catch (wrappedErr) {
+            console.error('Failed to parse testCase.input:', testCase.input);
+            console.error('Converted to:', jsonString);
+            throw err;
+          }
         }
       } else {
         inputData = testCase.input;
-      }
-
-
-      // Prepare arguments for the function call
-      // Prepare arguments for the function call
-      let args: any[];
-      if (Array.isArray(inputData)) {
-          // If input is an array, treat it as a single argument (e.g. nums for threeSum)
-          args = [inputData];
-      } else if (typeof inputData === 'object' && inputData !== null) {
-          // If it's an object (and not array), assume it's a map of named arguments
-          args = Object.values(inputData);
-      } else {
-          // Primitive value
-          args = [inputData];
+        args = [inputData];
       }
 
       // Hardened Execution Sandbox
@@ -215,17 +226,8 @@ export class ExecutionService {
     }
 
     // Only save submission if mode is 'submit'
-    if (executeCodeDto.mode === 'submit') {
-      const user = await this.prisma.user.findUnique({
-        where: { email: 'demo@example.com' },
-      });
-
-      if (user) {
-        // Calculate average metrics across all test cases
-        const numTestCases = problem.testCases.length;
-        const avgExecutionTime = numTestCases > 0 ? totalExecutionTime / numTestCases : 0;
-        const avgMemoryUsed = numTestCases > 0 ? totalMemoryUsed / numTestCases : 0;
-
+    if (executeCodeDto.mode === 'submit' && user) {
+      try {
         await this.prisma.submission.create({
           data: {
             code,
@@ -234,10 +236,13 @@ export class ExecutionService {
             output: JSON.stringify(results),
             problemId: problem.id,
             userId: user.id,
-            executionTime: avgExecutionTime,
-            memoryUsed: avgMemoryUsed,
+            executionTime: totalExecutionTime / problem.testCases.length,
+            memoryUsed: totalMemoryUsed / problem.testCases.length,
           },
         });
+      } catch (error) {
+        console.error('Failed to save submission:', error);
+        // Don't fail the execution if submission save fails
       }
     }
 

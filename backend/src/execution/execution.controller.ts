@@ -1,13 +1,15 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
 import { ExecuteCodeDto } from './dto/execute-code.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('execution')
 export class ExecutionController {
   constructor(private readonly executionService: ExecutionService) {}
 
   @Post()
-  execute(@Body() executeCodeDto: ExecuteCodeDto) {
-    return this.executionService.execute(executeCodeDto);
+  @UseGuards(JwtAuthGuard)
+  execute(@Body() executeCodeDto: ExecuteCodeDto, @Request() req) {
+    return this.executionService.execute(executeCodeDto, req.user);
   }
 }

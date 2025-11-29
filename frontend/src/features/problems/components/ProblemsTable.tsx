@@ -149,6 +149,7 @@ export function ProblemsTable({
                   <td className="px-4 py-3">
                     <button
                       onClick={(e) => {
+                        e.stopPropagation();
                         onToggleSelectOne(problem.id, e.shiftKey, lastSelectedId.current);
                         lastSelectedId.current = problem.id;
                       }}

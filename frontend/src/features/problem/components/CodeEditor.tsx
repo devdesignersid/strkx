@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2 } from 'lucide-react';
+import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CodeEditorProps {
@@ -19,9 +19,43 @@ interface CodeEditorProps {
   isRequestingHint: boolean;
   isCompletingCode: boolean;
   autocompleteEnabled: boolean;
+  onToggleAutocomplete: () => void;
   isAIEnabled: boolean;
   formatTime: (seconds: number) => string;
+  isFocusMode: boolean;
+  onToggleFocusMode: () => void;
 }
+
+// Inner component to isolate Editor from timer re-renders
+const InnerEditor = React.memo(({
+  initialCode,
+  onChange,
+  onMount,
+  handleEditorWillMount,
+  editorOptions
+}: {
+  initialCode: string;
+  onChange: (value: string | undefined) => void;
+  onMount: OnMount;
+  handleEditorWillMount: (monaco: typeof import('monaco-editor')) => void;
+  editorOptions: any;
+}) => {
+  return (
+    <Editor
+      height="100%"
+      defaultLanguage="javascript"
+      theme="vscode-dark"
+      defaultValue={initialCode}
+      onChange={onChange}
+      onMount={onMount}
+      beforeMount={handleEditorWillMount}
+      options={editorOptions}
+      loading={<div className="text-muted-foreground text-sm">Loading editor...</div>}
+    />
+  );
+});
+
+InnerEditor.displayName = 'InnerEditor';
 
 export function CodeEditor({
   code,
@@ -39,8 +73,11 @@ export function CodeEditor({
   isRequestingHint,
   isCompletingCode,
   autocompleteEnabled,
+  onToggleAutocomplete,
   isAIEnabled,
-  formatTime
+  formatTime,
+  isFocusMode,
+  onToggleFocusMode
 }: CodeEditorProps) {
 
   const editorOptions = useMemo(() => ({
@@ -62,9 +99,25 @@ export function CodeEditor({
     suggestOnTriggerCharacters: autocompleteEnabled,
     snippetSuggestions: (autocompleteEnabled ? 'inline' : 'none') as 'inline' | 'none' | 'bottom' | 'top',
     wordBasedSuggestions: (autocompleteEnabled ? 'currentDocument' : 'off') as 'currentDocument' | 'off' | 'matchingDocuments' | 'allDocuments',
+    acceptSuggestionOnCommitCharacter: false,
+    acceptSuggestionOnEnter: 'off' as const,
+    tabCompletion: 'off' as const,
+    formatOnType: false,
+    formatOnPaste: false,
+    // Performance optimizations
+    renderWhitespace: 'none',
+    renderControlCharacters: false,
+    renderLineHighlight: 'line' as const,
+    occurrencesHighlight: false,
+    renderValidationDecorations: 'off' as const,
+    codeLens: false,
+    folding: false,
+    foldingHighlight: false,
+    linkedEditing: false,
+    selectionHighlight: false,
   }), [autocompleteEnabled]);
 
-  const handleEditorWillMount = (monaco: typeof import('monaco-editor')) => {
+  const handleEditorWillMount = useCallback((monaco: typeof import('monaco-editor')) => {
     monaco.editor.defineTheme('vscode-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -91,7 +144,7 @@ export function CodeEditor({
         'editor.inactiveSelectionBackground': '#3a3d41',
       }
     });
-  };
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -140,6 +193,33 @@ export function CodeEditor({
             </>
           )}
           <div className="w-px h-4 bg-white/10 mx-1" />
+
+          <button
+            onClick={onToggleAutocomplete}
+            className={cn(
+              "p-1.5 rounded-md transition-colors",
+              autocompleteEnabled
+                ? "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+            )}
+            title={autocompleteEnabled ? "Disable Autocomplete" : "Enable Autocomplete"}
+          >
+            <Keyboard className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={onToggleFocusMode}
+            className={cn(
+              "p-1.5 rounded-md transition-colors",
+              isFocusMode
+                ? "text-green-400 bg-green-400/10 hover:bg-green-400/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+            )}
+            title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+          >
+            <Focus className="w-4 h-4" />
+          </button>
+
           <button
             onClick={onResetCode}
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
@@ -157,17 +237,13 @@ export function CodeEditor({
         </div>
       </div>
 
-      <div className="flex-1 relative group">
-        <Editor
-          height="100%"
-          defaultLanguage="javascript"
-          theme="vscode-dark"
-          value={code}
+      <div className="flex-1 relative group min-h-0">
+        <InnerEditor
+          initialCode={code}
           onChange={onChange}
           onMount={onMount}
-          beforeMount={handleEditorWillMount}
-          options={editorOptions}
-          loading={<div className="text-muted-foreground text-sm">Loading editor...</div>}
+          handleEditorWillMount={handleEditorWillMount}
+          editorOptions={editorOptions}
         />
       </div>
     </div>

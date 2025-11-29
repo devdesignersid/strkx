@@ -78,11 +78,14 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                     </div>
                   )}
                   {result.logs && result.logs.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-white/5">
-                      <span className="text-muted-foreground block mb-1 text-xs">Console Logs</span>
-                      <div className="bg-black/30 px-2 py-1 rounded block text-xs font-mono text-muted-foreground space-y-0.5">
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="flex items-center gap-1.5 mb-2 text-xs font-medium text-muted-foreground">
+                         <TerminalIcon className="w-3 h-3" />
+                         <span>Console Output</span>
+                      </div>
+                      <div className="bg-black/50 border border-white/5 px-3 py-2 rounded-md block text-xs font-mono text-foreground/90 space-y-1 overflow-x-auto">
                         {result.logs.map((log, j) => (
-                          <div key={j}>{log}</div>
+                          <div key={j} className="whitespace-pre-wrap break-all">{log}</div>
                         ))}
                       </div>
                     </div>

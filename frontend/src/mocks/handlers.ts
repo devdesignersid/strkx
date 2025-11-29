@@ -14,6 +14,15 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
+  // Auth
+  http.get('http://localhost:3000/auth/me', () => {
+    return HttpResponse.json({
+      id: 'user1',
+      email: 'demo@example.com',
+      name: 'Demo User',
+    });
+  }),
+
   // Dashboard
   http.get('http://localhost:3000/dashboard/stats', () => {
     return HttpResponse.json({

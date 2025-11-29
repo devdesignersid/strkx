@@ -25,8 +25,7 @@ export class ListsService {
     return user;
   }
 
-  async create(createListDto: CreateListDto) {
-    const user = await this.getDemoUser();
+  async create(createListDto: CreateListDto, user: any) {
     return this.prisma.list.create({
       data: {
         ...createListDto,
@@ -40,8 +39,7 @@ export class ListsService {
     });
   }
 
-  async findAll() {
-    const user = await this.getDemoUser();
+  async findAll(user: any) {
 
     // 1. Get all lists with all problem IDs (lightweight select)
     const lists = await this.prisma.list.findMany({
@@ -94,8 +92,11 @@ export class ListsService {
     tags?: string,
     sort?: string,
     order?: 'asc' | 'desc',
+    user?: any,
   ) {
-    const user = await this.getDemoUser();
+    if (!user) {
+      throw new NotFoundException('User not authenticated');
+    }
 
     // First check if list exists and get metadata
     const listMetadata = await this.prisma.list.findUnique({
@@ -238,21 +239,35 @@ export class ListsService {
     };
   }
 
-  async update(id: string, updateListDto: UpdateListDto) {
+  async update(id: string, updateListDto: UpdateListDto, user: any) {
+    // Verify list belongs to user
+    const list = await this.prisma.list.findFirst({
+      where: { id, userId: user.id },
+    });
+    if (!list) {
+      throw new NotFoundException(`List with ID ${id} not found`);
+    }
     return this.prisma.list.update({
       where: { id },
       data: updateListDto,
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, user: any) {
+    // Verify list belongs to user
+    const list = await this.prisma.list.findFirst({
+      where: { id, userId: user.id },
+    });
+    if (!list) {
+      throw new NotFoundException(`List with ID ${id} not found`);
+    }
     return this.prisma.list.delete({
       where: { id },
     });
   }
 
-  async addProblems(id: string, dto: ManageListProblemsDto) {
-    const list = await this.findOne(id); // Ensure list exists
+  async addProblems(id: string, dto: ManageListProblemsDto, user: any) {
+    const list = await this.findOne(id, 1, 20, undefined, undefined, undefined, undefined, undefined, undefined, user); // Ensure list exists and belongs to user
 
     // Create many ProblemsOnLists
     // Prisma createMany is supported
@@ -268,7 +283,8 @@ export class ListsService {
     });
   }
 
-  async removeProblems(id: string, dto: ManageListProblemsDto) {
+  async removeProblems(id: string, dto: ManageListProblemsDto, user: any) {
+    await this.findOne(id, 1, 20, undefined, undefined, undefined, undefined, undefined, undefined, user); // Ensure list exists and belongs to user
     return this.prisma.problemsOnLists.deleteMany({
         where: {
             listId: id,

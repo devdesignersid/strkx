@@ -74,7 +74,7 @@ export default function SettingsPage() {
   const handleResetData = async () => {
     setIsResetting(true);
     try {
-      await axios.delete('http://localhost:3000/user/reset');
+      await axios.delete('http://localhost:3000/user/reset', { withCredentials: true });
       toast.success('All data reset successfully!', {
         description: 'Your progress has been cleared.',
       });

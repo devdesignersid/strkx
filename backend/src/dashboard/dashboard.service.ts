@@ -5,11 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
-  async getStats() {
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-
+  async getStats(user: any) {
     if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0 };
 
     // 1. Get unique solved problems count by difficulty (Optimized)
@@ -97,11 +93,7 @@ export class DashboardService {
     };
   }
 
-  async getActivity() {
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-
+  async getActivity(user: any) {
     if (!user) return [];
 
     const submissions = await this.prisma.submission.findMany({
@@ -122,11 +114,7 @@ export class DashboardService {
     }));
   }
 
-  async getHeatmap() {
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-
+  async getHeatmap(user: any) {
     if (!user) return [];
 
     const submissions = await this.prisma.submission.findMany({

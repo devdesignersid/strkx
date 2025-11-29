@@ -79,7 +79,7 @@ export default function ListDetailPage() {
     params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`http://localhost:3000/lists/${id}?${params.toString()}`);
+      const res = await axios.get(`http://localhost:3000/lists/${id}?${params.toString()}`, { withCredentials: true });
       setList(res.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractedProblems = res.data.problems.map((p: any) => ({
@@ -186,6 +186,7 @@ export default function ListDetailPage() {
     if (!id) return;
     try {
         await axios.delete(`http://localhost:3000/lists/${id}/problems`, {
+            withCredentials: true,
             data: { problemIds: problemIdsToRemove }
         });
         setProblems(problems.filter(p => !problemIdsToRemove.includes(p.id)));

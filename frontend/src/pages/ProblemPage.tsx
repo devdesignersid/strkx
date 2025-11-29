@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
 import { Loader2 } from 'lucide-react';
@@ -43,7 +43,8 @@ export default function ProblemPage() {
 
   const [isDescriptionCollapsed, setIsDescriptionCollapsed] = useState(false);
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
-  const [autocompleteEnabled] = useState(true);
+  const [autocompleteEnabled, setAutocompleteEnabled] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
 
   const descriptionPanelRef = useRef<ImperativePanelHandle>(null);
@@ -55,9 +56,32 @@ export default function ProblemPage() {
     setIsAIEnabled(aiService.isEnabled());
   }, []);
 
-  const handleEditorDidMount = (editor: any) => {
+  const handleEditorDidMount = useCallback((editor: any) => {
     editorRef.current = editor;
-  };
+  }, []);
+
+  const isEditorChange = useRef(false);
+  const lastRunCodeRef = useRef<string>(''); // Track code when tests were last run
+
+  const handleCodeChange = useCallback((val: string | undefined) => {
+    isEditorChange.current = true;
+    setCode(val || '');
+  }, []);
+
+  // When code changes externally (like loading a submission), update the editor
+  useEffect(() => {
+    if (editorRef.current && code !== undefined && !isEditorChange.current) {
+      const currentValue = editorRef.current.getValue();
+      if (currentValue !== code) {
+        editorRef.current.setValue(code);
+      }
+    }
+    isEditorChange.current = false;
+  }, [code]);
+
+  // Calculate if submit should be enabled
+  // User must have run tests AND code must not have changed since last run
+  const canSubmit = output !== null && output.passed === true && lastRunCodeRef.current === code;
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -84,6 +108,22 @@ export default function ProblemPage() {
     if (panel) {
       if (isConsoleCollapsed) panel.expand();
       else panel.collapse();
+    }
+  };
+
+  const toggleFocusMode = () => {
+    const newFocusMode = !isFocusMode;
+    setIsFocusMode(newFocusMode);
+
+    const descPanel = descriptionPanelRef.current;
+    const consolePanel = consolePanelRef.current;
+
+    if (newFocusMode) {
+      descPanel?.collapse();
+      consolePanel?.collapse();
+    } else {
+      descPanel?.expand();
+      consolePanel?.expand();
     }
   };
 
@@ -120,10 +160,15 @@ export default function ProblemPage() {
         problem={problem}
         isRunning={isRunning}
         onRun={(mode) => {
+            // Get the latest code from the editor
+            const currentCode = editorRef.current?.getValue() || code;
+            // Save code snapshot when running tests
+            lastRunCodeRef.current = currentCode;
             handleRun(mode, () => {
                 if (isConsoleCollapsed) consolePanelRef.current?.expand();
-            });
+            }, currentCode);
         }}
+        canSubmit={canSubmit}
         isDescriptionCollapsed={isDescriptionCollapsed}
         isConsoleCollapsed={isConsoleCollapsed}
         onToggleDescription={toggleDescription}
@@ -160,12 +205,12 @@ export default function ProblemPage() {
           <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
 
           {/* Right Panel: Editor & Console */}
-          <Panel minSize={30}>
+          <Panel minSize={30} className="flex flex-col overflow-hidden">
             <PanelGroup direction="vertical">
-              <Panel minSize={30}>
+              <Panel minSize={30} className="flex flex-col overflow-hidden">
                 <CodeEditor
                   code={code}
-                  onChange={(val) => setCode(val || '')}
+                  onChange={handleCodeChange}
                   onMount={handleEditorDidMount}
                   isTimerRunning={isTimerRunning}
                   timeLeft={timeLeft}
@@ -179,8 +224,11 @@ export default function ProblemPage() {
                   isRequestingHint={isRequestingHint}
                   isCompletingCode={isCompletingCode}
                   autocompleteEnabled={autocompleteEnabled}
+                  onToggleAutocomplete={() => setAutocompleteEnabled(!autocompleteEnabled)}
                   isAIEnabled={isAIEnabled}
                   formatTime={formatTime}
+                  isFocusMode={isFocusMode}
+                  onToggleFocusMode={toggleFocusMode}
                 />
               </Panel>
 

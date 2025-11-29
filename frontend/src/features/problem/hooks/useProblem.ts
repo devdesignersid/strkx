@@ -25,8 +25,9 @@ export function useProblem(slug: string | undefined) {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const endTimeRef = useRef<number | null>(null);
 
+  // Timer countdown effect
   useEffect(() => {
-    let interval: number;
+    let interval: number | null = null;
 
     if (isTimerRunning && timeLeft > 0) {
       if (!endTimeRef.current) {
@@ -51,7 +52,12 @@ export function useProblem(slug: string | undefined) {
       endTimeRef.current = null;
     }
 
-    return () => clearInterval(interval);
+    // Cleanup: clear interval when component unmounts or timer stops
+    return () => {
+      if (interval !== null) {
+        clearInterval(interval);
+      }
+    };
   }, [isTimerRunning, timeLeft]);
 
   const fetchProblem = useCallback(() => {
@@ -96,16 +102,25 @@ export function useProblem(slug: string | undefined) {
     fetchProblem();
   }, [fetchProblem]);
 
-  const handleRun = async (mode: 'run' | 'submit' = 'run', onSuccess?: () => void) => {
+  useEffect(() => {
+    if (problem) {
+      fetchSubmissions();
+      fetchSolutions();
+    }
+  }, [problem, fetchSubmissions, fetchSolutions]);
+
+  const handleRun = async (mode: 'run' | 'submit' = 'run', onSuccess?: () => void, codeToSubmit?: string) => {
     if (!problem) return;
     setIsRunning(true);
     if (mode === 'run') {
       setOutput(null);
     }
 
+    const codeToUse = codeToSubmit || code;
+
     try {
       const res = await axios.post('http://localhost:3000/execution', {
-        code,
+        code: codeToUse,
         language: 'javascript',
         problemSlug: slug,
         mode,
@@ -202,9 +217,27 @@ export function useProblem(slug: string | undefined) {
 
     setIsCompletingCode(true);
     try {
+        let testResultsStr = 'No test results available.';
+        if (output && output.results) {
+            const failingTests = output.results.filter(r => !r.passed);
+            if (failingTests.length > 0) {
+                testResultsStr = 'Failing Tests:\n' + failingTests.map(t =>
+                    `Input: ${t.input}\nExpected: ${t.expectedOutput}\nActual: ${t.actualOutput}\nError: ${t.error || 'N/A'}`
+                ).join('\n\n');
+            } else if (output.results.length > 0) {
+                testResultsStr = 'All previous tests passed.';
+            }
+        }
+
+        const testCasesStr = problem?.testCases?.map((tc, i) =>
+            `Test Case ${i + 1}:\nInput: ${tc.input}\nExpected Output: ${tc.expectedOutput}`
+        ).join('\n\n') || 'No test cases available.';
+
         const prompt = PROMPTS.SOLUTION_COMPLETION
             .replace('{problemDescription}', problem?.description || '')
-            .replace('{userCode}', currentCode);
+            .replace('{userCode}', currentCode)
+            .replace('{testCases}', testCasesStr)
+            .replace('{testResults}', testResultsStr);
 
         const completion = await aiService.generateCompletion(prompt);
         const cleanCode = completion.replace(/```javascript\n?|```typescript\n?|```\n?|\n?```/g, '');

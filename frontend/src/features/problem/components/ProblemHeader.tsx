@@ -6,6 +6,7 @@ interface ProblemHeaderProps {
   problem: Problem;
   isRunning: boolean;
   onRun: (mode: 'run' | 'submit') => void;
+  canSubmit: boolean;
   isDescriptionCollapsed?: boolean;
   isConsoleCollapsed?: boolean;
   onToggleDescription?: () => void;
@@ -16,6 +17,7 @@ export function ProblemHeader({
   problem,
   isRunning,
   onRun,
+  canSubmit,
   isDescriptionCollapsed,
   isConsoleCollapsed,
   onToggleDescription,
@@ -63,10 +65,11 @@ export function ProblemHeader({
         </button>
         <button
           onClick={() => onRun('submit')}
-          disabled={isRunning}
+          disabled={isRunning || !canSubmit}
+          title={!canSubmit ? "Run your code and pass all test cases first" : "Submit your solution"}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200",
-            "bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(62,207,142,0.3)] border border-primary/20 disabled:opacity-50"
+            "bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(62,207,142,0.3)] border border-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
           <Send className="w-3.5 h-3.5" />

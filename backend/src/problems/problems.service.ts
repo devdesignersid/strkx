@@ -236,6 +236,14 @@ export class ProblemsService {
     await this.prisma.testCase.deleteMany({
       where: { problemId: id },
     });
+    // Delete related list entries
+    await this.prisma.problemsOnLists.deleteMany({
+      where: { problemId: id },
+    });
+    // Delete related interview questions
+    await this.prisma.interviewQuestion.deleteMany({
+      where: { problemId: id },
+    });
     // Finally, delete the problem
     return this.prisma.problem.delete({
       where: { id },
