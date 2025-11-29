@@ -248,4 +248,39 @@ export class InterviewSessionsService {
       },
     });
   }
+
+  async abandonSession(id: string) {
+    const session = await this.prisma.interviewSession.findUnique({
+      where: { id },
+      include: { questions: true }
+    });
+
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.status === 'COMPLETED' || session.status === 'ABANDONED') return session;
+
+    // Fail the current question if any
+    const currentQuestion = session.questions.find(q => q.status === 'IN_PROGRESS');
+
+    return this.prisma.$transaction(async (tx) => {
+        if (currentQuestion) {
+            await tx.interviewQuestion.update({
+                where: { id: currentQuestion.id },
+                data: {
+                    status: 'COMPLETED',
+                    outcome: 'FAILED',
+                    endTime: new Date(),
+                    autoSubmitted: true // technically abandoned
+                }
+            });
+        }
+
+        return tx.interviewSession.update({
+            where: { id },
+            data: {
+                status: 'ABANDONED',
+                endTime: new Date(),
+            }
+        });
+    });
+  }
 }

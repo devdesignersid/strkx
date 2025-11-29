@@ -49,6 +49,39 @@ const MockInterviewSession: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const mounted = useRef(true);
+  const isFinished = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      // If unmounting and not finished/completed, abandon session
+      if (!isFinished.current && session?.status !== 'COMPLETED' && session?.status !== 'ABANDONED') {
+         // Use sendBeacon for reliability during unload/navigation
+         const url = `${API_URL}/interview-sessions/${sessionId}/abandon`;
+         navigator.sendBeacon(url);
+      }
+    };
+  }, [session, sessionId]);
+
+  // Handle Browser Refresh/Close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (session && session.status !== 'COMPLETED' && session.status !== 'ABANDONED' && !isFinished.current) {
+        // Trigger browser warning
+        e.preventDefault();
+        e.returnValue = '';
+
+        // Attempt to abandon immediately
+        const url = `${API_URL}/interview-sessions/${sessionId}/abandon`;
+        navigator.sendBeacon(url);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [session, sessionId]);
 
   // Fetch Session
   useEffect(() => {
@@ -56,6 +89,7 @@ const MockInterviewSession: React.FC = () => {
     fetch(`${API_URL}/interview-sessions/${sessionId}`, { credentials: 'include' })
       .then(res => res.json())
       .then((data: Session) => {
+        if (!mounted.current) return;
         setSession(data);
         // Find first non-completed question
         const activeIndex = data.questions.findIndex(q => q.status === 'IN_PROGRESS' || q.status === 'PENDING');
@@ -70,10 +104,12 @@ const MockInterviewSession: React.FC = () => {
              setTimeLeft(remaining > 0 ? remaining : 0);
           }
         } else if (data.status === 'COMPLETED') {
+            isFinished.current = true; // Mark as finished so we don't abandon
             navigate(`/mock-interview/session/${sessionId}/summary`);
         }
       })
       .catch(err => {
+        if (!mounted.current) return;
         console.error(err);
         toast.error(TOAST_MESSAGES.INTERVIEW.LOAD_FAILED);
       });
@@ -101,7 +137,9 @@ const MockInterviewSession: React.FC = () => {
     }
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      if (mounted.current) {
+        setTimeLeft((prev) => prev - 1);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -154,6 +192,8 @@ const MockInterviewSession: React.FC = () => {
             status = 'RUNTIME_ERROR';
         }
 
+        if (!mounted.current) return;
+
         // 2. Submit to Interview Session
         const res = await fetch(`${API_URL}/interview-sessions/${sessionId}/questions/${question.id}/submit`, {
             method: 'POST',
@@ -172,6 +212,8 @@ const MockInterviewSession: React.FC = () => {
 
         const data = await res.json();
 
+        if (!mounted.current) return;
+
         if (data.nextQuestionId) {
             // Move to next question
             setCurrentQuestionIndex(prev => prev + 1);
@@ -179,14 +221,19 @@ const MockInterviewSession: React.FC = () => {
             toast.success(TOAST_MESSAGES.INTERVIEW.SUBMITTED_NEXT);
         } else {
             // Finish
+            isFinished.current = true; // Mark as explicitly finished
             navigate(`/mock-interview/session/${sessionId}/summary`);
         }
 
     } catch (error) {
-        console.error(error);
-        toast.error(TOAST_MESSAGES.INTERVIEW.SUBMIT_FAILED);
+        if (mounted.current) {
+            console.error(error);
+            toast.error(TOAST_MESSAGES.INTERVIEW.SUBMIT_FAILED);
+        }
     } finally {
-        setIsSubmitting(false);
+        if (mounted.current) {
+            setIsSubmitting(false);
+        }
     }
   };
 

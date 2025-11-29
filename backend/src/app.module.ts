@@ -13,6 +13,8 @@ import { CommonModule } from './common/common.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
+import { AppController } from './app.controller';
+
 @Module({
   imports: [
     ThrottlerModule.forRoot([{
@@ -31,7 +33,7 @@ import { APP_GUARD } from '@nestjs/core';
     StudyStatsModule,
     InterviewSessionsModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

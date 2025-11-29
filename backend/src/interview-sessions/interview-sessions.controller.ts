@@ -32,4 +32,9 @@ export class InterviewSessionsController {
   complete(@Param('id') id: string) {
     return this.interviewSessionsService.completeSession(id);
   }
+
+  @Post(':id/abandon')
+  abandon(@Param('id') id: string) {
+    return this.interviewSessionsService.abandonSession(id);
+  }
 }
