@@ -13,6 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
+import { API_URL } from '@/config';
 
 interface Problem {
   id: string;
@@ -79,7 +80,7 @@ export default function ListDetailPage() {
     params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`http://localhost:3000/lists/${id}?${params.toString()}`, { withCredentials: true });
+      const res = await axios.get(`${API_URL}/lists/${id}?${params.toString()}`, { withCredentials: true });
       setList(res.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractedProblems = res.data.problems.map((p: any) => ({
@@ -185,7 +186,7 @@ export default function ListDetailPage() {
   const handleRemoveFromList = async (problemIdsToRemove: string[]) => {
     if (!id) return;
     try {
-        await axios.delete(`http://localhost:3000/lists/${id}/problems`, {
+        await axios.delete(`${API_URL}/lists/${id}/problems`, {
             withCredentials: true,
             data: { problemIds: problemIdsToRemove }
         });

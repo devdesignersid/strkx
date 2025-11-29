@@ -6,6 +6,7 @@ import { Plus, Search, Folder, Trash2, Clock, List as ListIcon, Loader2 } from '
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Modal } from '@/components/ui/Modal';
+import { API_URL } from '@/config';
 
 interface List {
   id: string;
@@ -39,7 +40,7 @@ export default function ListsPage() {
   const fetchLists = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/lists', { withCredentials: true });
+      const res = await axios.get(`${API_URL}/lists`, { withCredentials: true });
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
@@ -55,7 +56,7 @@ export default function ListsPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await axios.post('http://localhost:3000/lists', {
+      const res = await axios.post(`${API_URL}/lists`, {
         name: newListName,
         description: newListDesc
       }, { withCredentials: true });
@@ -81,7 +82,7 @@ export default function ListsPage() {
     if (!deleteConfirmModal.listId) return;
 
     try {
-      await axios.delete(`http://localhost:3000/lists/${deleteConfirmModal.listId}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/lists/${deleteConfirmModal.listId}`, { withCredentials: true });
       setLists(lists.filter(l => l.id !== deleteConfirmModal.listId));
       toast.success(TOAST_MESSAGES.LISTS.DELETED);
     } catch (error) {

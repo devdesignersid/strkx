@@ -55,7 +55,10 @@ describe('ExecutionService', () => {
         }
       `;
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(true);
       expect(result.results[0].passed).toBe(true);
@@ -70,7 +73,10 @@ describe('ExecutionService', () => {
         }
       `;
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(false);
       expect(result.results[0].passed).toBe(false);
@@ -81,7 +87,10 @@ describe('ExecutionService', () => {
 
       const code = `function twoSum(nums, target) { return [0, 1]`; // Missing brace
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(false);
       expect(result.results[0].error).toBeDefined();
@@ -97,7 +106,10 @@ describe('ExecutionService', () => {
         }
       `;
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(false);
       expect(result.results[0].error).toContain('Script execution timed out');
@@ -119,7 +131,10 @@ describe('ExecutionService', () => {
       };
       mockPrismaService.problem.findUnique.mockResolvedValue(multiArgProblem);
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(true);
     });
@@ -130,7 +145,10 @@ describe('ExecutionService', () => {
 
       const code = `function twoSum() { return [0,1]; }`;
 
-      await service.execute({ code, problemSlug: 'two-sum', mode: 'submit' }, mockUser);
+      await service.execute({
+        code, problemSlug: 'two-sum', mode: 'submit',
+        language: ''
+      }, mockUser);
 
       expect(prisma.submission.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -144,7 +162,10 @@ describe('ExecutionService', () => {
     it('should throw NotFoundException if problem not found', async () => {
       mockPrismaService.problem.findUnique.mockResolvedValue(null);
 
-      await expect(service.execute({ code: '', problemSlug: 'unknown', mode: 'run' }, mockUser))
+      await expect(service.execute({
+        code: '', problemSlug: 'unknown', mode: 'run',
+        language: ''
+      }, mockUser))
         .rejects.toThrow(NotFoundException);
     });
     it('should capture console logs', async () => {
@@ -157,7 +178,10 @@ describe('ExecutionService', () => {
         }
       `;
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.results[0].logs).toBeDefined();
       expect(result.results[0].logs).toContain('Hello from sandbox');
@@ -173,7 +197,10 @@ describe('ExecutionService', () => {
         }
       `;
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.results[0].logs).toBeDefined();
       expect(result.results[0].logs.some(l => l.includes('[ERROR] Error log'))).toBe(true);
@@ -196,7 +223,10 @@ describe('ExecutionService', () => {
       };
       mockPrismaService.problem.findUnique.mockResolvedValue(singleArgProblem);
 
-      const result = await service.execute({ code, problemSlug: 'two-sum', mode: 'run' }, mockUser);
+      const result = await service.execute({
+        code, problemSlug: 'two-sum', mode: 'run',
+        language: ''
+      }, mockUser);
 
       expect(result.passed).toBe(true);
       expect(result.results[0].actualOutput).toBe('3');

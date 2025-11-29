@@ -8,6 +8,7 @@ import { subDays, format, isSameDay, addDays, startOfDay, getDay } from 'date-fn
 import axios from 'axios';
 import { useStudyTimer } from '@/context/StudyTimerContext';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/config';
 
 interface ActivityItem {
   id: string;
@@ -293,10 +294,10 @@ export default function DashboardPage() {
       setIsLoading(true);
       try {
         const [statsRes, activityRes, heatmapRes, studyStatsRes] = await Promise.all([
-          axios.get('http://localhost:3000/dashboard/stats', { withCredentials: true }),
-          axios.get('http://localhost:3000/dashboard/activity', { withCredentials: true }),
-          axios.get('http://localhost:3000/dashboard/heatmap', { withCredentials: true }),
-          axios.get('http://localhost:3000/study-stats/today', { withCredentials: true })
+          axios.get(`${API_URL}/dashboard/stats`, { withCredentials: true }),
+          axios.get(`${API_URL}/dashboard/activity`, { withCredentials: true }),
+          axios.get(`${API_URL}/dashboard/heatmap`, { withCredentials: true }),
+          axios.get(`${API_URL}/study-stats/today`, { withCredentials: true })
         ]);
 
         const studySeconds = studyStatsRes.data.totalStudySeconds || 0;

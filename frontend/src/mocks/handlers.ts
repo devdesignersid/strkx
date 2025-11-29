@@ -1,21 +1,22 @@
 import { http, HttpResponse } from 'msw';
+import { API_URL } from '@/config';
 
 export const handlers = [
   // Study Stats
-  http.get('http://localhost:3000/study-stats/today', () => {
+  http.get(`${API_URL}/study-stats/today`, () => {
     return HttpResponse.json({ totalStudySeconds: 3600 });
   }),
 
-  http.post('http://localhost:3000/study-stats/sync', () => {
+  http.post(`${API_URL}/study-stats/sync`, () => {
     return HttpResponse.json({ success: true });
   }),
 
-  http.post('http://localhost:3000/study-stats/reset', () => {
+  http.post(`${API_URL}/study-stats/reset`, () => {
     return HttpResponse.json({ success: true });
   }),
 
   // Auth
-  http.get('http://localhost:3000/auth/me', () => {
+  http.get(`${API_URL}/auth/me`, () => {
     return HttpResponse.json({
       id: 'user1',
       email: 'demo@example.com',
@@ -24,7 +25,7 @@ export const handlers = [
   }),
 
   // Dashboard
-  http.get('http://localhost:3000/dashboard/stats', () => {
+  http.get(`${API_URL}/dashboard/stats`, () => {
     return HttpResponse.json({
       easy: 0,
       medium: 0,
@@ -34,10 +35,10 @@ export const handlers = [
       weeklyChange: 0,
     });
   }),
-  http.get('http://localhost:3000/dashboard/activity', () => {
+  http.get(`${API_URL}/dashboard/activity`, () => {
     return HttpResponse.json([]);
   }),
-  http.get('http://localhost:3000/dashboard/heatmap', () => {
+  http.get(`${API_URL}/dashboard/heatmap`, () => {
     return HttpResponse.json([]);
   }),
 

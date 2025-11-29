@@ -4,6 +4,7 @@ import { X, Plus, Check, Loader2, FolderPlus } from 'lucide-react';
 import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
+import { API_URL } from '@/config';
 
 interface List {
   id: string;
@@ -37,7 +38,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
   const fetchLists = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get('http://localhost:3000/lists', { withCredentials: true });
+      const res = await axios.get(`${API_URL}/lists`, { withCredentials: true });
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
@@ -51,7 +52,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
     if (!newListName.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await axios.post('http://localhost:3000/lists', { name: newListName }, { withCredentials: true });
+      const res = await axios.post(`${API_URL}/lists`, { name: newListName }, { withCredentials: true });
       setLists([res.data, ...lists]);
       setNewListName('');
       setIsCreating(false);
@@ -77,7 +78,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
       // Add problems to each selected list
       // We do this in parallel
       await Promise.all(Array.from(selectedListIds).map(listId =>
-        axios.post(`http://localhost:3000/lists/${listId}/problems`, {
+        axios.post(`${API_URL}/lists/${listId}/problems`, {
           problemIds: selectedProblemIds
         }, { withCredentials: true })
       ));

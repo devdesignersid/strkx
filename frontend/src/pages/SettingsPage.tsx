@@ -8,6 +8,7 @@ import type { AIProviderMetadata } from '../lib/ai/types';
 import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '@/config';
 
 export default function SettingsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -74,7 +75,7 @@ export default function SettingsPage() {
   const handleResetData = async () => {
     setIsResetting(true);
     try {
-      await axios.delete('http://localhost:3000/user/reset', { withCredentials: true });
+      await axios.delete(`${API_URL}/user/reset`, { withCredentials: true });
       toast.success(TOAST_MESSAGES.SETTINGS.RESET_SUCCESS);
       setShowConfirmDialog(false);
 

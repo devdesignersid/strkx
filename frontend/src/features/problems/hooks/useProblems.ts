@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
+import { API_URL } from '@/config';
 
 export interface Problem {
   id: string;
@@ -51,7 +52,7 @@ export function useProblems() {
     params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`http://localhost:3000/problems?${params.toString()}`, { withCredentials: true });
+      const res = await axios.get(`${API_URL}/problems?${params.toString()}`, { withCredentials: true });
       const { problems: fetchedProblems, hasMore: more } = res.data;
 
       const enriched = fetchedProblems.map((p: any) => ({
@@ -140,7 +141,7 @@ export function useProblems() {
 
   const deleteProblem = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:3000/problems/${id}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/problems/${id}`, { withCredentials: true });
       setProblems(problems.filter(p => p.id !== id));
       setProblems(problems.filter(p => p.id !== id));
       toast.success(TOAST_MESSAGES.PROBLEM.DELETED);
@@ -156,7 +157,7 @@ export function useProblems() {
     try {
       await Promise.all(
         Array.from(selectedIds).map(id =>
-          axios.delete(`http://localhost:3000/problems/${id}`, { withCredentials: true })
+          axios.delete(`${API_URL}/problems/${id}`, { withCredentials: true })
         )
       );
       setProblems(problems.filter(p => !selectedIds.has(p.id)));

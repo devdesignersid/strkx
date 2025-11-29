@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, XCircle, Clock, ArrowRight, Home, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Home, RefreshCw } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { API_URL } from '@/config';
 
 interface QuestionResult {
   id: string;
@@ -30,7 +31,7 @@ const MockInterviewSummary: React.FC = () => {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/interview-sessions/${sessionId}`, { credentials: 'include' })
+    fetch(`${API_URL}/interview-sessions/${sessionId}`, { credentials: 'include' })
       .then(res => res.json())
       .then((data: SessionSummary) => {
         setSummary(data);

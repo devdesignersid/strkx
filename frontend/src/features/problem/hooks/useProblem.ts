@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
+import { API_URL } from '@/config';
 import type { Problem, ExecutionResult, Submission, Solution } from '@/types/problem';
 import { useMotivation } from '@/hooks/useMotivation';
 import { aiService } from '@/lib/ai/aiService';
@@ -73,7 +74,7 @@ export function useProblem(slug: string | undefined) {
     setIsTimerRunning(false);
     endTimeRef.current = null;
 
-    axios.get(`http://localhost:3000/problems/${slug}`, { withCredentials: true })
+    axios.get(`${API_URL}/problems/${slug}`, { withCredentials: true })
       .then(res => {
         setProblem(res.data);
         setCode(res.data.starterCode || '// Write your code here');
@@ -86,14 +87,14 @@ export function useProblem(slug: string | undefined) {
 
   const fetchSubmissions = useCallback(() => {
     if (!slug) return;
-    axios.get(`http://localhost:3000/problems/${slug}/submissions`, { withCredentials: true })
+    axios.get(`${API_URL}/problems/${slug}/submissions`, { withCredentials: true })
       .then(res => setSubmissions(res.data))
       .catch(err => console.error('Failed to fetch submissions:', err));
   }, [slug]);
 
   const fetchSolutions = useCallback(() => {
     if (!slug) return;
-    axios.get(`http://localhost:3000/problems/${slug}/solutions`, { withCredentials: true })
+    axios.get(`${API_URL}/problems/${slug}/solutions`, { withCredentials: true })
       .then(res => setSolutions(res.data))
       .catch(err => console.error('Failed to fetch solutions:', err));
   }, [slug]);
@@ -119,7 +120,7 @@ export function useProblem(slug: string | undefined) {
     const codeToUse = codeToSubmit || code;
 
     try {
-      const res = await axios.post('http://localhost:3000/execution', {
+      const res = await axios.post(`${API_URL}/execution`, {
         code: codeToUse,
         language: 'javascript',
         problemSlug: slug,
@@ -261,7 +262,7 @@ export function useProblem(slug: string | undefined) {
   const markAsSolution = async (submissionId: string, name: string) => {
     if (!slug) return;
     try {
-      await axios.patch(`http://localhost:3000/problems/${slug}/submissions/${submissionId}/solution`, {
+      await axios.patch(`${API_URL}/problems/${slug}/submissions/${submissionId}/solution`, {
         isSolution: true,
         solutionName: name,
       }, { withCredentials: true });
@@ -279,7 +280,7 @@ export function useProblem(slug: string | undefined) {
   const unmarkAsSolution = async (submissionId: string) => {
     if (!slug) return;
     try {
-      await axios.patch(`http://localhost:3000/problems/${slug}/submissions/${submissionId}/solution`, {
+      await axios.patch(`${API_URL}/problems/${slug}/submissions/${submissionId}/solution`, {
         isSolution: false,
       }, { withCredentials: true });
       fetchSubmissions();

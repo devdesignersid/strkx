@@ -9,6 +9,7 @@ import { Loader2, Play, Send, Clock, AlertTriangle, CheckCircle2, XCircle } from
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import * as monaco from 'monaco-editor';
+import { API_URL } from '@/config';
 
 interface Problem {
   id: string;
@@ -54,7 +55,7 @@ const MockInterviewSession: React.FC = () => {
   // Fetch Session
   useEffect(() => {
     if (!sessionId) return;
-    fetch(`http://localhost:3000/interview-sessions/${sessionId}`, { credentials: 'include' })
+    fetch(`${API_URL}/interview-sessions/${sessionId}`, { credentials: 'include' })
       .then(res => res.json())
       .then((data: Session) => {
         setSession(data);
@@ -136,7 +137,7 @@ const MockInterviewSession: React.FC = () => {
         let outputLog = '';
 
         try {
-            const execRes = await fetch('http://localhost:3000/execution', {
+            const execRes = await fetch(`${API_URL}/execution`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -156,7 +157,7 @@ const MockInterviewSession: React.FC = () => {
         }
 
         // 2. Submit to Interview Session
-        const res = await fetch(`http://localhost:3000/interview-sessions/${sessionId}/questions/${question.id}/submit`, {
+        const res = await fetch(`${API_URL}/interview-sessions/${sessionId}/questions/${question.id}/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

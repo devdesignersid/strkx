@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Clock, Brain, Filter, List as ListIcon, Hash } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
+import { API_URL } from '@/config';
 
 interface List {
   id: string;
@@ -23,7 +24,7 @@ const MockInterviewSetup: React.FC = () => {
 
   useEffect(() => {
     // Fetch lists for filter
-    fetch('http://localhost:3000/lists', { credentials: 'include' })
+    fetch(`${API_URL}/lists`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setLists(data))
       .catch(err => console.error('Failed to fetch lists', err));
@@ -34,7 +35,7 @@ const MockInterviewSetup: React.FC = () => {
     try {
       const tagList = tags.split(',').map(t => t.trim()).filter(t => t);
 
-      const res = await fetch('http://localhost:3000/interview-sessions', {
+      const res = await fetch(`${API_URL}/interview-sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -11,6 +11,7 @@ import { PROMPTS } from '../lib/ai/prompts';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { clsx } from 'clsx';
 import { Modal } from '../components/ui/Modal';
+import { API_URL } from '@/config';
 
 export default function CreateProblemPage() {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export default function CreateProblemPage() {
     if (isEditMode && id) {
       setIsLoading(true);
       // Use the GET endpoint that accepts ID parameter
-      axios.get(`http://localhost:3000/problems/id/${id}`, { withCredentials: true })
+      axios.get(`${API_URL}/problems/id/${id}`, { withCredentials: true })
         .then(res => {
           const problem = res.data;
           setFormData({
@@ -200,9 +201,9 @@ export default function CreateProblemPage() {
       };
 
       if (isEditMode && id) {
-        await axios.patch(`http://localhost:3000/problems/${id}`, payload, { withCredentials: true });
+        await axios.patch(`${API_URL}/problems/${id}`, payload, { withCredentials: true });
       } else {
-        await axios.post('http://localhost:3000/problems', payload, { withCredentials: true });
+        await axios.post(`${API_URL}/problems`, payload, { withCredentials: true });
       }
       navigate('/problems');
     } catch (error) {
