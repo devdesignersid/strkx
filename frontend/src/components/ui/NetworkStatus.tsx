@@ -1,18 +1,18 @@
 import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Wifi, WifiOff } from 'lucide-react';
 
 export function NetworkStatus() {
   useEffect(() => {
     const handleOnline = () => {
-      toast.success('You are back online!', {
+      toast.success(TOAST_MESSAGES.GENERAL.NETWORK_RESTORED, {
         icon: <Wifi className="w-4 h-4" />,
         duration: 3000,
       });
     };
 
     const handleOffline = () => {
-      toast.error('You are offline. Check your connection.', {
+      toast.error(TOAST_MESSAGES.GENERAL.NETWORK_ERROR, {
         icon: <WifiOff className="w-4 h-4" />,
         duration: Infinity, // Keep visible until online
       });

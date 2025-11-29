@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { Loader2, Play, Send, Clock, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import * as monaco from 'monaco-editor';
 
@@ -76,7 +76,7 @@ const MockInterviewSession: React.FC = () => {
       })
       .catch(err => {
         console.error(err);
-        toast.error('Failed to load session');
+        toast.error(TOAST_MESSAGES.INTERVIEW.LOAD_FAILED);
       });
   }, [sessionId, navigate]);
 
@@ -177,7 +177,7 @@ const MockInterviewSession: React.FC = () => {
             // Move to next question
             setCurrentQuestionIndex(prev => prev + 1);
             setTimeLeft(20 * 60);
-            toast.success('Question submitted! Moving to next...');
+            toast.success(TOAST_MESSAGES.INTERVIEW.SUBMITTED_NEXT);
         } else {
             // Finish
             navigate(`/mock-interview/session/${sessionId}/summary`);
@@ -185,7 +185,7 @@ const MockInterviewSession: React.FC = () => {
 
     } catch (error) {
         console.error(error);
-        toast.error('Failed to submit');
+        toast.error(TOAST_MESSAGES.INTERVIEW.SUBMIT_FAILED);
     } finally {
         setIsSubmitting(false);
     }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Plus, Search, Folder, Trash2, Clock, List as ListIcon, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Modal } from '@/components/ui/Modal';
 
@@ -43,7 +43,7 @@ export default function ListsPage() {
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
-      toast.error('Failed to load lists');
+      toast.error(TOAST_MESSAGES.LISTS.LOAD_FAILED);
     } finally {
       setIsLoading(false);
     }
@@ -63,10 +63,10 @@ export default function ListsPage() {
       setIsCreateModalOpen(false);
       setNewListName('');
       setNewListDesc('');
-      toast.success('List created successfully');
+      toast.success(TOAST_MESSAGES.LISTS.CREATED);
     } catch (error) {
       console.error('Failed to create list:', error);
-      toast.error('Failed to create list');
+      toast.error(TOAST_MESSAGES.LISTS.CREATE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
@@ -83,10 +83,10 @@ export default function ListsPage() {
     try {
       await axios.delete(`http://localhost:3000/lists/${deleteConfirmModal.listId}`, { withCredentials: true });
       setLists(lists.filter(l => l.id !== deleteConfirmModal.listId));
-      toast.success('List deleted');
+      toast.success(TOAST_MESSAGES.LISTS.DELETED);
     } catch (error) {
       console.error('Failed to delete list:', error);
-      toast.error('Failed to delete list');
+      toast.error(TOAST_MESSAGES.LISTS.DELETE_FAILED);
     } finally {
       setDeleteConfirmModal({ open: false, listId: null, listName: '' });
     }

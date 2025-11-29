@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 interface User {
   id: string;
@@ -59,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         credentials: 'include',
       });
       setUser(null);
+      toast.success(TOAST_MESSAGES.AUTH.LOGOUT_SUCCESS);
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);

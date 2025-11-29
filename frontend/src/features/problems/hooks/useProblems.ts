@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 export interface Problem {
   id: string;
@@ -69,7 +69,7 @@ export function useProblems() {
       setHasMore(more);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to fetch problems');
+      toast.error(TOAST_MESSAGES.PROBLEM.LOAD_FAILED);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -142,10 +142,11 @@ export function useProblems() {
     try {
       await axios.delete(`http://localhost:3000/problems/${id}`, { withCredentials: true });
       setProblems(problems.filter(p => p.id !== id));
-      toast.success('Problem deleted');
+      setProblems(problems.filter(p => p.id !== id));
+      toast.success(TOAST_MESSAGES.PROBLEM.DELETED);
     } catch (err) {
       console.error('Failed to delete problem:', err);
-      toast.error('Failed to delete problem');
+      toast.error(TOAST_MESSAGES.PROBLEM.DELETE_FAILED);
     }
   };
 
@@ -160,10 +161,15 @@ export function useProblems() {
       );
       setProblems(problems.filter(p => !selectedIds.has(p.id)));
       setSelectedIds(new Set());
-      toast.success(`Deleted ${selectedIds.size} problems`);
+      setProblems(problems.filter(p => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+      toast.success({
+        title: TOAST_MESSAGES.PROBLEM.BULK_DELETED.title,
+        description: `Deleted ${selectedIds.size} problems`
+      });
     } catch (err) {
       console.error('Failed to delete problems:', err);
-      toast.error('Failed to delete some problems');
+      toast.error(TOAST_MESSAGES.PROBLEM.BULK_DELETE_FAILED);
     }
   };
 

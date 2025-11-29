@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { aiService } from '../lib/ai/aiService';
 import type { AIProviderMetadata } from '../lib/ai/types';
 import axios from 'axios';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SettingsPage() {
@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
   const handleTestConnection = async () => {
     if (!apiKey) {
-        toast.error('Please enter an API key');
+        toast.error(TOAST_MESSAGES.AUTH.API_KEY_REQUIRED);
         return;
     }
     setIsTestingKey(true);
@@ -56,16 +56,16 @@ export default function SettingsPage() {
         const isValid = await aiService.validateConnection(selectedProvider, apiKey);
         if (isValid) {
             setKeyStatus('valid');
-            toast.success('Connection successful!');
+            toast.success(TOAST_MESSAGES.AUTH.CONNECTION_SUCCESS);
             // Save immediately on success
             aiService.configure(selectedProvider, { apiKey, model });
         } else {
             setKeyStatus('invalid');
-            toast.error('Invalid API key or connection failed');
+            toast.error(TOAST_MESSAGES.AUTH.CONNECTION_FAILED);
         }
     } catch (error) {
         setKeyStatus('invalid');
-        toast.error('Connection failed');
+        toast.error(TOAST_MESSAGES.AUTH.CONNECTION_ERROR);
     } finally {
         setIsTestingKey(false);
     }
@@ -75,9 +75,7 @@ export default function SettingsPage() {
     setIsResetting(true);
     try {
       await axios.delete('http://localhost:3000/user/reset', { withCredentials: true });
-      toast.success('All data reset successfully!', {
-        description: 'Your progress has been cleared.',
-      });
+      toast.success(TOAST_MESSAGES.SETTINGS.RESET_SUCCESS);
       setShowConfirmDialog(false);
 
       // Reload the page to reflect changes
@@ -86,9 +84,7 @@ export default function SettingsPage() {
       }, 1000);
     } catch (error) {
       console.error('Error resetting data:', error);
-      toast.error('Failed to reset data', {
-        description: 'Please try again later.',
-      });
+      toast.error(TOAST_MESSAGES.SETTINGS.RESET_FAILED);
     } finally {
       setIsResetting(false);
     }

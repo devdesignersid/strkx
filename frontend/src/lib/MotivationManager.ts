@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 const STORAGE_KEYS = {
   STREAK: 'strkx_streak',
@@ -35,9 +35,12 @@ export const MotivationManager = {
 
       // Trigger streak toast
       if (streak > 1) {
-        toast.success(`🔥 ${streak} Day Streak! Keep it up!`);
+        toast.success({
+            title: `🔥 ${streak} Day Streak!`,
+            description: 'Keep it up!'
+        });
       } else {
-        toast.success("🚀 First solve of the day!");
+        toast.success(TOAST_MESSAGES.MOTIVATION.FIRST_SOLVE);
       }
     } else {
       // Already solved today
@@ -48,7 +51,10 @@ export const MotivationManager = {
         "Making progress!",
       ];
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      toast.success(randomMsg);
+      toast.success({
+        title: TOAST_MESSAGES.MOTIVATION.KEEP_GOING.title,
+        description: randomMsg
+      });
     }
   },
 

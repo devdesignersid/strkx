@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Check, Loader2, FolderPlus } from 'lucide-react';
 import axios from 'axios';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
 interface List {
@@ -41,7 +41,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
       setLists(res.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
-      toast.error('Failed to load your lists');
+      toast.error(TOAST_MESSAGES.LISTS.LOAD_FAILED);
     } finally {
       setIsLoading(false);
     }
@@ -57,10 +57,10 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
       setIsCreating(false);
       // Auto-select the new list
       setSelectedListIds(prev => new Set(prev).add(res.data.id));
-      toast.success('List created');
+      toast.success(TOAST_MESSAGES.LISTS.CREATED);
     } catch (error) {
       console.error('Failed to create list:', error);
-      toast.error('Failed to create list');
+      toast.error(TOAST_MESSAGES.LISTS.CREATE_FAILED);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,11 +82,14 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
         }, { withCredentials: true })
       ));
 
-      toast.success(`Added ${selectedProblemIds.length} problems to ${selectedListIds.size} lists`);
+      toast.success({
+        title: TOAST_MESSAGES.LISTS.PROBLEM_ADDED.title,
+        description: `Added ${selectedProblemIds.length} problems to ${selectedListIds.size} lists`
+      });
       onClose();
     } catch (error) {
       console.error('Failed to add to lists:', error);
-      toast.error('Failed to add problems to lists');
+      toast.error(TOAST_MESSAGES.LISTS.ADD_FAILED);
     } finally {
       setIsSubmitting(false);
     }

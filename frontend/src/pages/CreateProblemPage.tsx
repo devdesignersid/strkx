@@ -8,7 +8,7 @@ import remarkBreaks from 'remark-breaks';
 import { Plus, Trash2, Save, ArrowLeft, Loader2, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2, Wand2 } from 'lucide-react';
 import { aiService } from '../lib/ai/aiService';
 import { PROMPTS } from '../lib/ai/prompts';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { clsx } from 'clsx';
 import { Modal } from '../components/ui/Modal';
 
@@ -115,12 +115,12 @@ export default function CreateProblemPage() {
 
   const handleAIGenerate = async () => {
     if (!formData.title) {
-        toast.error('Please enter a title first to generate a problem.');
+        toast.error(TOAST_MESSAGES.PROBLEM.TITLE_REQUIRED);
         return;
     }
 
     if (!aiService.isConfigured()) {
-        toast.error('AI is not configured. Please go to Settings to configure it.');
+        toast.error(TOAST_MESSAGES.AUTH.API_KEY_MISSING);
         return;
     }
 
@@ -181,10 +181,10 @@ export default function CreateProblemPage() {
              }));
         }
 
-        toast.success('Problem generated successfully!');
+        toast.success(TOAST_MESSAGES.PROBLEM.GENERATED);
     } catch (error) {
         console.error('AI Generation failed:', error);
-        toast.error('Failed to generate problem. Please try again.');
+        toast.error(TOAST_MESSAGES.PROBLEM.GENERATION_FAILED);
     } finally {
         setIsGenerating(false);
     }

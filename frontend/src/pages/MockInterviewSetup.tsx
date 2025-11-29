@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Clock, Brain, Filter, List as ListIcon, Hash } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 interface List {
   id: string;
@@ -49,7 +49,10 @@ const MockInterviewSetup: React.FC = () => {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.message || 'Failed to start interview');
+        toast.error({
+            title: TOAST_MESSAGES.INTERVIEW.START_FAILED.title,
+            description: err.message || TOAST_MESSAGES.INTERVIEW.START_FAILED.description
+        });
         setLoading(false);
         return;
       }
@@ -58,7 +61,7 @@ const MockInterviewSetup: React.FC = () => {
       navigate(`/mock-interview/session/${session.id}`);
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred');
+      toast.error(TOAST_MESSAGES.GENERAL.ERROR);
       setLoading(false);
     }
   };

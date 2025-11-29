@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import type { Problem, ExecutionResult, Submission, Solution } from '@/types/problem';
 import { MotivationManager } from '@/lib/MotivationManager';
 import { aiService } from '@/lib/ai/aiService';
@@ -142,14 +142,9 @@ export function useProblem(slug: string | undefined) {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        toast.error('Execution timed out. Check for infinite loops.', {
-          icon: React.createElement(Clock, { className: "w-4 h-4" })
-        });
+        toast.error(TOAST_MESSAGES.PROBLEM.EXECUTION_TIMEOUT);
       } else {
-        toast.error('Runtime Error. Check console for details.', {
-          icon: React.createElement(XCircle, { className: "w-4 h-4" }),
-          duration: 3000
-        });
+        toast.error(TOAST_MESSAGES.PROBLEM.EXECUTION_ERROR);
       }
     } finally {
       setIsRunning(false);
@@ -176,7 +171,7 @@ export function useProblem(slug: string | undefined) {
       setAiAnalysis(analysis);
     } catch (error) {
       console.error('Failed to analyze solution:', error);
-      toast.error('Failed to analyze solution', { duration: 3000 });
+      toast.error(TOAST_MESSAGES.AI.ANALYSIS_FAILED);
     } finally {
       setIsAnalyzing(false);
     }
@@ -184,7 +179,7 @@ export function useProblem(slug: string | undefined) {
 
   const handleGetHint = async () => {
     if (!aiService.isConfigured()) {
-      toast.error('AI is not configured. Please go to Settings.', { duration: 3000 });
+      toast.error(TOAST_MESSAGES.AUTH.API_KEY_MISSING);
       return;
     }
 
@@ -196,14 +191,15 @@ export function useProblem(slug: string | undefined) {
 
       const hint = await aiService.generateCompletion(prompt);
 
-      toast.info('AI Hint', {
-        description: hint,
-        duration: 10000,
-        icon: React.createElement(Lightbulb, { className: "w-4 h-4 text-yellow-400" }),
+      toast.info({
+        title: TOAST_MESSAGES.AI.HINT_GENERATED.title,
+        description: hint
+      }, {
+        duration: 8000
       });
     } catch (error) {
       console.error('Failed to get hint:', error);
-      toast.error('Failed to get hint', { duration: 3000 });
+      toast.error(TOAST_MESSAGES.GENERAL.ERROR);
     } finally {
       setIsRequestingHint(false);
     }
@@ -211,7 +207,7 @@ export function useProblem(slug: string | undefined) {
 
   const handleCompleteCode = async (currentCode: string) => {
      if (!aiService.isConfigured()) {
-        toast.error('AI is not configured. Please go to Settings.', { duration: 3000 });
+        toast.error(TOAST_MESSAGES.AUTH.API_KEY_MISSING);
         return;
     }
 
@@ -243,10 +239,10 @@ export function useProblem(slug: string | undefined) {
         const cleanCode = completion.replace(/```javascript\n?|```typescript\n?|```\n?|\n?```/g, '');
 
         setCode(cleanCode);
-        toast.success('Code completed!');
+        toast.success(TOAST_MESSAGES.AI.CODE_COMPLETED);
     } catch (error) {
         console.error('Failed to complete code:', error);
-        toast.error('Failed to complete code', { duration: 3000 });
+        toast.error(TOAST_MESSAGES.GENERAL.ERROR);
     } finally {
         setIsCompletingCode(false);
     }
@@ -271,10 +267,12 @@ export function useProblem(slug: string | undefined) {
       }, { withCredentials: true });
       fetchSubmissions();
       fetchSolutions();
-      toast.success('Solution saved!');
+      fetchSubmissions();
+      fetchSolutions();
+      toast.success(TOAST_MESSAGES.PROBLEM.SOLUTION_MARKED);
     } catch (err) {
       console.error('Failed to mark as solution:', err);
-      toast.error('Failed to save solution');
+      toast.error(TOAST_MESSAGES.GENERAL.ERROR);
     }
   };
 
@@ -286,10 +284,10 @@ export function useProblem(slug: string | undefined) {
       }, { withCredentials: true });
       fetchSubmissions();
       fetchSolutions();
-      toast.success('Solution removed');
+      toast.success(TOAST_MESSAGES.PROBLEM.SOLUTION_UNMARKED);
     } catch (err) {
       console.error('Failed to unmark as solution:', err);
-      toast.error('Failed to remove solution');
+      toast.error(TOAST_MESSAGES.GENERAL.ERROR);
     }
   };
 

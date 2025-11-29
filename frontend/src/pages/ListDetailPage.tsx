@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { createPortal } from 'react-dom';
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 interface Problem {
   id: string;
@@ -98,7 +98,7 @@ export default function ListDetailPage() {
       setHasMore(res.data.hasMore);
     } catch (error) {
       console.error('Failed to fetch list details:', error);
-      toast.error('Failed to load list details');
+      toast.error(TOAST_MESSAGES.LISTS.LOAD_DETAILS_FAILED);
       if (isReset) navigate('/lists');
     } finally {
       setIsLoading(false);
@@ -191,10 +191,13 @@ export default function ListDetailPage() {
         });
         setProblems(problems.filter(p => !problemIdsToRemove.includes(p.id)));
         setSelectedIds(new Set());
-        toast.success(`Removed ${problemIdsToRemove.length} problem(s) from list`);
+        toast.success({
+            title: TOAST_MESSAGES.LISTS.PROBLEM_REMOVED.title,
+            description: `Removed ${problemIdsToRemove.length} problem(s) from list`
+        });
     } catch (error) {
         console.error('Failed to remove problems:', error);
-        toast.error('Failed to remove problems');
+        toast.error(TOAST_MESSAGES.LISTS.REMOVE_FAILED);
     }
   };
 
