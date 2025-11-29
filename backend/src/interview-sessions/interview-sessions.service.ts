@@ -8,10 +8,9 @@ import { Difficulty, Prisma } from '@prisma/client';
 export class InterviewSessionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createDto: CreateInterviewSessionDto) {
-    // TODO: Get actual user from auth context. For now, use demo user.
+  async create(createDto: CreateInterviewSessionDto, userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
+      where: { id: userId },
     });
 
     if (!user) throw new NotFoundException('User not found');

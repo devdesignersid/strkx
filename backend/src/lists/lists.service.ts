@@ -9,21 +9,7 @@ import { ManageListProblemsDto } from './dto/manage-list-problems.dto';
 export class ListsService {
   constructor(private prisma: PrismaService) {}
 
-  private async getDemoUser() {
-    const user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
-    if (!user) {
-        // Create if not exists for dev convenience
-        return this.prisma.user.create({
-            data: {
-                email: 'demo@example.com',
-                name: 'Demo User'
-            }
-        });
-    }
-    return user;
-  }
+
 
   async create(createListDto: CreateListDto, user: any) {
     return this.prisma.list.create({

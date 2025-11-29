@@ -1,15 +1,17 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, Req } from '@nestjs/common';
 import { InterviewSessionsService } from './interview-sessions.service';
 import { CreateInterviewSessionDto } from './dto/create-interview-session.dto';
 import { SubmitInterviewAnswerDto } from './dto/submit-interview-answer.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('interview-sessions')
+@UseGuards(JwtAuthGuard)
 export class InterviewSessionsController {
   constructor(private readonly interviewSessionsService: InterviewSessionsService) {}
 
   @Post()
-  create(@Body() createInterviewSessionDto: CreateInterviewSessionDto) {
-    return this.interviewSessionsService.create(createInterviewSessionDto);
+  create(@Body() createInterviewSessionDto: CreateInterviewSessionDto, @Req() req) {
+    return this.interviewSessionsService.create(createInterviewSessionDto, req.user.id);
   }
 
   @Get(':id')

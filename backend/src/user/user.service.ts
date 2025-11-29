@@ -5,22 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getDemoUser() {
-    let user = await this.prisma.user.findUnique({
-      where: { email: 'demo@example.com' },
-    });
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email: 'demo@example.com',
-          name: 'Demo User',
-        },
-      });
-    }
-
-    return user;
-  }
 
   async resetUserData(user: any) {
     // Delete ALL data for this user in correct order to respect foreign key constraints
