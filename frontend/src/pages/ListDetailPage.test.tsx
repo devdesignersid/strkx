@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@/test-utils';
+import { render, screen, waitFor } from '@/test-utils';
 import ListDetailPage from './ListDetailPage';
 import { describe, it, expect, vi } from 'vitest';
 import { server } from '@/mocks/server';

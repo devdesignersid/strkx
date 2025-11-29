@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
   CheckCircle2, Circle, MoreHorizontal, Edit, Trash2, Filter, ChevronDown as ChevronDownIcon

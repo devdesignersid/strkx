@@ -278,7 +278,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     lastSyncedTimeRef.current = 0;
 
     // Update local storage
-    const today = new Date().toISOString().split('T')[0];
+    // const today = new Date().toISOString().split('T')[0];
     localStorage.setItem('study_time_today', '0');
 
     try {

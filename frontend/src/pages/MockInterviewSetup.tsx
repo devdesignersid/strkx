@@ -19,7 +19,7 @@ const MockInterviewSetup: React.FC = () => {
   const [difficulty, setDifficulty] = useState<string[]>([]);
   const [status, setStatus] = useState<string[]>([]);
   const [selectedLists, setSelectedLists] = useState<string[]>([]);
-  const [tags, setTags] = useState<string>(''); // Comma separated
+  const [tags] = useState<string>(''); // Comma separated
   const [questionCount, setQuestionCount] = useState<number>(2);
 
   useEffect(() => {

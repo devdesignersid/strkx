@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { Loader2, Play, Send, Clock, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, Loader2, Send } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import * as monaco from 'monaco-editor';
@@ -46,11 +46,9 @@ const MockInterviewSession: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [code, setCode] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<number>(20 * 60); // 20 minutes
-  const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const endTimeRef = useRef<number | null>(null);
 
   // Fetch Session
   useEffect(() => {
