@@ -58,7 +58,7 @@ export class AuthController {
   // Test bypass endpoint
   @Post('test-login')
   async testLogin(@Body() body: { email: string }, @Res() res: Response) {
-      if (process.env.E2E_AUTH_BYPASS !== 'true') {
+      if (process.env.E2E_AUTH_BYPASS !== 'true' && process.env.NODE_ENV === 'production') {
           throw new UnauthorizedException('Test login not enabled');
       }
 

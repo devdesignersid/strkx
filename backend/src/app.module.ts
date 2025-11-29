@@ -17,7 +17,7 @@ import { AuthModule } from './auth/auth.module';
     ExecutionModule,
     DashboardModule,
     ListsModule,
-    ListsModule,
+
     UserModule,
     StudyStatsModule,
     InterviewSessionsModule,

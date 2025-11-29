@@ -2,13 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import type { Problem, ExecutionResult, Submission, Solution } from '@/types/problem';
-import { MotivationManager } from '@/lib/MotivationManager';
+import { useMotivation } from '@/hooks/useMotivation';
 import { aiService } from '@/lib/ai/aiService';
 import { PROMPTS } from '@/lib/ai/prompts';
-import { Clock, XCircle, Lightbulb } from 'lucide-react';
-import React from 'react';
+
 
 export function useProblem(slug: string | undefined) {
+  const { recordSolve } = useMotivation();
   const [problem, setProblem] = useState<Problem | null>(null);
   const [code, setCode] = useState('');
   const [output, setOutput] = useState<ExecutionResult | null>(null);
@@ -136,7 +136,7 @@ export function useProblem(slug: string | undefined) {
         onSuccess?.();
 
         if (res.data.passed) {
-          MotivationManager.recordSolve();
+          recordSolve();
         }
       }
     } catch (err: any) {

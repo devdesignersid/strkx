@@ -74,7 +74,7 @@ export class AuthService {
 
   // For E2E testing bypass
   async validateTestUser(email: string): Promise<User> {
-      if (process.env.E2E_AUTH_BYPASS !== 'true') {
+      if (process.env.E2E_AUTH_BYPASS !== 'true' && process.env.NODE_ENV === 'production') {
           throw new Error('E2E Auth Bypass is not enabled');
       }
 

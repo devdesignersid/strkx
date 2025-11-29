@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 
 const STORAGE_KEYS = {
@@ -6,8 +7,8 @@ const STORAGE_KEYS = {
   TOTAL_SOLVED: 'strkx_total_solved',
 };
 
-export const MotivationManager = {
-  recordSolve: () => {
+export function useMotivation() {
+  const recordSolve = () => {
     const now = new Date();
     const today = now.toDateString();
     const lastSolved = localStorage.getItem(STORAGE_KEYS.LAST_SOLVED);
@@ -36,8 +37,8 @@ export const MotivationManager = {
       // Trigger streak toast
       if (streak > 1) {
         toast.success({
-            title: `🔥 ${streak} Day Streak!`,
-            description: 'Keep it up!'
+          title: `🔥 ${streak} Day Streak!`,
+          description: 'Keep it up!'
         });
       } else {
         toast.success(TOAST_MESSAGES.MOTIVATION.FIRST_SOLVE);
@@ -56,12 +57,14 @@ export const MotivationManager = {
         description: randomMsg
       });
     }
-  },
+  };
 
-  getStats: () => {
+  const getStats = () => {
     return {
       streak: parseInt(localStorage.getItem(STORAGE_KEYS.STREAK) || '0', 10),
       total: parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_SOLVED) || '0', 10),
     };
-  }
-};
+  };
+
+  return { recordSolve, getStats };
+}

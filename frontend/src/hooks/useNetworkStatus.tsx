@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Wifi, WifiOff } from 'lucide-react';
 
-export function NetworkStatus() {
+export function useNetworkStatus() {
   useEffect(() => {
     const handleOnline = () => {
       toast.success(TOAST_MESSAGES.GENERAL.NETWORK_RESTORED, {
@@ -26,6 +26,4 @@ export function NetworkStatus() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  return null; // Headless component
 }

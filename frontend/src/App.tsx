@@ -12,17 +12,19 @@ import MockInterviewSession from './pages/MockInterviewSession';
 import MockInterviewSummary from './pages/MockInterviewSummary';
 import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
-import { NetworkStatus } from '@/components/ui/NetworkStatus';
+
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+
 function App() {
+  useNetworkStatus();
   return (
     <GlobalErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <NetworkStatus />
           <Toaster
             position="top-right"
             theme="dark"
