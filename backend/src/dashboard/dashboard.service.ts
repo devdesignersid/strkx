@@ -1,100 +1,121 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService } from '../common/cache.service';
 import { DASHBOARD_CONSTANTS } from '../common/constants';
+import {
+  DashboardStatsDto,
+  DashboardActivityDto,
+  DashboardHeatmapDto,
+} from './dashboard.dto';
+import {
+  getWeeklyDateRanges,
+  buildSolvedSubmissionsQuery,
+  buildActivityQuery,
+  buildSystemDesignActivityQuery,
+  buildHeatmapCodingQuery,
+  buildHeatmapSystemDesignQuery,
+  getAccuracyCounts,
+} from './dashboard.utils';
+
+// Cache TTL constants (in milliseconds)
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const ACTIVITY_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const HEATMAP_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
-  async getStats(user: any) {
-    if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0, systemDesignSolved: 0 };
+  async getStats(user: any): Promise<DashboardStatsDto> {
+    if (!user) {
+      return {
+        solved: 0,
+        attempted: 0,
+        accuracy: 0,
+        streak: 0,
+        easy: 0,
+        medium: 0,
+        hard: 0,
+        weeklyChange: 0,
+        systemDesignSolved: 0,
+      };
+    }
 
-    // 1. Get Solved Counts by Difficulty (Optimized with groupBy)
-    const solvedCounts = await this.prisma.submission.groupBy({
-      by: ['problemId'],
-      where: { userId: user.id, status: 'ACCEPTED' },
-    });
+    // Check cache first
+    const cacheKey = `dashboard:stats:${user.id}`;
+    const cached = this.cache.get<DashboardStatsDto>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
-    // To get difficulty breakdown, we still need to join with Problem.
-    // Prisma groupBy doesn't support relation filtering/selection directly in the same query easily for this shape.
-    // However, we can fetch the problem IDs and then count.
-    // OR, since we need distinct problemIds, we can fetch them.
+    // Execute all queries in parallel for maximum performance
+    const [
+      distinctSolved,
+      systemDesignSolved,
+      attemptedGroup,
+      { acceptedCount, totalCount },
+    ] = await Promise.all([
+      // Query 1: Distinct solved problems with difficulty and date
+      buildSolvedSubmissionsQuery(user.id, this.prisma),
 
-    // Better approach for difficulty breakdown + distinct:
-    // Fetch all distinct solved submissions with difficulty.
-    const distinctSolved = await this.prisma.submission.findMany({
-      where: { userId: user.id, status: 'ACCEPTED' },
-      distinct: ['problemId'],
-      select: {
-        createdAt: true,
-        problem: {
-          select: { difficulty: true }
-        }
-      }
-    });
+      // Query 2: System design solved count
+      this.prisma.systemDesignSubmission.count({
+        where: {
+          userId: user.id,
+          status: 'completed',
+        },
+      }),
 
+      // Query 3: Attempted problems (distinct)
+      this.prisma.submission.groupBy({
+        by: ['problemId'],
+        where: { userId: user.id },
+      }),
+
+      // Query 4: Accuracy counts (total and accepted)
+      getAccuracyCounts(user.id, this.prisma),
+    ]);
+
+    // Process difficulty breakdown and weekly stats
     let solvedEasy = 0;
     let solvedMedium = 0;
     let solvedHard = 0;
     let solvedThisWeek = 0;
     let solvedLastWeek = 0;
 
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const { oneWeekAgo, twoWeeksAgo } = getWeeklyDateRanges();
 
     for (const s of distinctSolved) {
+      // Count by difficulty
       if (s.problem.difficulty === 'Easy') solvedEasy++;
       else if (s.problem.difficulty === 'Medium') solvedMedium++;
       else if (s.problem.difficulty === 'Hard') solvedHard++;
 
+      // Count by week
       const date = new Date(s.createdAt);
       if (date >= oneWeekAgo) solvedThisWeek++;
       else if (date >= twoWeeksAgo) solvedLastWeek++;
     }
 
     const solvedTotal = distinctSolved.length;
-
-    // 2. System Design Stats (Count is efficient)
-    const systemDesignSolved = await this.prisma.systemDesignSubmission.count({
-        where: {
-            userId: user.id,
-            status: 'completed'
-        }
-    });
-
-    // 3. Attempted (Distinct problemId)
-    // Using groupBy to get distinct count is efficient
-    const attemptedGroup = await this.prisma.submission.groupBy({
-      by: ['problemId'],
-      where: { userId: user.id },
-    });
     const attempted = attemptedGroup.length;
+    const accuracy =
+      totalCount > 0 ? Math.round((acceptedCount / totalCount) * 100) : 0;
 
-    // 4. Accuracy
-    // Total accepted submissions (not distinct problems)
-    const acceptedCount = await this.prisma.submission.count({
-      where: { userId: user.id, status: 'ACCEPTED' },
-    });
-
-    // Total submissions
-    const totalSubmissions = await this.prisma.submission.count({
-      where: { userId: user.id },
-    });
-
-    const accuracy = totalSubmissions > 0
-      ? Math.round((acceptedCount / totalSubmissions) * 100)
-      : 0;
-
-    // Weekly Change
+    // Calculate weekly change
     let weeklyChange = 0;
     if (solvedLastWeek > 0) {
-      weeklyChange = Math.round(((solvedThisWeek - solvedLastWeek) / solvedLastWeek) * 100);
+      weeklyChange = Math.round(
+        ((solvedThisWeek - solvedLastWeek) / solvedLastWeek) * 100,
+      );
     } else if (solvedThisWeek > 0) {
       weeklyChange = 100;
     }
 
-    return {
+    const result: DashboardStatsDto = {
       solved: solvedTotal,
       attempted,
       accuracy,
@@ -105,94 +126,82 @@ export class DashboardService {
       weeklyChange,
       systemDesignSolved,
     };
+
+    // Cache the result
+    this.cache.set(cacheKey, result, STATS_CACHE_TTL);
+
+    return result;
   }
 
-  async getActivity(user: any) {
+  async getActivity(user: any): Promise<DashboardActivityDto[]> {
     if (!user) return [];
 
-    // Fetch coding submissions (Optimized select)
-    const codingSubmissions = await this.prisma.submission.findMany({
-      where: { userId: user.id },
-      distinct: ['problemId'],
-      take: DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        status: true,
-        createdAt: true,
-        problem: {
-          select: { title: true, slug: true, difficulty: true }
-        }
-      }
-    });
+    // Check cache first
+    const cacheKey = `dashboard:activity:${user.id}`;
+    const cached = this.cache.get<DashboardActivityDto[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
-    // Fetch system design submissions (Optimized select)
-    const designSubmissions = await this.prisma.systemDesignSubmission.findMany({
-        where: { userId: user.id },
-        take: DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          status: true,
-          createdAt: true,
-          problem: {
-            select: { title: true, id: true, difficulty: true }
-          }
-        }
-    });
+    // Execute both queries in parallel
+    const [codingSubmissions, designSubmissions] = await Promise.all([
+      buildActivityQuery(
+        user.id,
+        DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
+        this.prisma,
+      ),
+      buildSystemDesignActivityQuery(
+        user.id,
+        DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
+        this.prisma,
+      ),
+    ]);
 
     // Combine and sort
     const combined = [
-        ...codingSubmissions.map(s => ({
-            id: s.id,
-            problemTitle: s.problem.title,
-            problemSlug: s.problem.slug,
-            difficulty: s.problem.difficulty,
-            status: s.status,
-            timestamp: s.createdAt,
-            type: 'coding'
-        })),
-        ...designSubmissions.map(s => ({
-            id: s.id,
-            problemTitle: s.problem.title,
-            problemSlug: s.problem.id,
-            difficulty: s.problem.difficulty, // Use actual difficulty (Easy/Medium/Hard)
-            status: s.status,
-            timestamp: s.createdAt,
-            type: 'system-design'
-        }))
-    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY);
+      ...codingSubmissions.map((s) => ({
+        id: s.id,
+        problemTitle: s.problem.title,
+        problemSlug: s.problem.slug,
+        difficulty: s.problem.difficulty,
+        status: s.status,
+        timestamp: s.createdAt,
+        type: 'coding' as const,
+      })),
+      ...designSubmissions.map((s) => ({
+        id: s.id,
+        problemTitle: s.problem.title,
+        problemSlug: s.problem.id,
+        difficulty: s.problem.difficulty,
+        status: s.status,
+        timestamp: s.createdAt,
+        type: 'system-design' as const,
+      })),
+    ]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY);
+
+    // Cache the result
+    this.cache.set(cacheKey, combined, ACTIVITY_CACHE_TTL);
 
     return combined;
   }
 
-  async getHeatmap(user: any) {
+  async getHeatmap(user: any): Promise<DashboardHeatmapDto[]> {
     if (!user) return [];
 
-    // Coding submissions (Optimized select)
-    const submissions = await this.prisma.submission.findMany({
-      where: {
-        userId: user.id,
-        status: 'ACCEPTED'
-      },
-      select: {
-        createdAt: true,
-        problemId: true
-      },
-    });
+    // Check cache first
+    const cacheKey = `dashboard:heatmap:${user.id}`;
+    const cached = this.cache.get<DashboardHeatmapDto[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
-    // System Design submissions (Optimized select)
-    const designSubmissions = await this.prisma.systemDesignSubmission.findMany({
-        where: {
-            userId: user.id,
-            status: 'completed'
-        },
-        select: {
-            createdAt: true,
-            problemId: true
-        }
-    });
+    // Execute both queries in parallel
+    const [submissions, designSubmissions] = await Promise.all([
+      buildHeatmapCodingQuery(user.id, this.prisma),
+      buildHeatmapSystemDesignQuery(user.id, this.prisma),
+    ]);
 
     const activityMap = new Map<string, Set<string>>();
 
@@ -207,16 +216,29 @@ export class DashboardService {
 
     // Process design submissions
     designSubmissions.forEach((s) => {
-        const date = s.createdAt.toISOString().split('T')[0];
-        if (!activityMap.has(date)) {
-          activityMap.set(date, new Set());
-        }
-        activityMap.get(date)!.add(`design-${s.problemId}`);
-      });
+      const date = s.createdAt.toISOString().split('T')[0];
+      if (!activityMap.has(date)) {
+        activityMap.set(date, new Set());
+      }
+      activityMap.get(date)!.add(`design-${s.problemId}`);
+    });
 
-    return Array.from(activityMap.entries()).map(([date, problems]) => ({
+    const result = Array.from(activityMap.entries()).map(([date, problems]) => ({
       date,
       count: problems.size,
     }));
+
+    // Cache the result
+    this.cache.set(cacheKey, result, HEATMAP_CACHE_TTL);
+
+    return result;
+  }
+
+  /**
+   * Invalidate cache for a specific user
+   * Useful when new submissions are created
+   */
+  invalidateUserCache(userId: string): void {
+    this.cache.invalidatePattern(`dashboard:${userId}`);
   }
 }

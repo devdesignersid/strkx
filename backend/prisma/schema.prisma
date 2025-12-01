@@ -107,6 +107,10 @@ model Submission {
   @@index([createdAt])
   @@index([executionTime])
   @@index([memoryUsed])
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([userId, status, createdAt])
+  @@index([userId, problemId])
 }
 
 model User {
@@ -177,6 +181,8 @@ model SystemDesignSubmission {
 
   @@index([userId])
   @@index([problemId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
 }
 
 model SystemDesignSolution {
