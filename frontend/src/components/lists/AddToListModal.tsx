@@ -10,6 +10,7 @@ interface List {
   id: string;
   name: string;
   _count: { problems: number };
+  problemIds?: string[];
 }
 
 interface AddToListModalProps {
@@ -179,47 +180,59 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
                     No lists found. Create one to get started!
                   </div>
                 ) : (
-                  lists.map(list => (
-                    <div
-                      key={list.id}
-                      onClick={() => toggleListSelection(list.id)}
-                      className={cn(
-                        "flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all border border-transparent",
-                        selectedListIds.has(list.id)
-                          ? "bg-primary/10 border-primary/20"
-                          : "hover:bg-white/5 border-transparent"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "w-8 h-8 rounded-md flex items-center justify-center transition-colors",
-                          selectedListIds.has(list.id) ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground"
-                        )}>
-                          <FolderPlus className="w-4 h-4" />
-                        </div>
-                        <div>
+                  lists.map(list => {
+                    const isAlreadyAdded = selectedProblemIds.every(id => list.problemIds?.includes(id));
+                    const isSelected = selectedListIds.has(list.id);
+
+                    return (
+                      <div
+                        key={list.id}
+                        onClick={() => !isAlreadyAdded && toggleListSelection(list.id)}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-lg transition-all border border-transparent",
+                          isAlreadyAdded
+                            ? "opacity-50 cursor-not-allowed bg-white/5"
+                            : "cursor-pointer",
+                          isSelected && !isAlreadyAdded
+                            ? "bg-primary/10 border-primary/20"
+                            : !isAlreadyAdded && "hover:bg-white/5 border-transparent"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
                           <div className={cn(
-                            "text-sm font-medium",
-                            selectedListIds.has(list.id) ? "text-primary" : "text-foreground"
+                            "w-8 h-8 rounded-md flex items-center justify-center transition-colors",
+                            isSelected && !isAlreadyAdded ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground"
                           )}>
-                            {list.name}
+                            <FolderPlus className="w-4 h-4" />
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
-                            {list._count.problems} problems
+                          <div>
+                            <div className={cn(
+                              "text-sm font-medium",
+                              isSelected && !isAlreadyAdded ? "text-primary" : "text-foreground"
+                            )}>
+                              {list.name}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {list._count.problems} problems
+                            </div>
                           </div>
                         </div>
+                        {isAlreadyAdded ? (
+                          <span className="text-[10px] font-medium text-muted-foreground bg-white/10 px-2 py-0.5 rounded">
+                            Added
+                          </span>
+                        ) : isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-primary"
+                          >
+                            <Check className="w-4 h-4" />
+                          </motion.div>
+                        )}
                       </div>
-                      {selectedListIds.has(list.id) && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="text-primary"
-                        >
-                          <Check className="w-4 h-4" />
-                        </motion.div>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

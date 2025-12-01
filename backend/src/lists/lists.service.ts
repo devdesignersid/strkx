@@ -85,7 +85,8 @@ export class ListsService {
             // Keep structure compatible with frontend expectations but limit preview
             problems: list.problems.slice(0, 5), // Only showing coding problems in preview for now to keep it simple
             _count: { problems: totalCount },
-            solvedCount
+            solvedCount,
+            problemIds: [...codingProblemIds, ...systemDesignProblemIds]
         };
     });
   }
