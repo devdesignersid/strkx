@@ -66,7 +66,7 @@ export default function CreateProblemPage() {
       axios.get(`${API_URL}/problems/id/${id}`, { withCredentials: true })
         .then(res => {
           console.log('Fetched problem data:', res.data); // Debug log
-          const problem = res.data;
+          const problem = res.data.data; // Access the nested data property
           setFormData({
             title: problem.title || '',
             slug: problem.slug || '',
