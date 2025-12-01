@@ -69,14 +69,14 @@ export class ProblemsController {
     return this.problemsService.findSolutions(slug, req.user);
   }
 
-  @Get(':slug')
-  findOne(@Param('slug') slug: string, @Req() req: any) {
-    return this.problemsService.findOne(slug, req.user.id);
-  }
-
   @Get('id/:id')
   findById(@Param('id') id: string, @Req() req: any) {
     return this.problemsService.findById(id, req.user.id);
+  }
+
+  @Get(':slug')
+  findOne(@Param('slug') slug: string, @Req() req: any) {
+    return this.problemsService.findOne(slug, req.user.id);
   }
 
   @Patch(':id')
