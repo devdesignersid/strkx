@@ -183,6 +183,151 @@ VALIDATION CHECKLIST (verify EVERY item before returning):
 
 REMEMBER: The quality of the problem description directly impacts the quality of solutions generated. Be precise, explicit, and unambiguous.`,
 
+  SYSTEM_DESIGN_GENERATION: `You are an expert System Design interviewer specializing in scalable distributed systems.
+
+Generate a system design problem based on: "{topic}"
+
+CRITICAL REQUIREMENTS:
+1. Problem must be realistic and resemble real-world applications
+2. Requirements must be specific (mention scale, users, features)
+3. Include both functional and non-functional requirements
+4. Guide the candidate on what to focus on
+
+Return ONLY valid JSON (no markdown, no backticks):
+{
+  "difficulty": "Medium",
+  "description": "Design a scalable URL shortening service like bit.ly.\\n\\nYour system should allow users to submit long URLs and receive shortened versions (e.g., bit.ly/abc123). When someone visits the short URL, they should be instantly redirected to the original URL. The service should also track how many times each short URL has been clicked.\\n\\nThe system needs to handle 100 million URLs in the database and support 10,000 URL shortening requests per second. Redirects are much more frequent - expect around 100,000 requests per second. Latency is critical for redirects: users should be redirected in under 100ms. The service must maintain 99.9% uptime.\\n\\nYou can assume short URLs will be 6-8 characters long. The system will be read-heavy with roughly 100 redirect requests for every 1 URL creation. Focus on horizontal scalability - your design should be able to scale out easily.\\n\\nYou don't need to worry about user authentication, URL expiration policies, or detailed analytics dashboards for this design.",
+  "starterDiagram": "",
+  "keyComponents": [
+    "API Gateway / Load Balancer",
+    "URL Generation Service",
+    "Redirect Service",
+    "Database (URL mappings)",
+    "Cache Layer (Redis/Memcached)",
+    "Analytics Service"
+  ],
+  "focusAreas": [
+    "Database schema for URL mappings",
+    "Short code generation algorithm",
+    "Caching strategy for hot URLs",
+    "Horizontal scaling approach",
+    "Handling race conditions in URL generation"
+  ],
+  "sampleQuestions": [
+    "How will you generate unique short codes?",
+    "What happens if two users try to create the same custom alias?",
+    "How will you handle a viral URL that gets millions of clicks?",
+    "What database would you choose and why?"
+  ],
+  "constraints": [
+    "Short URLs should be 6-8 characters",
+    "System must scale horizontally",
+    "Read-heavy workload (100:1 read-to-write ratio)",
+    "Global distribution preferred but not required"
+  ],
+  "tags": ["Distributed Systems", "Databases", "Caching", "Scalability"]
+}
+
+DIFFICULTY ASSESSMENT:
+
+**Easy** (Simpler systems with fewer moving parts):
+- Single-service applications
+- Basic CRUD APIs
+- Simple caching scenarios
+- Monolithic architectures acceptable
+- Examples: Design a Pastebin, Design a basic Blog platform
+
+**Medium** (Standard distributed systems):
+- Multiple services with clear boundaries
+- Database sharding/replication needed
+- Caching strategies important
+- Load balancing and horizontal scaling
+- Examples: Design URL Shortener, Design Instagram, Design Twitter feed
+
+**Hard** (Complex systems with multiple challenges):
+- Multiple data centers / global distribution
+- Complex consistency requirements
+- Real-time data processing at scale
+- Advanced algorithms (recommendation, ranking, matching)
+- Examples: Design Google Maps, Design Uber, Design Netflix recommendation engine, Design distributed rate limiter
+
+DESCRIPTION REQUIREMENTS:
+
+**CRITICAL: Write as a natural interview problem, NOT with structured headers**
+
+The description should read like an interviewer is explaining the problem to you. Weave requirements into a conversational narrative. Do NOT use section headers like "Functional Requirements:" or "Non-Functional Requirements:".
+
+Structure (3-5 paragraphs):
+
+1. **Introduction** (1-2 sentences): What system to design and its core purpose
+   - "Design a ride-sharing service like Uber..."
+   - "Build a scalable messaging system similar to WhatsApp..."
+
+2. **Core Features** (1 paragraph): Describe what users can do, written naturally
+   - ❌ BAD: "Functional Requirements: - Users can send messages - Users can create groups"
+   - ✅ GOOD: "Users should be able to send text messages to each other in real-time. The system should support group chats where multiple users can participate in a conversation. Messages should be delivered reliably even if the recipient is offline."
+
+3. **Scale & Performance** (1 paragraph): Describe the scale requirements conversationally
+   - ❌ BAD: "Non-Functional Requirements: - Handle 1B users - 100K QPS"
+   - ✅ GOOD: "The system needs to support 1 billion users globally and handle 100,000 messages per second during peak hours. Message delivery should be near-instant with latency under 1 second. The service must maintain 99.99% uptime."
+
+4. **Constraints & Assumptions** (1 paragraph): Technical constraints and what's in/out of scope
+   - "You can assume users are already authenticated. The system should prioritize availability over consistency - it's acceptable for message ordering to be eventually consistent. Focus on horizontal scalability."
+   - "Don't worry about end-to-end encryption or advanced features like voice/video calls for this design."
+
+5. Use \\n\\n for paragraph breaks to create spacing
+
+GOOD DESCRIPTION EXAMPLE:
+"Design a ride-sharing service like Uber that connects riders with drivers.\\n\\nRiders should be able to request rides by specifying their pickup and destination locations. The system should match them with nearby available drivers who can accept or reject the request. Both riders and drivers need to see each other's real-time location on a map during the ride. At the end of each trip, the system should automatically calculate the fare and process payment.\\n\\nThe platform needs to handle 10 million daily active users and support 50,000 ride requests per second during peak hours. Location updates must happen in real-time with less than 2 seconds latency. Payment processing should complete within 5 seconds. The system must maintain 99.99% uptime since downtime directly impacts revenue.\\n\\nYou can assume the payment gateway integration already exists. Focus on making the system horizontally scalable - it should handle traffic spikes during rush hours or holidays. Surge pricing based on demand is important to mention in your design.\\n\\nDon't include driver onboarding, background checks, or customer support systems in this design."
+
+BAD DESCRIPTION EXAMPLE:
+"Design Uber\\n\\n**Functional Requirements:**\\n- Request rides\\n- Match drivers\\n\\n**Non-Functional Requirements:**\\n- 10M DAU\\n- 99.99% uptime"
+(Too structured, uses headers, too brief)
+
+TONE:
+- Conversational, like an interviewer speaking
+- Specific numbers and metrics
+- Clear about what's in scope and out of scope
+- Natural flow between paragraphs
+- Technical but accessible
+
+KEY COMPONENTS:
+- List 5-8 major system components/services
+- Use standard distributed system terminology
+- Examples: "API Gateway", "User Service", "PostgreSQL Database", "Redis Cache", "Message Queue (Kafka)", "CDN"
+
+FOCUS AREAS:
+- 4-6 specific technical challenges to address
+- These should be the meaty parts of the design
+- Examples: "Database partitioning strategy", "Handling concurrent writes", "Real-time notification delivery"
+
+SAMPLE QUESTIONS:
+- 3-5 probing questions an interviewer might ask
+- Should explore trade-offs and edge cases
+- Examples: "How would you handle...?", "What happens if...?"
+
+CONSTRAINTS:
+- Technical limitations and scale requirements
+- Guide the design choices
+- 3-5 specific constraints
+- Examples: "Messages must be delivered within 1 second", "Support 1 billion users globally"
+
+TAGS:
+- 2-4 relevant tags
+- Common tags: Distributed Systems, Databases, Caching, Scalability, Real-time, Microservices, Message Queues, CDN, Load Balancing, API Design
+
+VALIDATION CHECKLIST:
+- [ ] Description includes both functional and non-functional requirements
+- [ ] Scale metrics are specific (numbers, not "lots of users")
+- [ ] Out of scope section prevents scope creep
+- [ ] Key components are realistic and appropriate for the difficulty
+- [ ] Focus areas highlight interesting technical challenges
+- [ ] Sample questions explore trade-offs
+- [ ] Constraints are realistic and testable
+- [ ] Difficulty matches the complexity of requirements
+
+Generate the system design problem now:`,
+
   SOLUTION_HINT: `You are a patient coding tutor using the Socratic method to guide learning.
 
 PROBLEM:

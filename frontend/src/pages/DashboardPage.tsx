@@ -359,7 +359,13 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back, {user?.name || 'User'}</p>
+          <p className="text-muted-foreground mt-1">
+            {(() => {
+              const hour = new Date().getHours();
+              const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+              return `${greeting}, ${user?.name || 'User'}!`;
+            })()}
+          </p>
         </header>
 
         {isLoading ? (
@@ -375,7 +381,40 @@ export default function DashboardPage() {
         {isLoading ? (
           <Skeleton className="h-[300px] w-full rounded-xl mb-8" />
         ) : (
-          <Heatmap data={heatmapData} />
+          <>
+            {/* Empty State for New Users */}
+            {stats.solved === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-12 text-center mb-8">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Ghost className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">Start Your Journey!</h2>
+                  <p className="text-muted-foreground mb-6">
+                    No practice activity yet. Let's get started with your first problem or mock interview.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Link
+                      to="/problems"
+                      className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Browse Problems
+                    </Link>
+                    <Link
+                      to="/mock-interview"
+                      className="bg-secondary text-foreground px-6 py-3 rounded-lg font-medium hover:bg-secondary/80 transition-colors inline-flex items-center gap-2"
+                    >
+                      <Activity className="w-4 h-4" />
+                      Start Mock Interview
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Heatmap data={heatmapData} />
+            )}
+          </>
         )}
 
         <div className="grid grid-cols-1 gap-8">

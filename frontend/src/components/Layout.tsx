@@ -10,10 +10,10 @@ export default function Layout() {
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/problems', icon: Code2, label: 'Problems' },
-    { path: '/lists', icon: List, label: 'Lists' },
     { path: '/mock-interview', icon: Brain, label: 'Mock Interview' },
+    { path: '/problems', icon: Code2, label: 'Coding Problems' },
     { path: '/system-design', icon: Boxes, label: 'System Design' },
+    { path: '/lists', icon: List, label: 'Problem Lists' },
   ];
 
   return (

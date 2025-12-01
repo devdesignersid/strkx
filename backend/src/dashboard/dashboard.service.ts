@@ -136,7 +136,7 @@ export class DashboardService {
           status: true,
           createdAt: true,
           problem: {
-            select: { title: true, id: true }
+            select: { title: true, id: true, difficulty: true }
           }
         }
     });
@@ -156,7 +156,7 @@ export class DashboardService {
             id: s.id,
             problemTitle: s.problem.title,
             problemSlug: s.problem.id,
-            difficulty: 'System Design',
+            difficulty: s.problem.difficulty, // Use actual difficulty (Easy/Medium/Hard)
             status: s.status,
             timestamp: s.createdAt,
             type: 'system-design'

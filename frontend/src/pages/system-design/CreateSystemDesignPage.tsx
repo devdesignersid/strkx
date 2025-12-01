@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { systemDesignApi } from '@/features/system-design/api/systemDesignApi';
 import { aiService } from '@/lib/ai/aiService';
+import { PROMPTS } from '@/lib/ai/prompts';
 import { Modal } from '@/components/ui/Modal';
 
 export default function CreateSystemDesignPage() {
@@ -101,20 +102,8 @@ export default function CreateSystemDesignPage() {
 
         setIsGenerating(true);
         try {
-            // Use a prompt tailored for System Design
-            const prompt = `Generate a system design interview problem for "${formData.title}".
-        Return a JSON object with the following structure:
-        {
-            "difficulty": "Easy" | "Medium" | "Hard",
-            "description": "Markdown description of the problem...",
-            "tags": ["tag1", "tag2"],
-            "constraints": ["constraint1", "constraint2"]
-        }
-        The description should include:
-        1. Functional Requirements
-        2. Non-Functional Requirements
-        3. Out of Scope (optional)
-        `;
+            // Use the comprehensive system design generation prompt
+            const prompt = PROMPTS.SYSTEM_DESIGN_GENERATION.replace('{topic}', formData.title);
 
             const response = await aiService.generateCompletion(prompt);
 
