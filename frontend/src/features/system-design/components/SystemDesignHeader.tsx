@@ -1,11 +1,9 @@
-import { FileText, Maximize2, Minimize2, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
+import { FileText, Maximize2, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
 import type { SystemDesignProblem } from '@/types/system-design';
 
 interface SystemDesignHeaderProps {
     problem: SystemDesignProblem;
     onSubmit: () => void;
-    isFocusMode: boolean;
-    onToggleFocusMode: () => void;
     isLeftPanelCollapsed: boolean;
     onToggleLeftPanel: () => void;
     isRightPanelCollapsed: boolean;
@@ -16,8 +14,6 @@ interface SystemDesignHeaderProps {
 export function SystemDesignHeader({
     problem,
     onSubmit,
-    isFocusMode,
-    onToggleFocusMode,
     isLeftPanelCollapsed,
     onToggleLeftPanel,
     isRightPanelCollapsed,
@@ -63,18 +59,6 @@ export function SystemDesignHeader({
                         <Maximize2 className="w-4 h-4 rotate-45" />
                     </button>
                 )}
-
-                <button
-                    onClick={onToggleFocusMode}
-                    className="p-2 hover:bg-secondary rounded-md transition-colors"
-                    title={isFocusMode ? 'Exit Focus Mode' : 'Focus Mode'}
-                >
-                    {isFocusMode ? (
-                        <Minimize2 className="w-4 h-4" />
-                    ) : (
-                        <Maximize2 className="w-4 h-4" />
-                    )}
-                </button>
 
                 <button
                     onClick={onSubmit}

@@ -248,8 +248,6 @@ export default function SystemDesignProblemView() {
             <SystemDesignHeader
                 problem={problem}
                 onSubmit={onSubmit}
-                isFocusMode={isFocusMode}
-                onToggleFocusMode={toggleFocusMode}
                 isLeftPanelCollapsed={isLeftPanelCollapsed}
                 onToggleLeftPanel={toggleLeftPanel}
                 isRightPanelCollapsed={isRightPanelCollapsed}
