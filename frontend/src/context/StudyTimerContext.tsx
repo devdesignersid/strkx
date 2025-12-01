@@ -152,11 +152,11 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           // Periodic Backend Sync (every 60s)
           // We sync the DELTA since the last sync to avoid double counting
           if (timeRef.current > 0 && timeRef.current % 60 === 0) {
-             const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
-             if (timeSinceLastSync > 0) {
-               syncToBackend(timeSinceLastSync);
-               lastSyncedTimeRef.current = timeRef.current;
-             }
+            const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
+            if (timeSinceLastSync > 0) {
+              syncToBackend(timeSinceLastSync);
+              lastSyncedTimeRef.current = timeRef.current;
+            }
           }
 
           // Check for midnight reset
@@ -175,8 +175,8 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (isActive && !isPaused) {
         const timeSinceLastSync = timeRef.current - lastSyncedTimeRef.current;
         if (timeSinceLastSync > 0) {
-           syncToBackend(timeSinceLastSync);
-           // No need to update ref as we are unloading
+          syncToBackend(timeSinceLastSync);
+          // No need to update ref as we are unloading
         }
       }
     };
@@ -205,7 +205,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setIsPaused(true);
           // Notify user?
           if (Notification.permission === 'granted') {
-             new Notification("Study Timer Paused", { body: "You've been idle for 5 minutes." });
+            new Notification("Study Timer Paused", { body: "You've been idle for 5 minutes." });
           }
         }
       }, IDLE_TIMEOUT);
@@ -261,8 +261,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const syncToBackend = async (seconds: number) => {
     try {
       await axios.post(`${API_URL}/study-stats/sync`, {
-        totalTime: timeRef.current,
-        problemsSolved: 0,
+        studySeconds: seconds,
       }, { withCredentials: true });
       console.log('Synced to backend:', seconds);
     } catch (error) {
