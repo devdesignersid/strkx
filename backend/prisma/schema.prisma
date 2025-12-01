@@ -14,6 +14,35 @@ enum Difficulty {
   Hard
 }
 
+enum SubmissionStatus {
+  ACCEPTED
+  REJECTED
+  PENDING
+  COMPILE_ERROR
+  RUNTIME_ERROR
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+}
+
+enum InterviewSessionStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum InterviewQuestionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum InterviewQuestionOutcome {
+  PASSED
+  FAILED
+  PARTIAL
+}
+
 model Problem {
   id          String       @id @default(uuid())
   slug        String
@@ -34,6 +63,7 @@ model Problem {
   user        User         @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@index([difficulty])
   @@unique([userId, slug])
 }
 
@@ -75,6 +105,8 @@ model Submission {
   @@index([problemId])
   @@index([status])
   @@index([createdAt])
+  @@index([executionTime])
+  @@index([memoryUsed])
 }
 
 model User {
@@ -274,4 +306,5 @@ model InterviewQuestion {
 
   @@index([interviewSessionId])
   @@index([problemId])
+  @@index([status])
 }

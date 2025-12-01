@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -27,6 +28,7 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalFilters(new PrismaClientExceptionFilter());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalInterceptors(new LoggingInterceptor());
