@@ -1,12 +1,14 @@
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
-import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, Loader2, PanelLeftClose } from 'lucide-react';
+import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, Loader2, PanelLeftClose, Trash2 } from 'lucide-react';
 import type { Problem, Submission, Solution } from '@/types/problem';
 import EmptyState from '@/components/ui/EmptyState';
 import { fadeIn } from '@/components/ui/DesignSystem';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Modal } from '@/components/ui/Modal';
 
 interface ProblemDescriptionProps {
   problem: Problem;
@@ -18,6 +20,7 @@ interface ProblemDescriptionProps {
   onAnalyze: () => void;
   onLoadSubmission: (submission: Submission) => void;
   onMarkAsSolution: (submissionId: string, currentStatus: boolean, currentName: string | null) => void;
+  onDeleteSubmission: (submissionId: string) => void;
   onLoadSolution: (code: string) => void;
   onCollapse: () => void;
 }
@@ -32,9 +35,12 @@ export function ProblemDescription({
   onAnalyze,
   onLoadSubmission,
   onMarkAsSolution,
+  onDeleteSubmission,
   onLoadSolution,
   onCollapse
 }: ProblemDescriptionProps) {
+  const [submissionToDelete, setSubmissionToDelete] = React.useState<string | null>(null);
+
   return (
     <div className="flex flex-col h-full bg-card">
       <Tabs defaultValue="description" className="flex flex-col h-full">
@@ -125,25 +131,37 @@ export function ProblemDescription({
                         {new Date(sub.createdAt).toLocaleTimeString()}
                       </div>
 
-                      {(sub.executionTime != null || sub.memoryUsed != null) && (
-                        <div className="flex items-center gap-3">
-                          {sub.executionTime != null && (
-                            <div className="flex items-center gap-1">
-                              <Zap className="w-3 h-3 text-amber-400" />
-                              <span>{sub.executionTime.toFixed(1)}ms</span>
-                              {sub.timePercentile != null && sub.timePercentile < 50 && (
-                                <span className="text-green-400">↑{100 - sub.timePercentile}%</span>
-                              )}
-                            </div>
-                          )}
-                          {sub.memoryUsed != null && (
-                            <div className="flex items-center gap-1">
-                              <TrendingUp className="w-3 h-3 text-blue-400" />
-                              <span>{(sub.memoryUsed / 1024).toFixed(1)}KB</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {(sub.executionTime != null || sub.memoryUsed != null) && (
+                          <>
+                            {sub.executionTime != null && (
+                              <div className="flex items-center gap-1">
+                                <Zap className="w-3 h-3 text-amber-400" />
+                                <span>{sub.executionTime.toFixed(1)}ms</span>
+                                {sub.timePercentile != null && sub.timePercentile < 50 && (
+                                  <span className="text-green-400">↑{100 - sub.timePercentile}%</span>
+                                )}
+                              </div>
+                            )}
+                            {sub.memoryUsed != null && (
+                              <div className="flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3 text-blue-400" />
+                                <span>{(sub.memoryUsed / 1024).toFixed(1)}KB</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSubmissionToDelete(sub.id);
+                          }}
+                          className="p-1 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                          title="Delete Submission"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -275,6 +293,34 @@ export function ProblemDescription({
           </TabsContent>
         </div>
       </Tabs>
+
+      <Modal
+        isOpen={!!submissionToDelete}
+        onClose={() => setSubmissionToDelete(null)}
+        title="Delete Submission"
+        description="Are you sure you want to delete this submission? This action cannot be undone."
+        footer={
+          <>
+            <button
+              onClick={() => setSubmissionToDelete(null)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (submissionToDelete) {
+                  onDeleteSubmission(submissionToDelete);
+                  setSubmissionToDelete(null);
+                }
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+            >
+              Delete
+            </button>
+          </>
+        }
+      />
     </div>
   );
 }

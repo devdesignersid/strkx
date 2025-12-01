@@ -315,6 +315,18 @@ export function useProblem(slug: string | undefined) {
     toggleTimer,
     resetTimer,
     markAsSolution,
-    unmarkAsSolution
+    unmarkAsSolution,
+    deleteSubmission: async (submissionId: string) => {
+      if (!slug) return;
+      try {
+        await axios.delete(`${API_URL}/problems/${slug}/submissions/${submissionId}`, { withCredentials: true });
+        fetchSubmissions();
+        fetchSolutions();
+        toast.success('Submission deleted');
+      } catch (err) {
+        console.error('Failed to delete submission:', err);
+        toast.error(TOAST_MESSAGES.GENERAL.ERROR);
+      }
+    }
   };
 }

@@ -64,6 +64,11 @@ export class ProblemsController {
     );
   }
 
+  @Delete(':slug/submissions/:id')
+  deleteSubmission(@Param('id') id: string, @Req() req: any) {
+    return this.problemsService.deleteSubmission(id, req.user.id);
+  }
+
   @Get(':slug/solutions')
   findSolutions(@Param('slug') slug: string, @Req() req: any) {
     return this.problemsService.findSolutions(slug, req.user);

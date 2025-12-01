@@ -24,6 +24,7 @@ interface CodeEditorProps {
   formatTime: (seconds: number) => string;
   isFocusMode: boolean;
   onToggleFocusMode: () => void;
+  onRun: () => void;
 }
 
 // Inner component to isolate Editor from timer re-renders
@@ -77,7 +78,8 @@ export function CodeEditor({
   isAIEnabled,
   formatTime,
   isFocusMode,
-  onToggleFocusMode
+  onToggleFocusMode,
+  onRun
 }: CodeEditorProps) {
 
   const editorOptions = useMemo(() => ({
@@ -116,6 +118,16 @@ export function CodeEditor({
     linkedEditing: false,
     selectionHighlight: false,
   }), [autocompleteEnabled]);
+
+  const handleEditorDidMount: OnMount = useCallback((editor, monaco) => {
+    // Add keyboard shortcut for Run (Cmd+Enter / Ctrl+Enter)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      onRun();
+    });
+
+    // Call the original onMount prop
+    onMount(editor, monaco);
+  }, [onMount, onRun]);
 
   const handleEditorWillMount = useCallback((monaco: typeof import('monaco-editor')) => {
     monaco.editor.defineTheme('vscode-dark', {
@@ -241,7 +253,7 @@ export function CodeEditor({
         <InnerEditor
           initialCode={code}
           onChange={onChange}
-          onMount={onMount}
+          onMount={handleEditorDidMount}
           handleEditorWillMount={handleEditorWillMount}
           editorOptions={editorOptions}
         />

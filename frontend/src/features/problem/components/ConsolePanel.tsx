@@ -29,7 +29,7 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
           <div className="text-muted-foreground">Run your code to see output here.</div>
         )}
         {isRunning && (
-          <div className="text-muted-foreground animate-pulse">Running code...</div>
+          <div className="text-muted-foreground animate-pulse pb-4">Running code...</div>
         )}
         {output && (
           <div className="space-y-4">
@@ -86,8 +86,8 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                   {result.logs && result.logs.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-white/10">
                       <div className="flex items-center gap-1.5 mb-2 text-xs font-medium text-muted-foreground">
-                         <TerminalIcon className="w-3 h-3" />
-                         <span>Console Output</span>
+                        <TerminalIcon className="w-3 h-3" />
+                        <span>Console Output</span>
                       </div>
                       <div className="bg-black/50 border border-white/5 px-3 py-2 rounded-md block text-xs font-mono text-white/90 space-y-1 overflow-x-auto">
                         {result.logs.map((log, j) => (

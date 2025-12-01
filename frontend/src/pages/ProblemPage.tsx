@@ -34,7 +34,8 @@ export default function ProblemPage() {
     toggleTimer,
     resetTimer,
     markAsSolution,
-    unmarkAsSolution
+    unmarkAsSolution,
+    deleteSubmission
   } = useProblem(slug);
 
 
@@ -160,13 +161,13 @@ export default function ProblemPage() {
         problem={problem}
         isRunning={isRunning}
         onRun={(mode) => {
-            // Get the latest code from the editor
-            const currentCode = editorRef.current?.getValue() || code;
-            // Save code snapshot when running tests
-            lastRunCodeRef.current = currentCode;
-            handleRun(mode, () => {
-                if (isConsoleCollapsed) consolePanelRef.current?.expand();
-            }, currentCode);
+          // Get the latest code from the editor
+          const currentCode = editorRef.current?.getValue() || code;
+          // Save code snapshot when running tests
+          lastRunCodeRef.current = currentCode;
+          handleRun(mode, () => {
+            if (isConsoleCollapsed) consolePanelRef.current?.expand();
+          }, currentCode);
         }}
         canSubmit={canSubmit}
         isDescriptionCollapsed={isDescriptionCollapsed}
@@ -197,6 +198,7 @@ export default function ProblemPage() {
               onAnalyze={handleAIAnalyze}
               onLoadSubmission={(sub) => setCode(sub.code)}
               onMarkAsSolution={handleMarkAsSolutionClick}
+              onDeleteSubmission={deleteSubmission}
               onLoadSolution={(code) => setCode(code)}
               onCollapse={toggleDescription}
             />
@@ -229,6 +231,13 @@ export default function ProblemPage() {
                   formatTime={formatTime}
                   isFocusMode={isFocusMode}
                   onToggleFocusMode={toggleFocusMode}
+                  onRun={() => {
+                    const currentCode = editorRef.current?.getValue() || code;
+                    lastRunCodeRef.current = currentCode;
+                    handleRun('run', () => {
+                      if (isConsoleCollapsed) consolePanelRef.current?.expand();
+                    }, currentCode);
+                  }}
                 />
               </Panel>
 
