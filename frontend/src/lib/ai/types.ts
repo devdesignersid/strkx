@@ -8,7 +8,7 @@ export interface AIProvider {
   id: string;
   name: string;
   configure(config: AIConfig): void;
-  generateCompletion(prompt: string, systemPrompt?: string): Promise<string>;
+  generateCompletion(prompt: string, systemPrompt?: string, images?: string[]): Promise<string>;
   validateKey(apiKey: string): Promise<boolean>;
 }
 

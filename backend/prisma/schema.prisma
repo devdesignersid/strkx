@@ -16,7 +16,7 @@ enum Difficulty {
 
 model Problem {
   id          String       @id @default(uuid())
-  slug        String       @unique
+  slug        String
   title       String
   description String
   starterCode String?
@@ -34,6 +34,7 @@ model Problem {
   user        User         @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@unique([userId, slug])
 }
 
 model TestCase {
@@ -90,6 +91,78 @@ model User {
   interviewSessions InterviewSession[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+
+  // System Design Relations
+  systemDesignProblems    SystemDesignProblem[]
+  systemDesignSubmissions SystemDesignSubmission[]
+}
+
+model SystemDesignProblem {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String
+  description     String
+  difficulty      Difficulty @default(Medium)
+  defaultDuration Int      @default(45) // Minutes
+  tags            String[]
+  constraints     String[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  submissions     SystemDesignSubmission[]
+  solutions       SystemDesignSolution[]
+  lists           SystemDesignProblemsOnLists[]
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@unique([userId, slug])
+}
+
+model SystemDesignSubmission {
+  id               String   @id @default(uuid())
+  problemId        String
+  problem          SystemDesignProblem @relation(fields: [problemId], references: [id])
+
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+
+  excalidrawJson   Json     // Store Excalidraw elements and appState
+  notesMarkdown    String?
+  timeSpentSeconds Int      @default(0)
+  status           String   @default("in_progress") // in_progress, completed
+  isSolution       Boolean  @default(false)
+  solutionName     String?
+
+  score            Int?
+  feedback         String?
+  aiAnalysis       Json?    // Store detailed AI analysis
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([problemId])
+}
+
+model SystemDesignSolution {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         SystemDesignProblem @relation(fields: [problemId], references: [id])
+
+  title           String
+  description     String
+  diagramSnapshot String? // URL to image
+  excalidrawJson  Json?   // Optional full diagram
+
+  author          String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([problemId])
 }
 
 model DailyStudyLog {
@@ -115,6 +188,7 @@ model List {
   user        User     @relation(fields: [userId], references: [id])
 
   problems    ProblemsOnLists[]
+  systemDesignProblems SystemDesignProblemsOnLists[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -128,6 +202,20 @@ model ProblemsOnLists {
 
   problemId String
   problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  addedAt   DateTime @default(now())
+
+  @@id([listId, problemId])
+  @@index([listId])
+  @@index([problemId])
+}
+
+model SystemDesignProblemsOnLists {
+  listId    String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  problemId String
+  problem   SystemDesignProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   addedAt   DateTime @default(now())
 

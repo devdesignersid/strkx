@@ -51,7 +51,9 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply !bg-background text-foreground;
+    font-family: "DM Sans", sans-serif !important;
+    /* Enforce app font against external overrides */
     font-feature-settings: "rlig" 1, "calt" 1;
     /* Supabase-style subtle noise/gradient if desired, but keeping it clean for now */
   }

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const user = await prisma.user.findUnique({ where: { email: 'demo@example.com' } });
-  const problem = await prisma.problem.findUnique({ where: { slug: 'two-sum' } });
+  const problem = user ? await prisma.problem.findFirst({ where: { slug: 'two-sum', userId: user.id } }) : null;
 
   if (user && problem) {
     await prisma.submission.create({

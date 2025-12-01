@@ -14,12 +14,29 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  async generateCompletion(prompt: string, systemPrompt?: string): Promise<string> {
+  async generateCompletion(prompt: string, systemPrompt?: string, images?: string[]): Promise<string> {
     if (!this.config.apiKey || !this.client) {
       throw new Error('API key not configured for Gemini');
     }
 
     const model = this.config.model || 'gemini-2.0-flash';
+
+    const parts: any[] = [
+        { text: systemPrompt ? `System Instruction: ${systemPrompt}\n\nUser Request: ${prompt}` : prompt }
+    ];
+
+    if (images && images.length > 0) {
+        images.forEach(image => {
+            // Ensure we strip the data URL prefix if present
+            const base64Data = image.includes('base64,') ? image.split('base64,')[1] : image;
+            parts.push({
+                inlineData: {
+                    mimeType: 'image/png',
+                    data: base64Data
+                }
+            });
+        });
+    }
 
     try {
       const response = await this.client.models.generateContent({
@@ -27,9 +44,7 @@ export class GeminiProvider implements AIProvider {
         contents: [
             {
                 role: 'user',
-                parts: [
-                    { text: systemPrompt ? `System Instruction: ${systemPrompt}\n\nUser Request: ${prompt}` : prompt }
-                ]
+                parts: parts
             }
         ],
         config: {

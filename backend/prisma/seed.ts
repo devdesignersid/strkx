@@ -7,13 +7,19 @@ async function main() {
     where: { email: 'demo@example.com' },
     update: {},
     create: {
+      id: 'demo-user',
       email: 'demo@example.com',
       name: 'Demo User',
     },
   });
 
   const twoSum = await prisma.problem.upsert({
-    where: { slug: 'two-sum' },
+    where: {
+      userId_slug: {
+        userId: user.id,
+        slug: 'two-sum',
+      },
+    },
     update: {},
     create: {
       title: 'Two Sum',

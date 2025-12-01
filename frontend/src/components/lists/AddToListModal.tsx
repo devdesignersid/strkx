@@ -39,7 +39,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
     setIsLoading(true);
     try {
       const res = await axios.get(`${API_URL}/lists`, { withCredentials: true });
-      setLists(res.data);
+      setLists(res.data.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
       toast.error(TOAST_MESSAGES.LISTS.LOAD_FAILED);
@@ -53,11 +53,11 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
     setIsSubmitting(true);
     try {
       const res = await axios.post(`${API_URL}/lists`, { name: newListName }, { withCredentials: true });
-      setLists([res.data, ...lists]);
+      setLists([res.data.data, ...lists]);
       setNewListName('');
       setIsCreating(false);
       // Auto-select the new list
-      setSelectedListIds(prev => new Set(prev).add(res.data.id));
+      setSelectedListIds(prev => new Set(prev).add(res.data.data.id));
       toast.success(TOAST_MESSAGES.LISTS.CREATED);
     } catch (error) {
       console.error('Failed to create list:', error);
@@ -192,17 +192,17 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
                     >
                       <div className="flex items-center gap-3">
                         <div className={cn(
-                            "w-8 h-8 rounded-md flex items-center justify-center transition-colors",
-                            selectedListIds.has(list.id) ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground"
+                          "w-8 h-8 rounded-md flex items-center justify-center transition-colors",
+                          selectedListIds.has(list.id) ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground"
                         )}>
-                            <FolderPlus className="w-4 h-4" />
+                          <FolderPlus className="w-4 h-4" />
                         </div>
                         <div>
                           <div className={cn(
-                              "text-sm font-medium",
-                              selectedListIds.has(list.id) ? "text-primary" : "text-foreground"
+                            "text-sm font-medium",
+                            selectedListIds.has(list.id) ? "text-primary" : "text-foreground"
                           )}>
-                              {list.name}
+                            {list.name}
                           </div>
                           <div className="text-[10px] text-muted-foreground">
                             {list._count.problems} problems
@@ -211,11 +211,11 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
                       </div>
                       {selectedListIds.has(list.id) && (
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="text-primary"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="text-primary"
                         >
-                            <Check className="w-4 h-4" />
+                          <Check className="w-4 h-4" />
                         </motion.div>
                       )}
                     </div>

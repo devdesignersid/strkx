@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ProblemsService } from './problems.service';
 import { CreateProblemDto } from './dto/create-problem.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -27,27 +28,17 @@ export class ProblemsController {
 
   @Get()
   findAll(
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Query('search') search: string,
+    @Query() paginationDto: PaginationDto,
     @Query('difficulty') difficulty: string,
     @Query('status') status: string,
     @Query('tags') tags: string,
-    @Query('sort') sort: string,
-    @Query('order') order: 'asc' | 'desc',
     @Req() req: any,
   ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const limitNum = limit ? parseInt(limit, 10) : 20;
     return this.problemsService.findAll(
-      pageNum,
-      limitNum,
-      search,
+      paginationDto,
       difficulty,
       status,
       tags,
-      sort,
-      order,
       req.user,
     );
   }
@@ -62,11 +53,13 @@ export class ProblemsController {
     @Param('slug') slug: string,
     @Param('id') id: string,
     @Body() body: { isSolution: boolean; solutionName?: string },
+    @Req() req: any,
   ) {
     return this.problemsService.updateSubmissionSolution(
       slug,
       id,
       body.isSolution,
+      req.user,
       body.solutionName,
     );
   }

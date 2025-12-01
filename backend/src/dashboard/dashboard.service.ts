@@ -1,24 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DASHBOARD_CONSTANTS } from '../common/constants';
 
 @Injectable()
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getStats(user: any) {
-    if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0 };
+    if (!user) return { solved: 0, attempted: 0, accuracy: 0, streak: 0, easy: 0, medium: 0, hard: 0, weeklyChange: 0, systemDesignSolved: 0 };
 
     // 1. Get unique solved problems count by difficulty (Optimized)
-    // We group by problemId to get unique solved problems, then filter by difficulty
-    // Since Prisma doesn't support "count distinct problemId where status=ACCEPTED group by difficulty" easily in one go without raw query,
-    // we will use a slightly different approach:
-    // Fetch all unique accepted problemIds with their difficulty.
-    // This is still much lighter than fetching all submissions.
-
     const distinctSolved = await this.prisma.submission.findMany({
       where: { userId: user.id, status: 'ACCEPTED' },
       distinct: ['problemId'],
       select: { problem: { select: { difficulty: true } }, createdAt: true },
+    });
+
+    // System Design Stats
+    const systemDesignSolved = await this.prisma.systemDesignSubmission.count({
+        where: {
+            userId: user.id,
+            status: 'completed'
+        }
     });
 
     let solvedEasy = 0;
@@ -46,7 +49,6 @@ export class DashboardService {
     const solvedTotal = distinctSolved.length;
 
     // 2. Get total attempted (distinct problemId)
-    // We can use groupBy for this
     const attemptedGroup = await this.prisma.submission.groupBy({
       by: ['problemId'],
       where: { userId: user.id },
@@ -54,7 +56,6 @@ export class DashboardService {
     const attempted = attemptedGroup.length;
 
     // 3. Get Accuracy (Total Accepted / Total Submissions)
-    // We can use aggregate for total counts
     const aggregations = await this.prisma.submission.aggregate({
       where: { userId: user.id },
       _count: {
@@ -85,38 +86,67 @@ export class DashboardService {
       solved: solvedTotal,
       attempted,
       accuracy,
-      streak: 1, // Mock streak for now
+      streak: DASHBOARD_CONSTANTS.DEFAULT_STREAK, // Mock streak for now
       easy: solvedEasy,
       medium: solvedMedium,
       hard: solvedHard,
       weeklyChange,
+      systemDesignSolved,
     };
   }
 
   async getActivity(user: any) {
     if (!user) return [];
 
-    const submissions = await this.prisma.submission.findMany({
+
+
+    // Fetch coding submissions
+    const codingSubmissions = await this.prisma.submission.findMany({
       where: { userId: user.id },
       distinct: ['problemId'],
-      take: 3,
+      take: DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
       orderBy: { createdAt: 'desc' },
       include: { problem: { select: { title: true, slug: true, difficulty: true } } },
     });
 
-    return submissions.map((s) => ({
-      id: s.id,
-      problemTitle: s.problem.title,
-      problemSlug: s.problem.slug,
-      difficulty: s.problem.difficulty,
-      status: s.status,
-      timestamp: s.createdAt,
-    }));
+    // Fetch system design submissions
+    const designSubmissions = await this.prisma.systemDesignSubmission.findMany({
+        where: { userId: user.id },
+        take: DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY,
+        orderBy: { createdAt: 'desc' },
+        include: { problem: { select: { title: true, id: true } } }
+    });
+
+    // Combine and sort
+    const combined = [
+        ...codingSubmissions.map(s => ({
+            id: s.id,
+            problemTitle: s.problem.title,
+            problemSlug: s.problem.slug,
+            difficulty: s.problem.difficulty,
+            status: s.status,
+            timestamp: s.createdAt,
+            type: 'coding'
+        })),
+        ...designSubmissions.map(s => ({
+            id: s.id,
+            problemTitle: s.problem.title,
+            problemSlug: s.problem.id, // Use ID as slug for system design
+            difficulty: 'System Design',
+            status: s.status,
+            timestamp: s.createdAt,
+            type: 'system-design'
+        }))
+    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, DASHBOARD_CONSTANTS.MAX_RECENT_ACTIVITY); // Take top 5 most recent
+
+    return combined;
   }
 
   async getHeatmap(user: any) {
     if (!user) return [];
 
+    // Coding submissions
     const submissions = await this.prisma.submission.findMany({
       where: {
         userId: user.id,
@@ -128,8 +158,21 @@ export class DashboardService {
       },
     });
 
+    // System Design submissions
+    const designSubmissions = await this.prisma.systemDesignSubmission.findMany({
+        where: {
+            userId: user.id,
+            status: 'completed'
+        },
+        select: {
+            createdAt: true,
+            problemId: true
+        }
+    });
+
     const activityMap = new Map<string, Set<string>>();
 
+    // Process coding submissions
     submissions.forEach((s) => {
       const date = s.createdAt.toISOString().split('T')[0];
       if (!activityMap.has(date)) {
@@ -137,6 +180,15 @@ export class DashboardService {
       }
       activityMap.get(date)!.add(s.problemId);
     });
+
+    // Process design submissions
+    designSubmissions.forEach((s) => {
+        const date = s.createdAt.toISOString().split('T')[0];
+        if (!activityMap.has(date)) {
+          activityMap.set(date, new Set());
+        }
+        activityMap.get(date)!.add(`design-${s.problemId}`); // Prefix to avoid collision
+      });
 
     return Array.from(activityMap.entries()).map(([date, problems]) => ({
       date,

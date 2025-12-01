@@ -41,7 +41,7 @@ export default function ListsPage() {
     setIsLoading(true);
     try {
       const res = await axios.get(`${API_URL}/lists`, { withCredentials: true });
-      setLists(res.data);
+      setLists(res.data.data);
     } catch (error) {
       console.error('Failed to fetch lists:', error);
       toast.error(TOAST_MESSAGES.LISTS.LOAD_FAILED);
@@ -60,7 +60,7 @@ export default function ListsPage() {
         name: newListName,
         description: newListDesc
       }, { withCredentials: true });
-      setLists([res.data, ...lists]);
+      setLists([res.data.data, ...lists]);
       setIsCreateModalOpen(false);
       setNewListName('');
       setNewListDesc('');
@@ -165,17 +165,17 @@ export default function ListsPage() {
                   <Folder className="w-5 h-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="text-xs text-muted-foreground flex items-center gap-1 bg-secondary/30 px-2 py-1 rounded-full">
-                        <Clock className="w-3 h-3" />
-                        {new Date(list.updatedAt).toLocaleDateString()}
-                    </div>
-                    <button
-                        onClick={(e) => handleDeleteList(e, list.id, list.name)}
-                        className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
-                        title="Delete List"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1 bg-secondary/30 px-2 py-1 rounded-full">
+                    <Clock className="w-3 h-3" />
+                    {new Date(list.updatedAt).toLocaleDateString()}
+                  </div>
+                  <button
+                    onClick={(e) => handleDeleteList(e, list.id, list.name)}
+                    className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
+                    title="Delete List"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -186,37 +186,37 @@ export default function ListsPage() {
 
               {/* Progress Bar */}
               <div className="mb-4">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                      <span>Progress</span>
-                      <span className={list.solvedCount === list._count.problems && list._count.problems > 0 ? "text-green-500 font-medium" : ""}>
-                          {list.solvedCount} / {list._count.problems}
-                      </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                      <div
-                          className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
-                          style={{ width: `${list._count.problems > 0 ? (list.solvedCount / list._count.problems) * 100 : 0}%` }}
-                      />
-                  </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                  <span>Progress</span>
+                  <span className={list.solvedCount === list._count.problems && list._count.problems > 0 ? "text-green-500 font-medium" : ""}>
+                    {list.solvedCount} / {list._count.problems}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${list._count.problems > 0 ? (list.solvedCount / list._count.problems) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-white/5">
                 <span className="text-xs font-medium text-muted-foreground">
-                    {list._count.problems} problems
+                  {list._count.problems} problems
                 </span>
 
                 {/* Tags Preview */}
                 <div className="flex -space-x-2">
-                    {Array.from(new Set((list.problems || []).flatMap(p => p.problem?.tags || []))).slice(0, 3).map((tag, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-secondary border border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground" title={tag}>
-                            {tag[0]}
-                        </div>
-                    ))}
-                    {(list.problems || []).flatMap(p => p.problem?.tags || []).length > 3 && (
-                        <div className="w-6 h-6 rounded-full bg-secondary border border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground">
-                            +
-                        </div>
-                    )}
+                  {Array.from(new Set((list.problems || []).flatMap(p => p.problem?.tags || []))).slice(0, 3).map((tag, i) => (
+                    <div key={i} className="w-6 h-6 rounded-full bg-secondary border border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground" title={tag}>
+                      {tag[0]}
+                    </div>
+                  ))}
+                  {(list.problems || []).flatMap(p => p.problem?.tags || []).length > 3 && (
+                    <div className="w-6 h-6 rounded-full bg-secondary border border-card flex items-center justify-center text-[8px] font-bold text-muted-foreground">
+                      +
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

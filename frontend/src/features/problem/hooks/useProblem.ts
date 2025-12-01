@@ -76,10 +76,10 @@ export function useProblem(slug: string | undefined) {
 
     axios.get(`${API_URL}/problems/${slug}`, { withCredentials: true })
       .then(res => {
-        setProblem(res.data);
-        setCode(res.data.starterCode || '// Write your code here');
-        if (res.data.timeLimit) {
-          setTimeLeft(res.data.timeLimit * 60);
+        setProblem(res.data.data);
+        setCode(res.data.data.starterCode || '// Write your code here');
+        if (res.data.data.timeLimit) {
+          setTimeLeft(res.data.data.timeLimit * 60);
         }
       })
       .catch(err => console.error(err));
@@ -88,14 +88,14 @@ export function useProblem(slug: string | undefined) {
   const fetchSubmissions = useCallback(() => {
     if (!slug) return;
     axios.get(`${API_URL}/problems/${slug}/submissions`, { withCredentials: true })
-      .then(res => setSubmissions(res.data))
+      .then(res => setSubmissions(res.data.data))
       .catch(err => console.error('Failed to fetch submissions:', err));
   }, [slug]);
 
   const fetchSolutions = useCallback(() => {
     if (!slug) return;
     axios.get(`${API_URL}/problems/${slug}/solutions`, { withCredentials: true })
-      .then(res => setSolutions(res.data))
+      .then(res => setSolutions(res.data.data))
       .catch(err => console.error('Failed to fetch solutions:', err));
   }, [slug]);
 
@@ -128,15 +128,15 @@ export function useProblem(slug: string | undefined) {
       }, { withCredentials: true });
 
       if (mode === 'run') {
-        setOutput(res.data);
+        setOutput(res.data.data);
         onSuccess?.();
       } else {
         fetchSubmissions();
         fetchSolutions();
-        setOutput(res.data);
+        setOutput(res.data.data);
         onSuccess?.();
 
-        if (res.data.passed) {
+        if (res.data.data.passed) {
           recordSolve();
         }
       }

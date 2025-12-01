@@ -408,4 +408,71 @@ Use this markdown format (with \\\\n for newlines):
 TONE: Professional, educational, and constructive. Praise good choices, explain issues clearly, and provide actionable improvements.
 
 Generate the evaluation now:`,
+  SYSTEM_DESIGN_ANALYSIS: `You are an expert System Design Interviewer evaluating a candidate's design.
+
+PROBLEM: {problemTitle}
+
+PROBLEM DESCRIPTION:
+{problemDescription}
+
+CANDIDATE'S NOTES:
+{userNotes}
+
+CANDIDATE'S DIAGRAM SUMMARY (Nodes & Edges):
+{diagramSummary}
+
+YOUR TASK: Provide a comprehensive, fair, and educational evaluation of the system design.
+
+CRITICAL SCORING RULES:
+1. **EMPTY/MINIMAL SUBMISSION:** If the notes are empty/minimal AND the diagram has few nodes (< 5), the score MUST be between **0-30**. Do NOT give high scores for empty submissions.
+2. **DIAGRAM ANALYSIS:** You have been provided with a **VISUAL SNAPSHOT** of the candidate's diagram. You MUST analyze this image.
+   - **Explicitly reference visual elements** in your feedback (e.g., "I see you placed the Load Balancer between the Client and API Gateway", "The connection from Service A to Database B is missing").
+   - **Critique the layout:** Is it messy? Are flows clear?
+   - If the diagram contradicts the notes, point it out.
+3.  **SPECIFICITY:** Penalize vague descriptions. "Database" is bad; "PostgreSQL with Read Replicas" is good.
+
+EVALUATION RUBRIC (100 points total):
+
+1. SCALABILITY (25 points):
+   - Does the design handle growth in traffic/data?
+   - Are there bottlenecks?
+   - Is horizontal scaling possible?
+
+2. RELIABILITY & AVAILABILITY (25 points):
+   - Is the system fault-tolerant?
+   - Are there single points of failure?
+   - Is data replication/backup considered?
+
+3. COMPLETENESS & REQUIREMENTS (25 points):
+   - Does it meet all functional requirements?
+   - Are non-functional requirements addressed?
+
+4. DESIGN CHOICES & TRADE-OFFS (25 points):
+   - Are the chosen technologies appropriate?
+   - Are trade-offs explained/justified?
+
+OUTPUT FORMAT - Return VALID JSON (all strings must use \\n for newlines, no actual newlines):
+
+{
+  "score": 85,
+  "scalability": "High - Uses horizontal scaling for web servers and sharding for the database.",
+  "reliability": "Medium - Single point of failure in the load balancer configuration.",
+  "bottlenecks": "The primary database write throughput might become a bottleneck.",
+  "completeness": "Covers most requirements but misses rate limiting.",
+  "feedback": "## Score Breakdown\\\\n\\\\n**Scalability (22/25)**\\\\n- Good use of caching...\\\\n\\\\n**Reliability (18/25)**\\\\n- Needs better failover...\\\\n\\\\n**Completeness (20/25)**\\\\n- Missed rate limiting...\\\\n\\\\n**Diagram Analysis**\\\\n- I noticed you grouped the microservices logically...\\\\n- The flow from the client to the CDN is clearly depicted...",
+  "suggestions": [
+    "Add a rate limiter to prevent abuse.",
+    "Consider using a managed load balancer for better availability.",
+    "Implement read replicas to offload read traffic."
+  ]
+}
+
+JSON FORMATTING RULES:
+- Use \\\\n for line breaks in feedback (NOT actual newlines)
+- Escape all quotes inside strings with \\\\"
+- No control characters (tabs, actual newlines, etc.)
+- Score must be integer from 0-100
+- Suggestions array should have 3-5 specific, actionable items
+
+Generate the evaluation now:`,
 };

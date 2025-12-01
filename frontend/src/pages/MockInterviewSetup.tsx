@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Play, Clock, Brain, Filter, List as ListIcon, Hash } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { API_URL } from '@/config';
+import { DIFFICULTY_LEVELS, PROBLEM_STATUSES, MOCK_INTERVIEW_CONSTANTS } from '@/config/constants';
 
 interface List {
   id: string;
@@ -26,7 +27,7 @@ const MockInterviewSetup: React.FC = () => {
     // Fetch lists for filter
     fetch(`${API_URL}/lists`, { credentials: 'include' })
       .then(res => res.json())
-      .then(data => setLists(data))
+      .then(data => setLists(data.data))
       .catch(err => console.error('Failed to fetch lists', err));
   }, []);
 
@@ -51,8 +52,8 @@ const MockInterviewSetup: React.FC = () => {
       if (!res.ok) {
         const err = await res.json();
         toast.error({
-            title: TOAST_MESSAGES.INTERVIEW.START_FAILED.title,
-            description: err.message || TOAST_MESSAGES.INTERVIEW.START_FAILED.description
+          title: TOAST_MESSAGES.INTERVIEW.START_FAILED.title,
+          description: err.message || TOAST_MESSAGES.INTERVIEW.START_FAILED.description
         });
         setLoading(false);
         return;
@@ -102,15 +103,14 @@ const MockInterviewSetup: React.FC = () => {
               <Filter className="w-4 h-4 text-primary" /> Difficulty
             </label>
             <div className="flex gap-3">
-              {['Easy', 'Medium', 'Hard'].map(diff => (
+              {DIFFICULTY_LEVELS.map(diff => (
                 <button
                   key={diff}
                   onClick={() => toggleSelection(diff, difficulty, setDifficulty)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                    difficulty.includes(diff)
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                  }`}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${difficulty.includes(diff)
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                    }`}
                 >
                   {diff}
                 </button>
@@ -124,15 +124,14 @@ const MockInterviewSetup: React.FC = () => {
               <Clock className="w-4 h-4 text-primary" /> Status
             </label>
             <div className="flex gap-3">
-              {['Todo', 'Attempted', 'Solved'].map(s => (
+              {PROBLEM_STATUSES.map(s => (
                 <button
                   key={s}
                   onClick={() => toggleSelection(s, status, setStatus)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                    status.includes(s)
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                  }`}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${status.includes(s)
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                    }`}
                 >
                   {s}
                 </button>
@@ -150,11 +149,10 @@ const MockInterviewSetup: React.FC = () => {
                 <button
                   key={list.id}
                   onClick={() => toggleSelection(list.id, selectedLists, setSelectedLists)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                    selectedLists.includes(list.id)
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${selectedLists.includes(list.id)
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-secondary/50 text-muted-foreground border-transparent hover:bg-secondary hover:text-foreground'
+                    }`}
                 >
                   {list.name}
                 </button>
@@ -168,18 +166,18 @@ const MockInterviewSetup: React.FC = () => {
               <Hash className="w-4 h-4 text-primary" /> Number of Questions
             </label>
             <div className="p-6 bg-secondary/30 rounded-xl border border-border space-y-4">
-                <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">{questionCount}</span>
-                    <span className="text-sm text-muted-foreground">Estimated duration: <span className="text-foreground font-medium">{questionCount * 20} mins</span></span>
-                </div>
-                <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={questionCount}
-                    onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                    className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                />
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-primary">{questionCount}</span>
+                <span className="text-sm text-muted-foreground">Estimated duration: <span className="text-foreground font-medium">{questionCount * MOCK_INTERVIEW_CONSTANTS.MINUTES_PER_QUESTION} mins</span></span>
+              </div>
+              <input
+                type="range"
+                min={MOCK_INTERVIEW_CONSTANTS.MIN_QUESTION_COUNT}
+                max={MOCK_INTERVIEW_CONSTANTS.MAX_QUESTION_COUNT}
+                value={questionCount}
+                onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              />
             </div>
           </div>
 
@@ -190,8 +188,8 @@ const MockInterviewSetup: React.FC = () => {
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Preparing Session...
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Preparing Session...
               </span>
             ) : (
               <>

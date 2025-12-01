@@ -1,8 +1,8 @@
-import { IsArray, IsString, IsNotEmpty } from 'class-validator';
+import { IsArray, IsString, IsNotEmpty, ArrayNotEmpty } from 'class-validator';
 
 export class ManageListProblemsDto {
   @IsArray()
   @IsString({ each: true })
-  @IsNotEmpty()
+  @ArrayNotEmpty()
   problemIds: string[];
 }

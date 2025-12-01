@@ -53,7 +53,7 @@ export function useProblems() {
 
     try {
       const res = await axios.get(`${API_URL}/problems?${params.toString()}`, { withCredentials: true });
-      const { problems: fetchedProblems, hasMore: more } = res.data;
+      const { problems: fetchedProblems, hasMore: more } = res.data.data;
 
       const enriched = fetchedProblems.map((p: any) => ({
           ...p,

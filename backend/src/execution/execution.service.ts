@@ -27,8 +27,11 @@ export class ExecutionService {
   private async executeSafe(executeCodeDto: ExecuteCodeDto, user?: any) {
     const { code, problemSlug } = executeCodeDto;
 
-    const problem = await this.prisma.problem.findUnique({
-      where: { slug: problemSlug },
+    const problem = await this.prisma.problem.findFirst({
+      where: {
+        slug: problemSlug,
+        userId: user.id,
+      },
       include: { testCases: true },
     });
 

@@ -17,6 +17,7 @@ interface ActivityItem {
   time: string;
   difficulty: string;
   slug: string;
+  type: 'coding' | 'system-design';
 }
 
 interface HeatmapItem {
@@ -113,6 +114,22 @@ const StatsCard = memo(({ stats }: { stats: any }) => {
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
           <span className="text-red-500 font-medium">Mastery</span>
+        </div>
+      </div>
+
+      {/* System Design Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">System Design</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.systemDesignSolved || 0}</div>
+          </div>
+          <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+            <Activity className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className="text-purple-500 font-medium">Architect</span>
         </div>
       </div>
     </div>
@@ -283,6 +300,7 @@ export default function DashboardPage() {
     ranking: 0,
     weeklyChange: 0,
     studyTime: '0m',
+    systemDesignSolved: 0,
   });
 
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
@@ -300,28 +318,29 @@ export default function DashboardPage() {
           axios.get(`${API_URL}/study-stats/today`, { withCredentials: true })
         ]);
 
-        const studySeconds = studyStatsRes.data.totalStudySeconds || 0;
+        const studySeconds = studyStatsRes.data.data.totalStudySeconds || 0;
         const hours = Math.floor(studySeconds / 3600);
         const minutes = Math.floor((studySeconds % 3600) / 60);
         const studyTimeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
         setStats({
-          ...statsRes.data,
+          ...statsRes.data.data,
           studyTime: studyTimeStr
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setRecentActivity(activityRes.data.map((item: any) => ({
-          id: item.problemSlug,
+        setRecentActivity(activityRes.data.data.map((item: any) => ({
+          id: item.id,
           problem: item.problemTitle,
-          status: item.status === 'ACCEPTED' ? 'Solved' : 'Attempted',
+          status: item.status === 'ACCEPTED' || item.status === 'completed' ? 'Solved' : 'Attempted',
           time: format(new Date(item.timestamp), 'MMM d, h:mm a'),
           difficulty: item.difficulty,
-          slug: item.problemSlug
+          slug: item.problemSlug,
+          type: item.type || 'coding'
         })));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setHeatmapData(heatmapRes.data.map((item: any) => ({
+        setHeatmapData(heatmapRes.data.data.map((item: any) => ({
           date: new Date(item.date),
           count: item.count
         })));
@@ -387,7 +406,12 @@ export default function DashboardPage() {
                           )}>
                             {activity.status}
                           </span>
-                          <Link to={`/problems/${activity.slug}`} className="font-medium hover:underline">{activity.problem}</Link>
+                          <Link
+                            to={activity.type === 'system-design' ? `/system-design/${activity.slug}` : `/problems/${activity.slug}`}
+                            className="font-medium hover:underline"
+                          >
+                            {activity.problem}
+                          </Link>
                         </div>
                         <div className="text-xs text-muted-foreground">{activity.time}</div>
                       </div>
@@ -397,6 +421,7 @@ export default function DashboardPage() {
                       activity.difficulty === 'Easy' && "text-green-500",
                       activity.difficulty === 'Medium' && "text-yellow-500",
                       activity.difficulty === 'Hard' && "text-red-500",
+                      activity.difficulty === 'System Design' && "text-purple-500",
                     )}>{activity.difficulty}</span>
                   </div>
                 ))

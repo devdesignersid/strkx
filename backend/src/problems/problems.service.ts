@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
+import { PaginationDto, SortOrder } from '../common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Difficulty, Prisma } from '@prisma/client';
 
@@ -25,16 +26,14 @@ export class ProblemsService {
   }
 
   async findAll(
-    page: number = 1,
-    limit: number = 20,
-    search?: string,
+    paginationDto: PaginationDto,
     difficulty?: string,
     status?: string,
     tags?: string,
-    sort?: string,
-    order?: 'asc' | 'desc',
     user?: any,
   ) {
+    const { page = 1, limit = 20, search, sortBy, sortOrder = 'desc', skip, take } = paginationDto;
+
     const where: Prisma.ProblemWhereInput = {
       userId: user.id,
     };
@@ -124,9 +123,9 @@ export class ProblemsService {
     }
 
     // Sort (In-Memory)
-    if (sort) {
-      const sortKey = sort as keyof typeof enrichedProblems[0];
-      const sortOrder = order === 'desc' ? -1 : 1;
+    if (sortBy) {
+      const sortKey = sortBy as keyof typeof enrichedProblems[0];
+      const direction = sortOrder === SortOrder.DESC ? -1 : 1;
 
       enrichedProblems.sort((a, b) => {
         let valA = a[sortKey];
@@ -143,16 +142,15 @@ export class ProblemsService {
           valB = statusMap[b.status];
         }
 
-        if (valA < valB) return -1 * sortOrder;
-        if (valA > valB) return 1 * sortOrder;
+        if (valA < valB) return -1 * direction;
+        if (valA > valB) return 1 * direction;
         return 0;
       });
     }
 
     // Paginate
     const total = enrichedProblems.length;
-    const skip = (page - 1) * limit;
-    const paginatedProblems = enrichedProblems.slice(skip, skip + limit);
+    const paginatedProblems = enrichedProblems.slice(skip, skip + take);
 
     return {
       problems: paginatedProblems,
@@ -164,8 +162,11 @@ export class ProblemsService {
   }
 
   async findOne(slug: string, userId: string) {
-    const problem = await this.prisma.problem.findUnique({
-      where: { slug },
+    const problem = await this.prisma.problem.findFirst({
+      where: {
+        slug,
+        userId,
+      },
       include: {
         testCases: {
           where: { isHidden: false },
@@ -251,8 +252,11 @@ export class ProblemsService {
   }
 
   async findSubmissions(slug: string, user: any) {
-    const problem = await this.prisma.problem.findUnique({
-      where: { slug },
+    const problem = await this.prisma.problem.findFirst({
+      where: {
+        slug,
+        userId: user.id,
+      },
     });
 
     if (!problem) {
@@ -319,10 +323,14 @@ export class ProblemsService {
     slug: string,
     submissionId: string,
     isSolution: boolean,
+    user: any,
     solutionName?: string,
   ) {
-    const problem = await this.prisma.problem.findUnique({
-      where: { slug },
+    const problem = await this.prisma.problem.findFirst({
+      where: {
+        slug,
+        userId: user.id,
+      },
     });
 
     if (!problem) {
@@ -339,8 +347,11 @@ export class ProblemsService {
   }
 
   async findSolutions(slug: string, user: any) {
-    const problem = await this.prisma.problem.findUnique({
-      where: { slug },
+    const problem = await this.prisma.problem.findFirst({
+      where: {
+        slug,
+        userId: user.id,
+      },
     });
 
     if (!problem) {

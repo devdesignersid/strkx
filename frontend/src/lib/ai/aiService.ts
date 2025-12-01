@@ -68,11 +68,11 @@ class AIService {
     }
   }
 
-  async generateCompletion(prompt: string, systemPrompt?: string): Promise<string> {
+  async generateCompletion(prompt: string, systemPrompt?: string, images?: string[]): Promise<string> {
     if (!this.activeProvider) {
       throw new Error('AI Service not configured');
     }
-    return this.activeProvider.generateCompletion(prompt, systemPrompt);
+    return this.activeProvider.generateCompletion(prompt, systemPrompt, images);
   }
 
   async validateConnection(providerId: string, apiKey: string): Promise<boolean> {

@@ -10,8 +10,14 @@ import SettingsPage from './pages/SettingsPage';
 import MockInterviewSetup from './pages/MockInterviewSetup';
 import MockInterviewSession from './pages/MockInterviewSession';
 import MockInterviewSummary from './pages/MockInterviewSummary';
+import SystemDesignListPage from './pages/system-design/SystemDesignListPage';
+import SystemDesignProblemView from './pages/system-design/SystemDesignProblemView';
+import CreateSystemDesignPage from './pages/system-design/CreateSystemDesignPage';
 import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
+import { Suspense, lazy } from 'react';
+
+const ExcalidrawCanvasPage = lazy(() => import('./pages/system-design/ExcalidrawCanvasPage'));
 
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -42,6 +48,11 @@ function App() {
           />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/excalidraw-canvas" element={
+              <Suspense fallback={<div className="h-screen w-screen bg-[#151515]" />}>
+                <ExcalidrawCanvasPage />
+              </Suspense>
+            } />
             <Route path="/" element={
               <ProtectedRoute>
                 <Layout />
@@ -58,6 +69,10 @@ function App() {
               <Route path="mock-interview" element={<MockInterviewSetup />} />
               <Route path="mock-interview/session/:sessionId" element={<MockInterviewSession />} />
               <Route path="mock-interview/session/:sessionId/summary" element={<MockInterviewSummary />} />
+              <Route path="system-design" element={<SystemDesignListPage />} />
+              <Route path="system-design/new" element={<CreateSystemDesignPage />} />
+              <Route path="system-design/edit/:id" element={<CreateSystemDesignPage />} />
+              <Route path="system-design/:id" element={<SystemDesignProblemView />} />
             </Route>
           </Routes>
         </AuthProvider>

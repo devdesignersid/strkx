@@ -40,7 +40,25 @@ export class UserService {
             problem: { userId: user.id }
         }
       }),
-      // 7. Delete Problems created by user (FK to User)
+      // 7. Delete System Design Submissions (FK to User/Problem)
+      this.prisma.systemDesignSubmission.deleteMany({
+        where: { userId: user.id }
+      }),
+      // 8. Delete System Design Solutions (FK to Problem)
+      this.prisma.systemDesignSolution.deleteMany({
+        where: {
+            problem: { userId: user.id }
+        }
+      }),
+      // 9. Delete System Design Problems (FK to User)
+      this.prisma.systemDesignProblem.deleteMany({
+        where: { userId: user.id }
+      }),
+      // 10. Delete Daily Study Logs (FK to User)
+      this.prisma.dailyStudyLog.deleteMany({
+        where: { userId: user.id }
+      }),
+      // 11. Delete Problems created by user (FK to User)
       this.prisma.problem.deleteMany({
         where: { userId: user.id }
       }),
