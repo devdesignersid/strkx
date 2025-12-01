@@ -31,7 +31,7 @@ const StatsCard = memo(({ stats }: { stats: any }) => {
   return (
     <div className={cn(
       "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8",
-      isEnabled ? "lg:grid-cols-5" : "lg:grid-cols-4"
+      isEnabled ? "lg:grid-cols-4" : "lg:grid-cols-3"
     )}>
       {/* Study Time Card */}
       {isEnabled && (
@@ -50,6 +50,22 @@ const StatsCard = memo(({ stats }: { stats: any }) => {
           </div>
         </div>
       )}
+
+      {/* Total Hours Card */}
+      <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Total Hours</div>
+            <div className="text-4xl font-bold tracking-tight text-foreground">{stats.totalHours || 0}</div>
+          </div>
+          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+            <Activity className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+          <span className="text-blue-500 font-medium">Lifetime</span>
+        </div>
+      </div>
 
       {/* Solved Card */}
       <div className="bg-card border border-border p-6 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group hover:border-primary/50 transition-all duration-300">
@@ -301,6 +317,7 @@ export default function DashboardPage() {
     weeklyChange: 0,
     studyTime: '0m',
     systemDesignSolved: 0,
+    totalHours: 0,
   });
 
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);

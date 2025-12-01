@@ -41,6 +41,7 @@ export class DashboardService {
         hard: 0,
         weeklyChange: 0,
         systemDesignSolved: 0,
+        totalHours: 0,
       };
     }
 
@@ -57,6 +58,7 @@ export class DashboardService {
       systemDesignSolved,
       attemptedGroup,
       { acceptedCount, totalCount },
+      studyStats,
     ] = await Promise.all([
       // Query 1: Distinct solved problems with difficulty and date
       buildSolvedSubmissionsQuery(user.id, this.prisma),
@@ -77,6 +79,16 @@ export class DashboardService {
 
       // Query 4: Accuracy counts (total and accepted)
       getAccuracyCounts(user.id, this.prisma),
+
+      // Query 5: Total study time
+      this.prisma.dailyStudyLog.aggregate({
+        _sum: {
+          totalStudySeconds: true,
+        },
+        where: {
+          userId: user.id,
+        },
+      }),
     ]);
 
     // Process difficulty breakdown and weekly stats
@@ -105,6 +117,10 @@ export class DashboardService {
     const accuracy =
       totalCount > 0 ? Math.round((acceptedCount / totalCount) * 100) : 0;
 
+    // Calculate total hours (round to 1 decimal place)
+    const totalSeconds = studyStats._sum.totalStudySeconds || 0;
+    const totalHours = Math.round((totalSeconds / 3600) * 10) / 10;
+
     // Calculate weekly change
     let weeklyChange = 0;
     if (solvedLastWeek > 0) {
@@ -125,6 +141,7 @@ export class DashboardService {
       hard: solvedHard,
       weeklyChange,
       systemDesignSolved,
+      totalHours,
     };
 
     // Cache the result

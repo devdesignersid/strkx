@@ -43,6 +43,14 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Constants
   const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
+  // Helper to get local date string (YYYY-MM-DD)
+  const getLocalDateString = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  };
+
   // Load enabled state
   useEffect(() => {
     const savedEnabled = localStorage.getItem('study_timer_enabled');
@@ -72,14 +80,14 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const fetchInitialTime = async () => {
       try {
         const res = await axios.get(`${API_URL}/study-stats/today`, { withCredentials: true });
-        const serverTime = res.data.totalStudySeconds || 0;
+        const serverTime = res.data.data.totalStudySeconds || 0;
 
         setTime(serverTime);
         timeRef.current = serverTime;
         lastSyncedTimeRef.current = serverTime;
 
         // Update local storage to match server
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
         localStorage.setItem('study_date', today);
         localStorage.setItem('study_time_today', serverTime.toString());
       } catch (error) {
@@ -87,7 +95,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Fallback to local storage if server fails
         const savedTime = localStorage.getItem('study_time_today');
         const savedDate = localStorage.getItem('study_date');
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
 
         if (savedDate === today && savedTime) {
           setTime(parseInt(savedTime, 10));
@@ -160,7 +168,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
 
           // Check for midnight reset
-          const today = new Date().toISOString().split('T')[0];
+          const today = getLocalDateString();
           const storedDate = localStorage.getItem('study_date');
           if (storedDate !== today) {
             // Day changed!
@@ -235,7 +243,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const handleDayReset = () => {
     timeRef.current = 0;
     setTime(0);
-    localStorage.setItem('study_date', new Date().toISOString().split('T')[0]);
+    localStorage.setItem('study_date', getLocalDateString());
     localStorage.setItem('study_time_today', '0');
   };
 

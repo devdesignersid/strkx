@@ -8,6 +8,7 @@ export interface DashboardStatsDto {
   hard: number;
   weeklyChange: number;
   systemDesignSolved: number;
+  totalHours: number;
 }
 
 export interface DashboardActivityDto {
