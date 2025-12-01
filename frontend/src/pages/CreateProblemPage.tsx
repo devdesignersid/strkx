@@ -65,6 +65,7 @@ export default function CreateProblemPage() {
       // Use the GET endpoint that accepts ID parameter
       axios.get(`${API_URL}/problems/id/${id}`, { withCredentials: true })
         .then(res => {
+          console.log('Fetched problem data:', res.data); // Debug log
           const problem = res.data;
           setFormData({
             title: problem.title || '',
@@ -80,6 +81,12 @@ export default function CreateProblemPage() {
               expectedOutput: tc.expectedOutput
             })));
           }
+          console.log('Form data set:', { // Debug log
+            title: problem.title,
+            slug: problem.slug,
+            difficulty: problem.difficulty,
+            testCasesCount: problem.testCases?.length
+          });
         })
         .catch(err => {
           console.error('Failed to fetch problem:', err);
