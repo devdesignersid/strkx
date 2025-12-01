@@ -2,61 +2,65 @@ export const PROMPTS = {
   PROBLEM_GENERATION: `
   You are an expert technical interview problem setter specializing in algorithm and data structure challenges.
 
-Generate a coding problem based on: "{topic}"
+**CRITICAL: Generate a coding problem based SPECIFICALLY on: "{topic}"**
+
+DO NOT generate content for "Two Sum" or any other default problem. ALL examples, test cases, descriptions, and code must be for the topic "{topic}" requested by the user.
 
 CRITICAL VALIDATION RULES:
-1. ALL test cases MUST be mathematically correct and verifiable
-2. Output values MUST be derivable from input values following the problem logic
-3. Double-check arithmetic, array manipulations, and edge case outputs
+1. ALL test cases MUST be mathematically correct and verifiable for the problem "{topic}"
+2. Output values MUST be derivable from input values following the "{topic}" problem logic
+3. Double-check arithmetic, array manipulations, and edge case outputs are correct for "{topic}"
 4. Verify each test case independently before including it
 
 Return ONLY valid JSON (no markdown, no backticks):
 {
-  "difficulty": "Medium",
-  "description": "Clear problem statement in Markdown. Use \\\\n\\\\n for paragraphs.\\\\n\\\\nMust include:\\\\n- EXACT input format and parameter names\\\\n- EXACT output format with specific type (array of indices, array of arrays, number, boolean, etc.)\\\\n- All rules and constraints on the solution\\\\n- Whether elements can be reused\\\\n- How to handle multiple valid answers",
-  "starterCode": "function solution(param1, param2) {\\\\n  // Your code here\\\\n  return result;\\\\n}",
+  "difficulty": "<<Easy/Medium/Hard based on {topic}>>",
+  "description": "Clear problem statement for {topic} in Markdown. Use \\\\\\\\n\\\\\\\\n for paragraphs.\\\\\\\\n\\\\\\\\nMust include:\\\\\\\\n- EXACT input format and parameter names\\\\\\\\n- EXACT output format with specific type (array of indices, array of arrays, number, boolean, etc.)\\\\\\\\n- All rules and constraints on the solution\\\\\\\\n- Whether elements can be reused\\\\\\\\n- How to handle multiple valid answers",
+  "starterCode": "function solution(<<params for {topic}>>) {\\\\\\\\n  // Your code here\\\\\\\\n  return result;\\\\\\\\n}",
   "examples": [
     {
-      "input": "[2,7,11,15], 9",
-      "output": "[0,1]",
-      "explanation": "nums[0] + nums[1] = 2 + 7 = 9, so we return the indices [0, 1]"
+      "input": "<<REALISTIC EXAMPLE INPUT FOR {topic}>>",
+      "output": "<<CORRECT OUTPUT FOR {topic}>>",
+      "explanation": "<<WHY THIS OUTPUT IS CORRECT FOR {topic}>>"
     }
   ],
   "testCases": [
     {
-      "input": "[2,7,11,15], 9",
-      "output": "[0,1]",
-      "description": "Basic case - first two elements sum to target"
+      "input": "<<REALISTIC TEST INPUT 1 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 1 FOR {topic}>>",
+      "description": "Basic case - core functionality of {topic}"
     },
     {
-      "input": "[3,2,4], 6",
-      "output": "[1,2]",
-      "description": "Target requires non-adjacent elements"
+      "input": "<<REALISTIC TEST INPUT 2 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 2 FOR {topic}>>",
+      "description": "Different scenario for {topic}"
     },
     {
-      "input": "[3,3], 6",
-      "output": "[0,1]",
-      "description": "Edge case - duplicate values that sum to target"
+      "input": "<<REALISTIC TEST INPUT 3 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 3 FOR {topic}>>",
+      "description": "Edge case - minimal input for {topic}"
     },
     {
-      "input": "[-1,-2,-3,-4,-5], -8",
-      "output": "[2,4]",
-      "description": "Negative numbers"
+      "input": "<<REALISTIC TEST INPUT 4 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 4 FOR {topic}>>",
+      "description": "Boundary values for {topic}"
     },
     {
-      "input": "[0,4,3,0], 0",
-      "output": "[0,3]",
-      "description": "Zero values"
+      "input": "<<REALISTIC TEST INPUT 5 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 5 FOR {topic}>>",
+      "description": "Large input scenario for {topic}"
     },
     {
-      "input": "[1,1,1,1,1,1,4,1,1,1,1,1], 5",
-      "output": "[0,6]",
-      "description": "Large array with many duplicates"
+      "input": "<<REALISTIC TEST INPUT 6 FOR {topic}>>",
+      "output": "<<MATHEMATICALLY CORRECT OUTPUT 6 FOR {topic}>>",
+      "description": "Special case for {topic} (negatives, zeros, duplicates, etc.)"
     }
   ],
-  "constraints": ["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9", "-10^9 <= target <= 10^9", "Only one valid answer exists"],
-  "tags": ["Arrays", "Hash Table"]
+  "constraints": ["<<CONSTRAINT 1 SPECIFIC TO {topic}>>", "<<CONSTRAINT 2 SPECIFIC TO {topic}>>", "<<CONSTRAINT 3 SPECIFIC TO {topic}>>"],
+  "tags": ["<<RELEVANT TAG 1 FOR {topic}>>", "<<RELEVANT TAG 2 FOR {topic}>>"]
 }
+
+**REMINDER: The problem topic is "{topic}" - generate ALL content (description, examples, test cases, constraints, tags) specifically for "{topic}", NOT for any other problem.**
 
 CRITICAL: DIFFICULTY MUST BE ACCURATELY ASSESSED
 Carefully analyze the problem "{topic}" and **replace the "difficulty" field value** with the CORRECT difficulty (Easy, Medium, or Hard):
