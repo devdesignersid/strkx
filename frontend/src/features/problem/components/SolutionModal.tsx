@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, X } from 'lucide-react';
 
@@ -11,6 +11,13 @@ interface SolutionModalProps {
 
 export function SolutionModal({ isOpen, onClose, onConfirm, currentName }: SolutionModalProps) {
   const [name, setName] = useState(currentName || '');
+
+  // Update name when modal opens or currentName changes
+  useEffect(() => {
+    if (isOpen) {
+      setName(currentName || '');
+    }
+  }, [isOpen, currentName]);
 
   if (!isOpen) return null;
 

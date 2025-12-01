@@ -222,6 +222,18 @@ export function ProblemDescription({
                 </div>
               ) : (
                 <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-border">
+                    <h3 className="text-sm font-semibold text-foreground">Analysis Results</h3>
+                    <button
+                      onClick={onAnalyze}
+                      disabled={isAnalyzing}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 transition-all disabled:opacity-50"
+                    >
+                      <BrainCircuit className="w-3.5 h-3.5" />
+                      Re-Analyze
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-card border border-border">
                       <h4 className="text-xs font-medium text-muted-foreground mb-1">Time Complexity</h4>
