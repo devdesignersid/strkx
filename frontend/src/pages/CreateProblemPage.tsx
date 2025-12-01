@@ -179,14 +179,20 @@ export default function CreateProblemPage() {
       }
 
       if (generated.constraints && Array.isArray(generated.constraints)) {
-        let constraintText = '\n\n### Constraints\n';
-        generated.constraints.forEach((c: string) => {
-          constraintText += `- ${c}\n`;
+        setFormData(prev => {
+          // Check if description already has constraints to avoid duplication
+          if (!prev.description.includes('### Constraints') && !generated.description?.includes('### Constraints')) {
+            let constraintText = '\n\n### Constraints\n';
+            generated.constraints.forEach((c: string) => {
+              constraintText += `- ${c}\n`;
+            });
+            return {
+              ...prev,
+              description: prev.description + constraintText
+            };
+          }
+          return prev;
         });
-        setFormData(prev => ({
-          ...prev,
-          description: prev.description + constraintText
-        }));
       }
 
       toast.success(TOAST_MESSAGES.PROBLEM.GENERATED);

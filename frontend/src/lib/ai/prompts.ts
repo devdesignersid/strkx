@@ -15,7 +15,7 @@ CRITICAL VALIDATION RULES:
 Return ONLY valid JSON (no markdown, no backticks):
 {
   "difficulty": "<<Easy/Medium/Hard based on {topic}>>",
-  "description": "Clear problem statement for {topic} in Markdown. Use \\\\\\\\n\\\\\\\\n for paragraphs.\\\\\\\\n\\\\\\\\nMust include:\\\\\\\\n- EXACT input format and parameter names\\\\\\\\n- EXACT output format with specific type (array of indices, array of arrays, number, boolean, etc.)\\\\\\\\n- All rules and constraints on the solution\\\\\\\\n- Whether elements can be reused\\\\\\\\n- How to handle multiple valid answers",
+  "description": "Clear problem statement for {topic} in Markdown. Use \\\\\\\\n\\\\\\\\n for paragraphs.\\\\\\\\n\\\\\\\\nMust include:\\\\\\\\n- EXACT input format and parameter names\\\\\\\\n- EXACT output format with specific type (array of indices, array of arrays, number, boolean, etc.)\\\\\\\\n- Whether elements can be reused\\\\\\\\n- How to handle multiple valid answers\\\\\\\\n\\\\\\\\n**DO NOT include a 'Constraints' section or header in the description. These will be added automatically from the constraints array.**",
   "starterCode": "function solution(<<params for {topic}>>) {\\\\\\\\n  // Your code here\\\\\\\\n  return result;\\\\\\\\n}",
   "examples": [
     {
