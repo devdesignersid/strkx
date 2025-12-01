@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerModule } from 'nestjs-pino';
+import { CacheService } from './cache.service';
 
 @Global()
 @Module({
@@ -17,6 +18,7 @@ import { LoggerModule } from 'nestjs-pino';
       },
     }),
   ],
-  exports: [HttpModule, LoggerModule],
+  providers: [CacheService],
+  exports: [HttpModule, LoggerModule, CacheService],
 })
 export class CommonModule {}

@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CacheService } from '../common/cache.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
-
-
+  constructor(
+    private prisma: PrismaService,
+    private cacheService: CacheService,
+  ) {}
 
   async resetUserData(user: any) {
     // Delete ALL data for this user in correct order to respect foreign key constraints
@@ -63,6 +65,9 @@ export class UserService {
         where: { userId: user.id }
       }),
     ]);
+
+    // Invalidate dashboard cache for this user
+    this.cacheService.invalidatePattern(`dashboard:${user.id}`);
 
     return {
       success: true,

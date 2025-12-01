@@ -7,6 +7,6 @@ import { CacheService } from '../common/cache.service';
 @Module({
   imports: [PrismaModule],
   controllers: [DashboardController],
-  providers: [DashboardService, CacheService],
+  providers: [DashboardService],
 })
 export class DashboardModule {}
