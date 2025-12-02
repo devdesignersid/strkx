@@ -92,6 +92,8 @@ export class ExecutionService {
       let inputData;
       let args: any[] = [];
 
+        let parsedDirectlyAsArray = false;
+
       try {
         if (typeof testCase.input === 'string') {
           // Robust JSON parsing
@@ -121,14 +123,65 @@ export class ExecutionService {
           }
 
           if (Array.isArray(inputData)) {
-             args = inputData;
-          } else {
-             args = [inputData];
+             // Check if the original string started with '[' to determine if it was explicitly an array
+             // or if we wrapped it (or if it was just a list of values that JSON.parse accepted as array? No, JSON.parse only accepts single value)
+             // Actually, if we successfully parsed `jsonString` and it is an array, it means the input WAS an array (e.g. "[1, 2]" or "[\"\"]")
+             // UNLESS we fell back to the `try wrapping in array` block.
+
+             // Let's refine this.
+             // If the first try succeeded:
+             //   If jsonString started with '[', then it is explicitly an array.
+             //   If it didn't start with '[', it's unlikely to be an array unless it was just "null" or something, but we are checking Array.isArray.
+
+             // Wait, if input is `1, 2`, the first JSON.parse fails. The second one `[1, 2]` succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be FALSE (it's a list of args).
+             // If input is `[1, 2]`, the first JSON.parse succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be TRUE (it's a single argument that is an array).
+
+             // We need to know WHICH try block succeeded.
           }
         } else {
           inputData = testCase.input;
           args = [inputData];
         }
+
+        // Re-implementing the parsing logic to capture the flag
+        if (typeof testCase.input === 'string') {
+            let jsonString = testCase.input.trim();
+            jsonString = jsonString.replace(/(\w+):/g, '"$1":');
+            jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
+
+            let firstParseSuccess = false;
+            try {
+                inputData = JSON.parse(jsonString);
+                firstParseSuccess = true;
+            } catch (e) {
+                // Fallback
+            }
+
+            if (firstParseSuccess) {
+                if (Array.isArray(inputData)) {
+                    args = inputData;
+                    parsedDirectlyAsArray = true; // It was "[...]"
+                } else {
+                    args = [inputData];
+                    parsedDirectlyAsArray = false; // It was "1" or "true" or "{...}"
+                }
+            } else {
+                // Try wrapping
+                try {
+                    inputData = JSON.parse(`[${jsonString}]`);
+                    args = inputData;
+                    parsedDirectlyAsArray = false; // It was "1, 2" -> became [1, 2] -> args list
+                } catch (e2) {
+                    throw new Error(`Failed to parse input: ${testCase.input}`);
+                }
+            }
+        } else {
+             // Non-string input (already parsed?)
+             inputData = testCase.input;
+             args = [inputData];
+             parsedDirectlyAsArray = false; // Treat as single arg
+        }
+
       } catch (err: any) {
          allPassed = false;
          results.push({
@@ -150,6 +203,7 @@ export class ExecutionService {
         const context = vm.createContext({
           ...sandbox,
           args,
+          parsedDirectlyAsArray,
         });
 
         vm.runInNewContext(
@@ -157,12 +211,10 @@ export class ExecutionService {
           ${code}
           try {
              if (typeof ${functionName} === 'function') {
-               // Heuristic: If function expects 1 argument but we have multiple,
-               // and the user likely meant to pass an array as the single argument.
-               if (${functionName}.length === 1 && args.length > 1) {
-                  result = ${functionName}(args);
+               if (parsedDirectlyAsArray) {
+                   result = ${functionName}(args);
                } else {
-                  result = ${functionName}(...args);
+                   result = ${functionName}(...args);
                }
              } else {
                throw new Error('Function ${functionName} not found');

@@ -110,6 +110,25 @@ export function useProblem(slug: string | undefined) {
     }
   }, [problem, fetchSubmissions, fetchSolutions]);
 
+  // Persistence Logic
+  useEffect(() => {
+    if (!slug || !code) return;
+    // Don't save if it's the starter code (simple check, could be better)
+    if (code === problem?.starterCode) return;
+
+    const key = `strkx_code_${slug}`;
+    localStorage.setItem(key, code);
+  }, [code, slug, problem]);
+
+  useEffect(() => {
+    if (!slug || !problem) return;
+    const key = `strkx_code_${slug}`;
+    const savedCode = localStorage.getItem(key);
+    if (savedCode) {
+      setCode(savedCode);
+    }
+  }, [slug, problem]);
+
   const handleRun = async (mode: 'run' | 'submit' = 'run', onSuccess?: () => void, codeToSubmit?: string) => {
     if (!problem) return;
     setIsRunning(true);
@@ -138,6 +157,10 @@ export function useProblem(slug: string | undefined) {
 
         if (res.data.data.passed) {
           recordSolve();
+          // Clear saved code on successful submission
+          if (slug) {
+             localStorage.removeItem(`strkx_code_${slug}`);
+          }
         }
       }
     } catch (err: any) {
