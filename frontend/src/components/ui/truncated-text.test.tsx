@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { TruncatedText } from './truncated-text';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 
 // Mock Tooltip components since they rely on Radix UI which might need setup
 vi.mock('@/components/ui/tooltip', () => ({
