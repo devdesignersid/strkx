@@ -25,11 +25,15 @@ export class ListsService {
     });
   }
 
-  async findAll(user: any) {
+  async findAll(user: any, skip: number = 0, take: number = 20, search?: string) {
+    const where: Prisma.ListWhereInput = { userId: user.id };
+    if (search) {
+        where.name = { contains: search, mode: 'insensitive' };
+    }
 
     // 1. Get all lists with all problem IDs (lightweight select)
     const lists = await this.prisma.list.findMany({
-      where: { userId: user.id },
+      where,
       include: {
         problems: {
             select: {
@@ -45,6 +49,8 @@ export class ListsService {
         }
       },
       orderBy: { updatedAt: 'desc' },
+      skip,
+      take,
     });
 
     // 2. Get user's solved problem IDs
@@ -86,7 +92,9 @@ export class ListsService {
             problems: list.problems.slice(0, 5), // Only showing coding problems in preview for now to keep it simple
             _count: { problems: totalCount },
             solvedCount,
-            problemIds: [...codingProblemIds, ...systemDesignProblemIds]
+            problemIds: [...codingProblemIds, ...systemDesignProblemIds],
+            codingProblemCount: codingProblemIds.length,
+            systemDesignProblemCount: systemDesignProblemIds.length
         };
     });
   }

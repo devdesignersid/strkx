@@ -41,7 +41,7 @@ export function Modal({ isOpen, onClose, title, description, children, footer }:
 
 
 
-          // ... existing imports
+
 
           <div className="mb-6">
             <TruncatedText

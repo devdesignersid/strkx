@@ -23,6 +23,7 @@ interface ProblemDescriptionProps {
   onDeleteSubmission: (submissionId: string) => void;
   onLoadSolution: (code: string) => void;
   onCollapse: () => void;
+  hiddenTabs?: string[];
 }
 
 export function ProblemDescription({
@@ -37,7 +38,8 @@ export function ProblemDescription({
   onMarkAsSolution,
   onDeleteSubmission,
   onLoadSolution,
-  onCollapse
+  onCollapse,
+  hiddenTabs = []
 }: ProblemDescriptionProps) {
   const [submissionToDelete, setSubmissionToDelete] = React.useState<string | null>(null);
 
@@ -50,13 +52,17 @@ export function ProblemDescription({
               <TabsTrigger value="description" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
                 Description
               </TabsTrigger>
-              <TabsTrigger value="submissions" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
-                Submissions
-              </TabsTrigger>
-              <TabsTrigger value="solutions" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
-                Solutions
-              </TabsTrigger>
-              {isAIEnabled && (
+              {!hiddenTabs.includes('submissions') && (
+                <TabsTrigger value="submissions" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
+                  Submissions
+                </TabsTrigger>
+              )}
+              {!hiddenTabs.includes('solutions') && (
+                <TabsTrigger value="solutions" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
+                  Solutions
+                </TabsTrigger>
+              )}
+              {isAIEnabled && !hiddenTabs.includes('ai_analysis') && (
                 <TabsTrigger value="ai_analysis" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
                   AI Analysis
                 </TabsTrigger>

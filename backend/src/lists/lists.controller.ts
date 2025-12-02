@@ -16,8 +16,16 @@ export class ListsController {
   }
 
   @Get()
-  findAll(@Req() req: any) {
-    return this.listsService.findAll(req.user);
+  findAll(
+    @Req() req: any,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    const skip = (pageNum - 1) * limitNum;
+    return this.listsService.findAll(req.user, skip, limitNum, search);
   }
 
   @Get(':id')

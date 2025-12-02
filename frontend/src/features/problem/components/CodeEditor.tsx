@@ -24,7 +24,12 @@ interface CodeEditorProps {
   formatTime: (seconds: number) => string;
   isFocusMode: boolean;
   onToggleFocusMode: () => void;
+
   onRun: () => void;
+  timerReadOnly?: boolean;
+  hideAI?: boolean;
+  hideAutocomplete?: boolean;
+  hideDividers?: boolean;
 }
 
 // Inner component to isolate Editor from timer re-renders
@@ -79,7 +84,12 @@ export function CodeEditor({
   formatTime,
   isFocusMode,
   onToggleFocusMode,
-  onRun
+
+  onRun,
+  timerReadOnly = false,
+  hideAI = false,
+  hideAutocomplete = false,
+  hideDividers = false
 }: CodeEditorProps) {
 
   const editorOptions = useMemo(() => ({
@@ -166,25 +176,29 @@ export function CodeEditor({
             <span className={cn("text-xs font-mono font-medium tabular-nums", timeLeft < 300 ? "text-red-400" : "text-foreground")}>
               {formatTime(timeLeft)}
             </span>
-            <button
-              onClick={onToggleTimer}
-              className={cn(
-                "w-2 h-2 rounded-full transition-colors",
-                isTimerRunning ? "bg-green-500 animate-pulse" : "bg-red-500"
-              )}
-            />
+            {!timerReadOnly && (
+              <button
+                onClick={onToggleTimer}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-colors",
+                  isTimerRunning ? "bg-green-500 animate-pulse" : "bg-red-500"
+                )}
+              />
+            )}
           </div>
-          <button
-            onClick={onResetTimer}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
-            title="Reset Timer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          {!timerReadOnly && (
+            <button
+              onClick={onResetTimer}
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+              title="Reset Timer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
-          {isAIEnabled && (
+          {isAIEnabled && !hideAI && (
             <>
               <button
                 onClick={onGetHint}
@@ -204,20 +218,22 @@ export function CodeEditor({
               </button>
             </>
           )}
-          <div className="w-px h-4 bg-white/10 mx-1" />
+          {!hideDividers && <div className="w-px h-4 bg-white/10 mx-1" />}
 
-          <button
-            onClick={onToggleAutocomplete}
-            className={cn(
-              "p-1.5 rounded-md transition-colors",
-              autocompleteEnabled
-                ? "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-            )}
-            title={autocompleteEnabled ? "Disable Autocomplete" : "Enable Autocomplete"}
-          >
-            <Keyboard className="w-4 h-4" />
-          </button>
+          {!hideAutocomplete && (
+            <button
+              onClick={onToggleAutocomplete}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                autocompleteEnabled
+                  ? "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              )}
+              title={autocompleteEnabled ? "Disable Autocomplete" : "Enable Autocomplete"}
+            >
+              <Keyboard className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             onClick={onToggleFocusMode}

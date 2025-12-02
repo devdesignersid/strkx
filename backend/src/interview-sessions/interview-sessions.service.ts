@@ -17,8 +17,10 @@ export class InterviewSessionsService {
 
     const { difficulty, status, tags, lists, questionCount = 2 } = createDto;
 
-    // 1. Build Filter Query
-    const where: Prisma.ProblemWhereInput = {};
+    // 1. Build Filter Query - Only fetch coding problems for this user
+    const where: Prisma.ProblemWhereInput = {
+      userId: user.id, // FILTER: Only this user's coding problems
+    };
 
     if (difficulty && difficulty.length > 0) {
       where.difficulty = { in: difficulty as Difficulty[] };
@@ -68,7 +70,7 @@ export class InterviewSessionsService {
 
     if (matchingProblems.length < questionCount) {
       throw new BadRequestException(
-        `Not enough questions found matching criteria. Found ${matchingProblems.length}, requested ${questionCount}.`,
+        `Not enough coding problems found matching your criteria. Found ${matchingProblems.length}, need ${questionCount}. Try changing your filters.`,
       );
     }
 
@@ -77,7 +79,7 @@ export class InterviewSessionsService {
     const selected = shuffled.slice(0, questionCount);
 
     // 4. Create Session
-    return this.prisma.interviewSession.create({
+    const session = await this.prisma.interviewSession.create({
       data: {
         userId: user.id,
         difficulty: difficulty || [],
@@ -113,6 +115,8 @@ export class InterviewSessionsService {
         },
       },
     });
+
+    return session;
   }
 
   async findOne(id: string) {
@@ -167,9 +171,10 @@ export class InterviewSessionsService {
       });
 
       if (!q) throw new NotFoundException('Question not found');
-      if (q.status === 'COMPLETED') {
-          throw new BadRequestException('Question already completed');
-      }
+
+    if (q.status === 'COMPLETED') {
+        throw new BadRequestException('Question already completed');
+    }
 
       // 1. Create Submission
       const submission = await tx.submission.create({
