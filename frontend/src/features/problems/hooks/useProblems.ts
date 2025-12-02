@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { axiosInstance as axios } from '@/lib/axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
-import { API_URL } from '@/config';
+
 
 export interface Problem {
   id: string;
@@ -52,7 +52,7 @@ export function useProblems() {
     params.append('order', sortConfig.direction);
 
     try {
-      const res = await axios.get(`${API_URL}/problems?${params.toString()}`, { withCredentials: true });
+      const res = await axios.get(`/problems?${params.toString()}`);
       const { problems: fetchedProblems, hasMore: more } = res.data.data;
 
       const enriched = fetchedProblems.map((p: any) => ({
@@ -140,13 +140,17 @@ export function useProblems() {
   };
 
   const deleteProblem = async (id: string) => {
+    // Optimistic Update
+    const previousProblems = [...problems];
+    setProblems(problems.filter(p => p.id !== id));
+
     try {
-      await axios.delete(`${API_URL}/problems/${id}`, { withCredentials: true });
-      setProblems(problems.filter(p => p.id !== id));
-      setProblems(problems.filter(p => p.id !== id));
+      await axios.delete(`/problems/${id}`);
       toast.success(TOAST_MESSAGES.PROBLEM.DELETED);
     } catch (err) {
       console.error('Failed to delete problem:', err);
+      // Rollback
+      setProblems(previousProblems);
       toast.error(TOAST_MESSAGES.PROBLEM.DELETE_FAILED);
     }
   };
@@ -154,22 +158,29 @@ export function useProblems() {
   const bulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
+    // Optimistic Update
+    const previousProblems = [...problems];
+    const previousSelectedIds = new Set(selectedIds);
+
+    setProblems(problems.filter(p => !selectedIds.has(p.id)));
+    setSelectedIds(new Set());
+
     try {
       await Promise.all(
         Array.from(selectedIds).map(id =>
-          axios.delete(`${API_URL}/problems/${id}`, { withCredentials: true })
+          axios.delete(`/problems/${id}`)
         )
       );
-      setProblems(problems.filter(p => !selectedIds.has(p.id)));
-      setSelectedIds(new Set());
-      setProblems(problems.filter(p => !selectedIds.has(p.id)));
-      setSelectedIds(new Set());
+
       toast.success({
         title: TOAST_MESSAGES.PROBLEM.BULK_DELETED.title,
-        description: `Deleted ${selectedIds.size} problems`
+        description: `Deleted ${previousSelectedIds.size} problems`
       });
     } catch (err) {
       console.error('Failed to delete problems:', err);
+      // Rollback
+      setProblems(previousProblems);
+      setSelectedIds(previousSelectedIds);
       toast.error(TOAST_MESSAGES.PROBLEM.BULK_DELETE_FAILED);
     }
   };

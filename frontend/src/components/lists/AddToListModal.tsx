@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { API_URL } from '@/config';
+import { TruncatedText } from '@/components/ui/truncated-text';
 
 interface List {
   id: string;
@@ -206,12 +207,13 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
                             <FolderPlus className="w-4 h-4" />
                           </div>
                           <div>
-                            <div className={cn(
-                              "text-sm font-medium",
-                              isSelected && !isAlreadyAdded ? "text-primary" : "text-foreground"
-                            )}>
-                              {list.name}
-                            </div>
+                            <TruncatedText
+                              text={list.name}
+                              className={cn(
+                                "text-sm font-medium",
+                                isSelected && !isAlreadyAdded ? "text-primary" : "text-foreground"
+                              )}
+                            />
                             <div className="text-[10px] text-muted-foreground">
                               {list._count.problems} problems
                             </div>

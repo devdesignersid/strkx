@@ -68,7 +68,7 @@ export default function Layout() {
                   to={item.path}
                   title={isCollapsed ? item.label : undefined}
                   className={`
-                    flex items-center rounded-md text-sm font-medium transition-colors
+                    flex items-center rounded-md text-sm font-medium transition-colors overflow-hidden
                     ${isCollapsed ? 'justify-center px-3 py-2' : 'gap-3 px-3 py-2'}
                     ${isActive
                       ? 'bg-primary/10 text-primary'
@@ -77,7 +77,7 @@ export default function Layout() {
                   `}
                 >
                   <item.icon className="w-4 h-4 shrink-0" />
-                  {!isCollapsed && <span>{item.label}</span>}
+                  {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
                 </Link>
               );
             })}
@@ -90,7 +90,7 @@ export default function Layout() {
             to="/settings"
             title={isCollapsed ? 'Settings' : undefined}
             className={`
-              flex items-center rounded-md text-sm font-medium transition-colors
+              flex items-center rounded-md text-sm font-medium transition-colors overflow-hidden
               ${isCollapsed ? 'justify-center px-3 py-2' : 'gap-3 px-3 py-2'}
               ${location.pathname === '/settings'
                 ? 'bg-primary/10 text-primary'
@@ -99,7 +99,7 @@ export default function Layout() {
             `}
           >
             <Settings className="w-4 h-4 shrink-0" />
-            {!isCollapsed && <span>Settings</span>}
+            {!isCollapsed && <span className="whitespace-nowrap">Settings</span>}
           </Link>
         </div>
       </aside>

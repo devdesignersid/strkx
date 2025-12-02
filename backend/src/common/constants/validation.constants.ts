@@ -1,0 +1,18 @@
+export const VALIDATION_LIMITS = {
+  PROBLEM: {
+    TITLE_MAX_LENGTH: 100,
+    DESCRIPTION_MAX_LENGTH: 5000,
+    TAG_MAX_LENGTH: 20,
+    MAX_TAGS: 10,
+  },
+  LIST: {
+    NAME_MAX_LENGTH: 50,
+    DESCRIPTION_MAX_LENGTH: 200,
+  },
+  USER: {
+    NAME_MAX_LENGTH: 50,
+  },
+  COMMENT: {
+    MAX_LENGTH: 1000,
+  },
+} as const;

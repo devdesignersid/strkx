@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { TruncatedText } from './truncated-text';
 
 interface ModalProps {
   isOpen: boolean;
@@ -38,8 +39,15 @@ export function Modal({ isOpen, onClose, title, description, children, footer }:
             <X className="w-4 h-4" />
           </button>
 
+
+
+          // ... existing imports
+
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
+            <TruncatedText
+              text={title}
+              className="text-lg font-semibold text-foreground mb-1"
+            />
             {description && (
               <p className="text-sm text-muted-foreground">
                 {description}

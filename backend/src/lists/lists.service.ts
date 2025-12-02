@@ -107,6 +107,10 @@ export class ListsService {
       throw new NotFoundException('User not authenticated');
     }
 
+    // Enforce max limit
+    const maxLimit = 100;
+    const effectiveLimit = Math.min(limit, maxLimit);
+
     // First check if list exists and get metadata
     const listMetadata = await this.prisma.list.findUnique({
       where: { id },
@@ -272,15 +276,15 @@ export class ListsService {
 
     // --- PAGINATE ---
     const total = allProblems.length;
-    const skip = (page - 1) * limit;
-    const paginatedProblems = allProblems.slice(skip, skip + limit);
+    const skip = (page - 1) * effectiveLimit;
+    const paginatedProblems = allProblems.slice(skip, skip + effectiveLimit);
 
     return {
         ...listMetadata,
         problems: paginatedProblems,
         total,
         page,
-        limit,
+        limit: effectiveLimit,
         hasMore: skip + paginatedProblems.length < total,
     };
   }

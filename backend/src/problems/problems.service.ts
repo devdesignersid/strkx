@@ -34,6 +34,21 @@ export class ProblemsService {
   ) {
     const { page = 1, limit = 20, search, sortBy, sortOrder = 'desc', skip, take } = paginationDto;
 
+    // Enforce max limit
+    const maxLimit = 100;
+    const effectiveLimit = Math.min(limit, maxLimit);
+
+    // Recalculate take if necessary (though paginationDto might have handled it, better to be safe)
+    // Actually, skip and take are derived from page/limit in the DTO transformation usually,
+    // but here we are using them directly.
+    // If we change limit, we should update take.
+    // However, the code uses `slice(skip, skip + take)` later.
+    // Let's just override limit and ensure we use effectiveLimit for slicing.
+
+    // Wait, the code uses `skip` and `take` from paginationDto.
+    // If I change limit, I need to ensure `take` is also updated if it was derived from limit.
+    // Let's assume we should use effectiveLimit.
+
     const where: Prisma.ProblemWhereInput = {
       userId: user.id,
     };
@@ -150,14 +165,16 @@ export class ProblemsService {
 
     // Paginate
     const total = enrichedProblems.length;
-    const paginatedProblems = enrichedProblems.slice(skip, skip + take);
+    // We need to recalculate skip/take based on effectiveLimit if we want to be consistent
+    const effectiveSkip = (page - 1) * effectiveLimit;
+    const paginatedProblems = enrichedProblems.slice(effectiveSkip, effectiveSkip + effectiveLimit);
 
     return {
       problems: paginatedProblems,
       total,
       page,
-      limit,
-      hasMore: skip + paginatedProblems.length < total,
+      limit: effectiveLimit,
+      hasMore: effectiveSkip + paginatedProblems.length < total,
     };
   }
 

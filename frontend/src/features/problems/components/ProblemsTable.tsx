@@ -42,7 +42,7 @@ export function ProblemsTable({
 }: ProblemsTableProps) {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [hoveredTagTooltip, setHoveredTagTooltip] = useState<{id: string, x: number, y: number, tags: string[], position: 'top' | 'bottom'} | null>(null);
+  const [hoveredTagTooltip, setHoveredTagTooltip] = useState<{ id: string, x: number, y: number, tags: string[], position: 'top' | 'bottom' } | null>(null);
   const lastSelectedId = useState<{ current: string | null }>({ current: null })[0]; // Ref-like state for last selected
 
   const handleMenuClick = (e: React.MouseEvent, id: string) => {
@@ -161,8 +161,10 @@ export function ProblemsTable({
                       {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                     </button>
                   </td>
-                  <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
-                    {problem.title}
+                  <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors max-w-[300px]">
+                    <div className="truncate" title={problem.title}>
+                      {problem.title}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn(
