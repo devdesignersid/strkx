@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from '@/test-utils';
+import { render, screen, fireEvent, waitFor } from '@/test-utils';
 import MockInterviewSetup from './MockInterviewSetup';
 import { vi } from 'vitest';
 import { DIFFICULTY_LEVELS, PROBLEM_STATUSES } from '@/config/constants';

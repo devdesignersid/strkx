@@ -47,8 +47,6 @@ describe('SettingsPage', () => {
             isAuthenticated: true,
             loading: false,
             login: vi.fn(),
-            register: vi.fn(),
-            checkAuth: vi.fn(),
         });
 
         // Mock StudyTimerContext
@@ -56,12 +54,19 @@ describe('SettingsPage', () => {
             isEnabled: false,
             toggleEnabled: mockToggleEnabled,
             triggerTestReminder: mockTriggerTestReminder,
-            timeLeft: 1200,
             isActive: false,
             isPaused: false,
-            startTimer: vi.fn(),
-            pauseTimer: vi.fn(),
+            time: 1500,
+            testReminder: null,
+            toggleTimer: vi.fn(),
+            stopTimer: vi.fn(),
             resetTimer: vi.fn(),
+            clearTestReminder: vi.fn(),
+            formatTime: vi.fn((seconds: number) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }),
         });
     });
 
@@ -96,7 +101,7 @@ describe('SettingsPage', () => {
         render(<SettingsPage />);
 
         // Find toggle button (it's the first switch-like button)
-        const toggles = screen.getAllByRole('button');
+        // const toggles = screen.getAllByRole('button');
         // The AI toggle is the one in the AI section.
         // Based on structure, it's likely the 2nd button (1st is logout, wait logout is inside account section)
         // Let's find it by class or context.

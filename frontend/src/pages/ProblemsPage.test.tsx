@@ -3,16 +3,14 @@ import ProblemsPage from './problems/ProblemsPage';
 import { describe, it, expect, vi } from 'vitest';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
+import { API_URL } from '@/config';
 
 // Mock AddToListModal
-vi.mock('@/components/lists/AddToListModal', () => ({
+vi.mock('@/features/lists/components/AddToListModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div data-testid="add-to-list-modal">Add to List Modal</div> : null),
 }));
 
 describe('ProblemsPage', () => {
-  import { API_URL } from '@/config';
-
-  // ...
 
   it('renders problems list', async () => {
     server.use(

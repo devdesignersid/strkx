@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import CreateSystemDesignPage from './CreateSystemDesignPage';
-import { systemDesignApi } from '@/features/system-design/api/systemDesignApi';
+import { systemDesignApi } from '@/services/api/system-design.service';
 import { aiService } from '@/lib/ai/aiService';
 
 // Mock API and AI Service
