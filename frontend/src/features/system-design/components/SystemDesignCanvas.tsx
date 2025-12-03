@@ -1,6 +1,7 @@
 import { RotateCcw, Maximize2, Minimize2, Focus, PanelRightClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ExcalidrawWrapper from './ExcalidrawWrapper';
+import { Button } from '@/design-system/components';
 
 interface SystemDesignCanvasProps {
     excalidrawData: any;
@@ -50,20 +51,24 @@ export function SystemDesignCanvas({
                             )}
                         />
                     </div>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onResetTimer}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         title="Reset Timer"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onToggleFocusMode}
                         className={cn(
-                            "p-1.5 rounded-md transition-colors",
+                            "h-7 w-7 transition-colors",
                             isFocusMode
                                 ? "text-green-400 bg-green-400/10 hover:bg-green-400/20"
                                 : "text-muted-foreground hover:text-foreground hover:bg-white/5"
@@ -71,32 +76,38 @@ export function SystemDesignCanvas({
                         title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
                     >
                         <Focus className="w-4 h-4" />
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onResetCanvas}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         title="Reset Canvas"
                     >
                         <RotateCcw className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onToggleFullscreen}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
                     >
                         {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                    </button>
+                    </Button>
 
                     <div className="w-px h-4 bg-white/10 mx-1" />
 
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onCollapse}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         title="Collapse Canvas"
                     >
                         <PanelRightClose className="w-4 h-4" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 

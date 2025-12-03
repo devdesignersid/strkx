@@ -1,5 +1,6 @@
 import { render, screen, waitFor, fireEvent } from '@/test-utils';
-import ProblemPage from './ProblemPage';
+import { API_URL } from '@/config';
+import ProblemPage from './problems/ProblemPage';
 import { describe, it, expect, vi } from 'vitest';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -60,16 +61,24 @@ vi.mock('framer-motion', () => ({
 describe('ProblemPage AI Features', () => {
   it('handles AI analysis request', async () => {
     server.use(
-      http.get('http://localhost:3000/problems/two-sum', () => {
+      http.get(`${API_URL}/problems/two-sum`, () => {
         return HttpResponse.json({
-          id: '1',
-          title: 'Two Sum',
-          slug: 'two-sum',
-          description: 'Desc',
-          starterCode: '',
-          difficulty: 'Easy',
-          testCases: [],
+          data: {
+            id: '1',
+            title: 'Two Sum',
+            slug: 'two-sum',
+            description: 'Desc',
+            starterCode: '',
+            difficulty: 'Easy',
+            testCases: [],
+          }
         });
+      }),
+      http.get(`${API_URL}/problems/two-sum/submissions`, () => {
+        return HttpResponse.json({ data: [] });
+      }),
+      http.get(`${API_URL}/problems/two-sum/solutions`, () => {
+        return HttpResponse.json({ data: [] });
       })
     );
 

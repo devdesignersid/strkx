@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@/test-utils';
-import ListsPage from './ListsPage';
+import ListsPage from './lists/ListsPage';
 import { describe, it, expect, vi } from 'vitest';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -16,17 +16,19 @@ describe('ListsPage', () => {
   it('renders lists', async () => {
     server.use(
       http.get('http://localhost:3000/lists', () => {
-        return HttpResponse.json([
-          {
-            id: '1',
-            name: 'Blind 75',
-            description: 'Essential problems',
-            updatedAt: new Date().toISOString(),
-            _count: { problems: 10 },
-            solvedCount: 5,
-            problems: [],
-          },
-        ]);
+        return HttpResponse.json({
+          data: [
+            {
+              id: '1',
+              name: 'Blind 75',
+              description: 'Essential problems',
+              updatedAt: new Date().toISOString(),
+              _count: { problems: 10 },
+              solvedCount: 5,
+              problems: [],
+            },
+          ]
+        });
       })
     );
 
@@ -42,17 +44,19 @@ describe('ListsPage', () => {
   it('handles list creation', async () => {
     server.use(
       http.get('http://localhost:3000/lists', () => {
-        return HttpResponse.json([]);
+        return HttpResponse.json({ data: [] });
       }),
       http.post('http://localhost:3000/lists', () => {
         return HttpResponse.json({
-          id: '2',
-          name: 'New List',
-          description: 'Desc',
-          updatedAt: new Date().toISOString(),
-          _count: { problems: 0 },
-          solvedCount: 0,
-          problems: [],
+          data: {
+            id: '2',
+            name: 'New List',
+            description: 'Desc',
+            updatedAt: new Date().toISOString(),
+            _count: { problems: 0 },
+            solvedCount: 0,
+            problems: [],
+          }
         });
       })
     );

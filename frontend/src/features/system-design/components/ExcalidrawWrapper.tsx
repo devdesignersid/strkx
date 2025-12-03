@@ -104,7 +104,7 @@ export default function ExcalidrawWrapper({
     }, [onSave]);
 
     return (
-        <div className="h-full w-full bg-[#151515] relative">
+        <div className="h-full w-full bg-background relative">
             <iframe
                 ref={iframeRef}
                 src="/excalidraw-canvas"

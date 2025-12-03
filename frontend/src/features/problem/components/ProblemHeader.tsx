@@ -1,6 +1,7 @@
 import { FileText, Play, Send, Loader2, PanelLeftOpen, PanelBottomOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Problem } from '@/types/problem';
+import { Button } from '@/design-system/components';
 
 interface ProblemHeaderProps {
   problem: Problem;
@@ -34,47 +35,51 @@ export function ProblemHeader({
 
       <div className="flex items-center space-x-3">
         {isDescriptionCollapsed && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onToggleDescription}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="h-8 w-8 p-0"
             title="Show Description"
           >
             <PanelLeftOpen className="w-4 h-4" />
-          </button>
+          </Button>
         )}
         {isConsoleCollapsed && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onToggleConsole}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="h-8 w-8 p-0"
             title="Show Console"
           >
             <PanelBottomOpen className="w-4 h-4" />
-          </button>
+          </Button>
         )}
         <div className="h-4 w-px bg-border mx-2" />
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onRun('run')}
           disabled={isRunning}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200",
-            "bg-secondary/50 text-foreground hover:bg-secondary hover:shadow-lg border border-white/5 disabled:opacity-50"
-          )}
+          className="gap-2"
         >
           {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
           Run
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
           onClick={() => onRun('submit')}
           disabled={isRunning || !canSubmit}
           title={!canSubmit ? "Run your code and pass all test cases first" : "Submit your solution"}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200",
-            "bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(62,207,142,0.3)] border border-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            "gap-2",
+            "bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(62,207,142,0.3)] border border-primary/20"
           )}
         >
           <Send className="w-3.5 h-3.5" />
           Submit
-        </button>
+        </Button>
       </div>
     </header>
   );

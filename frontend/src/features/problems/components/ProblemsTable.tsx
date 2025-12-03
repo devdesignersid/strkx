@@ -7,8 +7,8 @@ import {
   CheckCircle2, Circle, MoreHorizontal, Edit, Trash2, Filter, ChevronDown as ChevronDownIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/Skeleton';
-import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton } from '@/design-system/components/Skeleton';
+import { EmptyState, Button, StatusBadge } from '@/design-system/components';
 import type { Problem, SortKey, SortDirection } from '@/features/problems/hooks/useProblems';
 
 interface ProblemsTableProps {
@@ -179,13 +179,13 @@ export function ProblemsTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center flex-wrap gap-1.5">
                       {problem.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5">
+                        <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border">
                           {tag}
                         </span>
                       ))}
                       {problem.tags.length > 3 && (
                         <span
-                          className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5 cursor-help"
+                          className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border cursor-help"
                           onMouseEnter={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const viewportHeight = window.innerHeight;
@@ -209,14 +209,12 @@ export function ProblemsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {problem.status === 'Solved' ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      ) : problem.status === 'Attempted' ? (
-                        <Circle className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/30" />
-                      )}
-                      <span className="text-xs text-muted-foreground">{problem.status}</span>
+                      <StatusBadge
+                        status={problem.status}
+                        icon={problem.status === 'Solved' ? CheckCircle2 : problem.status === 'Attempted' ? Circle : Circle}
+                        variant={problem.status === 'Solved' ? 'success' : problem.status === 'Attempted' ? 'warning' : 'neutral'}
+                        className="border-none bg-transparent p-0"
+                      />
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right relative">
@@ -237,10 +235,11 @@ export function ProblemsTable({
       {/* Load More Button */}
       {!isLoading && hasMore && problems.length > 0 && (
         <div className="flex justify-center py-6">
-          <button
+          <Button
+            variant="secondary"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="px-6 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-lg font-medium text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="gap-2"
           >
             {isLoadingMore ? (
               <>
@@ -253,7 +252,7 @@ export function ProblemsTable({
                 Load More
               </>
             )}
-          </button>
+          </Button>
         </div>
       )}
 

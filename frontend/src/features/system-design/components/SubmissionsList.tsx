@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock, FileText, Star } from 'lucide-react';
-import EmptyState from '@/components/ui/EmptyState';
+import { EmptyState, Button } from '@/design-system/components';
 
 interface Submission {
     id: string;
@@ -76,15 +76,17 @@ export const SubmissionsList: React.FC<SubmissionsListProps> = ({
                                 )}
                             </div>
                             {onMarkAsSolution && submission.status === 'completed' && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onMarkAsSolution(submission.id, submission.isSolution || false, submission.solutionName || null);
                                     }}
-                                    className="text-[10px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 transition-colors shrink-0"
+                                    className="h-6 text-[10px] px-2 bg-white/5 hover:bg-white/10"
                                 >
                                     {submission.isSolution ? 'Unmark' : 'Save as Solution'}
-                                </button>
+                                </Button>
                             )}
                         </div>
 

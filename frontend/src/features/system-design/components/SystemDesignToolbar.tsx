@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Search, Filter, Check, X, FolderPlus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Button, Input } from '@/design-system/components';
 
 interface SystemDesignToolbarProps {
     searchQuery: string;
@@ -52,25 +53,26 @@ export function SystemDesignToolbar({
             <div className="flex items-center gap-3 flex-1 w-full md:w-auto">
                 {/* Search */}
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Input
                         type="text"
                         placeholder="Search system design problems..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                        className="pl-10"
                     />
                 </div>
 
                 {/* Unified Filter */}
                 <div className="relative" ref={filterRef}>
-                    <button
+                    <Button
+                        variant="outline"
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
                         className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors",
+                            "gap-2",
                             isFilterOpen || activeFiltersCount > 0
-                                ? "bg-primary/10 text-primary border-primary/20"
-                                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         <Filter className="w-4 h-4" />
@@ -80,7 +82,7 @@ export function SystemDesignToolbar({
                                 {activeFiltersCount}
                             </span>
                         )}
-                    </button>
+                    </Button>
 
                     <AnimatePresence>
                         {isFilterOpen && (
@@ -139,10 +141,10 @@ export function SystemDesignToolbar({
                                                 </span>
                                             ))}
                                         </div>
-                                        <input
+                                        <Input
                                             type="text"
                                             placeholder="Add tag..."
-                                            className="w-full bg-secondary/50 border border-border rounded px-2 py-1 text-xs focus:outline-none focus:border-primary"
+                                            className="h-8 text-xs"
                                             value={tagInput}
                                             onChange={(e) => setTagInput(e.target.value)}
                                             onKeyDown={handleAddTag}
@@ -168,31 +170,37 @@ export function SystemDesignToolbar({
                             <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                                 {selectedCount}
                             </div>
-                            <span className="text-sm font-medium">Selected</span>
+                            <span className="text-sm font-medium text-white">Selected</span>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={onAddToList}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium"
+                                className="h-8 text-white hover:bg-white/10 hover:text-white"
                             >
-                                <FolderPlus className="w-4 h-4" />
+                                <FolderPlus className="w-4 h-4 mr-2" />
                                 Add to List
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={onBulkDelete}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                                className="h-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4 mr-2" />
                                 Delete
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={onClearSelection}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                                className="h-8 text-muted-foreground hover:bg-white/10 hover:text-white"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="w-4 h-4 mr-2" />
                                 Clear
-                            </button>
+                            </Button>
                         </div>
                     </motion.div>
                 )}

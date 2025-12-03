@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '@/config';
+import { studyService } from '@/services/api/study.service';
 
 interface StudyTimerContextType {
   time: number; // in seconds
@@ -79,8 +78,8 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     const fetchInitialTime = async () => {
       try {
-        const res = await axios.get(`${API_URL}/study-stats/today`, { withCredentials: true });
-        const serverTime = res.data.data.totalStudySeconds || 0;
+        const res = await studyService.getTodayStats();
+        const serverTime = res.data.totalStudySeconds || 0;
 
         setTime(serverTime);
         timeRef.current = serverTime;
@@ -268,9 +267,10 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const syncToBackend = async (seconds: number) => {
     try {
-      await axios.post(`${API_URL}/study-stats/sync`, {
-        studySeconds: seconds,
-      }, { withCredentials: true });
+      await studyService.syncStats({
+        duration: seconds,
+        timestamp: new Date().toISOString()
+      });
       console.log('Synced to backend:', seconds);
     } catch (error) {
       console.error('Failed to sync study stats:', error);
@@ -289,7 +289,7 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     localStorage.setItem('study_time_today', '0');
 
     try {
-      await axios.post(`${API_URL}/study-stats/reset`, {}, { withCredentials: true });
+      await studyService.resetStats();
       console.log('Timer reset successfully');
     } catch (error) {
       console.error('Failed to reset timer:', error);

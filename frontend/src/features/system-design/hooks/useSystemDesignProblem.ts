@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { SystemDesignProblem } from '@/types/system-design';
 import { NOTES_TEMPLATE } from '@/types/system-design';
-import { systemDesignApi } from '../api/systemDesignApi';
+import { systemDesignApi } from '@/services/api/system-design.service';
 import { aiService } from '@/lib/ai/aiService';
 import { PROMPTS } from '@/lib/ai/prompts';
 import { exportToBlob } from '@excalidraw/excalidraw';

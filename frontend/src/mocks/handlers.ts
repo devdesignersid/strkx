@@ -4,7 +4,7 @@ import { API_URL } from '@/config';
 export const handlers = [
   // Study Stats
   http.get(`${API_URL}/study-stats/today`, () => {
-    return HttpResponse.json({ totalStudySeconds: 3600 });
+    return HttpResponse.json({ data: { totalStudySeconds: 3600 } });
   }),
 
   http.post(`${API_URL}/study-stats/sync`, () => {

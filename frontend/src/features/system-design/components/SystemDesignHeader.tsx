@@ -1,5 +1,6 @@
 import { FileText, Maximize2, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
 import type { SystemDesignProblem } from '@/types/system-design';
+import { Button } from '@/design-system/components';
 
 interface SystemDesignHeaderProps {
     problem: SystemDesignProblem;
@@ -31,41 +32,49 @@ export function SystemDesignHeader({
 
             <div className="flex items-center space-x-3">
                 {isLeftPanelCollapsed && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={onToggleLeftPanel}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                        className="text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
                         title="Show Sidebar"
                     >
-                        <PanelLeftOpen className="w-4 h-4" />
-                    </button>
+                        <PanelLeftOpen className="w-4 h-4 mr-2" />
+                        Show Sidebar
+                    </Button>
                 )}
 
                 {isRightPanelCollapsed && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={onToggleRightPanel}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                        className="text-xs font-medium bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
                         title="Show Canvas"
                     >
-                        <PanelRightOpen className="w-4 h-4" />
-                    </button>
+                        <PanelRightOpen className="w-4 h-4 mr-2" />
+                        Show Canvas
+                    </Button>
                 )}
 
                 {(isLeftPanelCollapsed || isRightPanelCollapsed) && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onResetLayout}
-                        className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                        className="hover:bg-secondary text-muted-foreground hover:text-foreground"
                         title="Reset Layout"
                     >
                         <Maximize2 className="w-4 h-4 rotate-45" />
-                    </button>
+                    </Button>
                 )}
 
-                <button
+                <Button
                     onClick={onSubmit}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                     Submit
-                </button>
+                </Button>
             </div>
         </header>
     );

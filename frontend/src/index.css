@@ -3,46 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Supabase Dark Mode Scale */
-    --background: 0 0% 8%;
-    /* scale-2 #151515 */
-    --foreground: 0 0% 93%;
-    /* scale-12 #EDEDED */
-
-    --card: 0 0% 11%;
-    /* scale-3 #1C1C1C */
-    --card-foreground: 0 0% 93%;
-
-    --popover: 0 0% 11%;
-    --popover-foreground: 0 0% 93%;
-
-    --primary: 153 60% 53%;
-    /* #3ECF8E (Supabase Green) */
-    --primary-foreground: 0 0% 9%;
-
-    --secondary: 0 0% 15%;
-    /* scale-4 #262626 */
-    --secondary-foreground: 0 0% 93%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 55%;
-    /* scale-9 #8B8B8B */
-
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 93%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 18%;
-    /* scale-5 #2E2E2E */
-    --input: 0 0% 18%;
-    --ring: 153 60% 53%;
-
-    --radius: 0.25rem;
-    /* 4px - Supabase uses smaller radius */
-  }
+  /* Variables are now injected by ThemeProvider */
 }
 
 @layer base {

@@ -7,8 +7,8 @@ import {
     Circle, MoreHorizontal, Edit, Trash2, Filter
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/Skeleton';
-import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton } from '@/design-system/components/Skeleton';
+import { EmptyState, Button } from '@/design-system/components';
 import type { SystemDesignProblem } from '@/types/system-design';
 import type { SortKey, SortDirection } from '../hooks/useSystemDesignProblems';
 
@@ -71,15 +71,17 @@ export function SystemDesignTable({
         <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-secondary/30 text-muted-foreground font-medium border-b border-border">
+                    <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                         <tr>
                             <th className="px-4 py-3 w-10">
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={onToggleSelectAll}
-                                    className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                                    className="h-8 w-8 p-0 hover:bg-transparent hover:text-foreground"
                                 >
                                     {isAllSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                </button>
+                                </Button>
                             </th>
                             <th
                                 className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
@@ -142,24 +144,26 @@ export function SystemDesignTable({
                                     key={problem.id}
                                     onClick={() => navigate(`/system-design/${problem.id}`)}
                                     className={cn(
-                                        "group hover:bg-secondary/30 transition-colors cursor-pointer",
+                                        "group hover:bg-muted/30 transition-colors cursor-pointer",
                                         selectedIds.has(problem.id) && "bg-primary/5 hover:bg-primary/10"
                                     )}
                                 >
                                     <td className="px-4 py-3">
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onToggleSelectOne(problem.id, e.shiftKey, lastSelectedId.current);
                                                 lastSelectedId.current = problem.id;
                                             }}
                                             className={cn(
-                                                "flex items-center justify-center transition-colors",
+                                                "h-8 w-8 p-0 hover:bg-transparent",
                                                 selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
                                             )}
                                         >
                                             {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                        </button>
+                                        </Button>
                                     </td>
                                     <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
                                         {problem.title}
@@ -177,13 +181,13 @@ export function SystemDesignTable({
                                     <td className="px-4 py-3">
                                         <div className="flex items-center flex-wrap gap-1.5">
                                             {problem.tags.slice(0, 3).map(tag => (
-                                                <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5">
+                                                <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border">
                                                     {tag}
                                                 </span>
                                             ))}
                                             {problem.tags.length > 3 && (
                                                 <span
-                                                    className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-white/5 cursor-help"
+                                                    className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border cursor-help"
                                                     onMouseEnter={(e) => {
                                                         const rect = e.currentTarget.getBoundingClientRect();
                                                         const viewportHeight = window.innerHeight;
@@ -213,12 +217,14 @@ export function SystemDesignTable({
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-right relative">
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={(e) => handleMenuClick(e, problem.id)}
-                                            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors row-action-menu-trigger"
+                                            className="h-8 w-8 p-0 row-action-menu-trigger"
                                         >
                                             <MoreHorizontal className="w-4 h-4" />
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))

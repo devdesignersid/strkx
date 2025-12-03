@@ -5,10 +5,10 @@ import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
 import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, Loader2, PanelLeftClose, Trash2 } from 'lucide-react';
 import type { Problem, Submission, Solution } from '@/types/problem';
-import EmptyState from '@/components/ui/EmptyState';
-import { fadeIn } from '@/components/ui/DesignSystem';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
-import { Modal } from '@/components/ui/Modal';
+import { EmptyState, Button } from '@/design-system/components';
+import { fadeIn } from '@/design-system/animations';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/design-system/components';
+import { Modal } from '@/design-system/components';
 
 interface ProblemDescriptionProps {
   problem: Problem;
@@ -46,7 +46,7 @@ export function ProblemDescription({
   return (
     <div className="flex flex-col h-full bg-card">
       <Tabs defaultValue="description" className="flex flex-col h-full">
-        <div className="flex items-center justify-between border-b border-white/5 px-2 pt-2 shrink-0">
+        <div className="flex items-center justify-between border-b border-border px-2 pt-2 shrink-0">
           <div className="flex items-center overflow-x-auto no-scrollbar">
             <TabsList className="bg-transparent p-0 h-auto gap-1">
               <TabsTrigger value="description" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary px-4 py-2">
@@ -69,18 +69,21 @@ export function ProblemDescription({
               )}
             </TabsList>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onCollapse}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors shrink-0 ml-2"
+            className="h-8 w-8 p-0 ml-2 shrink-0"
             title="Collapse Description"
           >
             <PanelLeftClose className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 prose prose-invert prose-sm max-w-none prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-headings:text-foreground/90 prose-p:text-muted-foreground prose-a:text-primary prose-code:text-primary/90 prose-code:text-[13px] prose-code:font-medium">
+        <div className="flex-1 overflow-y-auto p-6 prose prose-invert prose-sm max-w-none prose-pre:bg-black/30 prose-pre:border prose-pre:border-border prose-headings:text-foreground/90 prose-p:text-muted-foreground prose-a:text-primary prose-code:text-primary/90 prose-code:text-[13px] prose-code:font-medium">
           <TabsContent value="description" className="mt-0">
             <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit">
+              <h1 className="text-2xl font-bold text-foreground mb-4">{problem.title}</h1>
               <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{problem.description || 'No description available.'}</ReactMarkdown>
             </motion.div>
           </TabsContent>
@@ -106,9 +109,9 @@ export function ProblemDescription({
                         {sub.status === 'ACCEPTED' ? (
                           <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
                         ) : (
-                          <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                          <XCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
                         )}
-                        <span className={`text-xs font-medium ${sub.status === 'ACCEPTED' ? 'text-green-500' : 'text-red-500'}`}>
+                        <span className={`text-xs font-medium ${sub.status === 'ACCEPTED' ? 'text-green-500' : 'text-destructive'}`}>
                           {sub.status === 'ACCEPTED' ? 'Accepted' : 'Wrong Answer'}
                         </span>
                         {sub.isSolution && (
@@ -119,15 +122,17 @@ export function ProblemDescription({
                         )}
                       </div>
                       {sub.status === 'ACCEPTED' && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             onMarkAsSolution(sub.id, sub.isSolution, sub.solutionName);
                           }}
-                          className="text-[10px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 transition-colors shrink-0"
+                          className="h-6 text-[10px] px-2 py-0.5 bg-white/5 hover:bg-white/10 shrink-0"
                         >
                           {sub.isSolution ? 'Unmark' : 'Save as Solution'}
-                        </button>
+                        </Button>
                       )}
                     </div>
 
@@ -157,16 +162,18 @@ export function ProblemDescription({
                             )}
                           </>
                         )}
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSubmissionToDelete(sub.id);
                           }}
-                          className="p-1 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                          className="h-6 w-6 p-0 hover:text-destructive hover:bg-destructive/10"
                           title="Delete Submission"
                         >
                           <Trash2 className="w-3 h-3" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -248,14 +255,16 @@ export function ProblemDescription({
                 <div className="space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-border">
                     <h3 className="text-sm font-semibold text-foreground">Analysis Results</h3>
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={onAnalyze}
                       disabled={isAnalyzing}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 transition-all disabled:opacity-50"
+                      className="gap-2 text-purple-400 bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30"
                     >
                       <BrainCircuit className="w-3.5 h-3.5" />
                       Re-Analyze
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -274,7 +283,7 @@ export function ProblemDescription({
                     <div className="flex items-center gap-4">
                       <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
+                          className="h-full bg-gradient-to-r from-destructive via-yellow-500 to-green-500"
                           style={{ width: `${aiAnalysis.score}%` }}
                         />
                       </div>
@@ -307,23 +316,23 @@ export function ProblemDescription({
         description="Are you sure you want to delete this submission? This action cannot be undone."
         footer={
           <>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setSubmissionToDelete(null)}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="destructive"
               onClick={() => {
                 if (submissionToDelete) {
                   onDeleteSubmission(submissionToDelete);
                   setSubmissionToDelete(null);
                 }
               }}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
             >
               Delete
-            </button>
+            </Button>
           </>
         }
       />

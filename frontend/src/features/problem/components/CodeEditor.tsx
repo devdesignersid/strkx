@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/design-system/components';
 
 interface CodeEditorProps {
   code: string;
@@ -155,7 +156,7 @@ export function CodeEditor({
         { token: 'identifier', foreground: '9cdcfe' },
       ],
       colors: {
-        'editor.background': '#1e1e1e',
+        'editor.background': '#1e1e1e', // Keep specific editor background
         'editor.foreground': '#d4d4d4',
         'editor.lineHighlightBackground': '#2f3337',
         'editorCursor.foreground': '#d4d4d4',
@@ -173,7 +174,7 @@ export function CodeEditor({
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#1e1e1e]">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/5">
-            <span className={cn("text-xs font-mono font-medium tabular-nums", timeLeft < 300 ? "text-red-400" : "text-foreground")}>
+            <span className={cn("text-xs font-mono font-medium tabular-nums", timeLeft < 300 ? "text-destructive" : "text-foreground")}>
               {formatTime(timeLeft)}
             </span>
             {!timerReadOnly && (
@@ -181,87 +182,97 @@ export function CodeEditor({
                 onClick={onToggleTimer}
                 className={cn(
                   "w-2 h-2 rounded-full transition-colors",
-                  isTimerRunning ? "bg-green-500 animate-pulse" : "bg-red-500"
+                  isTimerRunning ? "bg-green-500 animate-pulse" : "bg-destructive"
                 )}
               />
             )}
           </div>
           {!timerReadOnly && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onResetTimer}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+              className="h-8 w-8 p-0"
               title="Reset Timer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           {isAIEnabled && !hideAI && (
             <>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onGetHint}
                 disabled={isRequestingHint}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 transition-colors disabled:opacity-50"
+                className="gap-1.5 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 border-yellow-400/20"
               >
                 {isRequestingHint ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
                 Hint
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onCompleteCode}
                 disabled={isCompletingCode}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-purple-400 bg-purple-400/10 hover:bg-purple-400/20 border border-purple-400/20 transition-colors disabled:opacity-50"
+                className="gap-1.5 text-purple-400 bg-purple-400/10 hover:bg-purple-400/20 border-purple-400/20"
               >
                 {isCompletingCode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 Complete
-              </button>
+              </Button>
             </>
           )}
           {!hideDividers && <div className="w-px h-4 bg-white/10 mx-1" />}
 
           {!hideAutocomplete && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onToggleAutocomplete}
               className={cn(
-                "p-1.5 rounded-md transition-colors",
-                autocompleteEnabled
-                  ? "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                "h-8 w-8 p-0",
+                autocompleteEnabled && "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
               )}
               title={autocompleteEnabled ? "Disable Autocomplete" : "Enable Autocomplete"}
             >
               <Keyboard className="w-4 h-4" />
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onToggleFocusMode}
             className={cn(
-              "p-1.5 rounded-md transition-colors",
-              isFocusMode
-                ? "text-green-400 bg-green-400/10 hover:bg-green-400/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              "h-8 w-8 p-0",
+              isFocusMode && "text-green-400 bg-green-400/10 hover:bg-green-400/20"
             )}
             title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
           >
             <Focus className="w-4 h-4" />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onResetCode}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+            className="h-8 w-8 p-0"
             title="Reset Code"
           >
             <RotateCcw className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onToggleFullscreen}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+            className="h-8 w-8 p-0"
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
+          </Button>
         </div>
       </div>
 

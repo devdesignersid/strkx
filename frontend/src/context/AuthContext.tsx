@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { API_URL } from '@/config';
+import { userService } from '@/services/api/user.service';
 
 interface User {
   id: string;
@@ -33,12 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData.data);
+      const response = await userService.getProfile();
+      if (response && response.data) {
+        setUser(response.data);
       } else {
         setUser(null);
       }
@@ -56,10 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await userService.logout();
       setUser(null);
       toast.success(TOAST_MESSAGES.AUTH.LOGOUT_SUCCESS);
       navigate('/login');

@@ -4,8 +4,8 @@ import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
 import { PanelLeftClose, Star, Clock, PanelBottomOpen } from 'lucide-react';
 import type { SystemDesignProblem } from '@/types/system-design';
-import { fadeIn } from '@/components/ui/DesignSystem';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { fadeIn } from '@/design-system/animations';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Button } from '@/design-system/components';
 
 import { SubmissionsList } from './SubmissionsList';
 import { AiAnalysisPanel } from './AiAnalysisPanel';
@@ -62,21 +62,25 @@ export function SystemDesignDescription({
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                         {isNotesCollapsed && onToggleNotes && (
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onToggleNotes}
-                                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                                className="h-7 w-7"
                                 title="Expand Notes"
                             >
                                 <PanelBottomOpen className="w-4 h-4" />
-                            </button>
+                            </Button>
                         )}
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={onCollapse}
-                            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-md transition-colors"
+                            className="h-7 w-7"
                             title="Collapse Description"
                         >
                             <PanelLeftClose className="w-4 h-4" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
 

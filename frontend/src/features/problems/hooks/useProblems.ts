@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { axiosInstance as axios } from '@/lib/axios';
+import { useState, useMemo } from 'react';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { problemsService } from '@/services/api/problems.service';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
-
 
 export interface Problem {
   id: string;
@@ -17,89 +17,145 @@ export type SortKey = 'title' | 'difficulty' | 'status' | 'acceptance';
 export type SortDirection = 'asc' | 'desc';
 
 export function useProblems() {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDifficulties, setFilterDifficulties] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
-
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
     key: 'title',
     direction: 'asc'
   });
-
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const LIMIT = 20;
 
-  const fetchProblems = useCallback(async (page: number, isReset: boolean = false) => {
-    if (isReset) setIsLoading(true);
-    setIsLoadingMore(true);
+  // Build query params
+  const queryParams = useMemo(() => ({
+    limit: LIMIT,
+    search: searchQuery || undefined,
+    difficulty: filterDifficulties.length ? filterDifficulties.join(',') : undefined,
+    status: filterStatus.length ? filterStatus.join(',') : undefined,
+    tags: filterTags.length ? filterTags.join(',') : undefined,
+    sort: sortConfig.key,
+    order: sortConfig.direction
+  }), [searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
 
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', LIMIT.toString());
-    if (searchQuery) params.append('search', searchQuery);
-    if (filterDifficulties.length) params.append('difficulty', filterDifficulties.join(','));
-    if (filterStatus.length) params.append('status', filterStatus.join(','));
-    if (filterTags.length) params.append('tags', filterTags.join(','));
-    params.append('sort', sortConfig.key);
-    params.append('order', sortConfig.direction);
+  // Infinite query for problems
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error
+  } = useInfiniteQuery({
+    queryKey: ['problems', queryParams],
+    queryFn: async ({ pageParam = 1 }) => {
+      const res = await problemsService.findAll({
+        ...queryParams,
+        page: pageParam
+      });
 
-    try {
-      const res = await axios.get(`/problems?${params.toString()}`);
-      const { problems: fetchedProblems, hasMore: more } = res.data.data;
-
+      const { problems: fetchedProblems, hasMore } = res.data;
       const enriched = fetchedProblems.map((p: any) => ({
-          ...p,
-          acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
+        ...p,
+        acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
       }));
 
-      if (isReset) {
-        setProblems(enriched);
-        setCurrentPage(1);
-      } else {
-        setProblems(prev => [...prev, ...enriched]);
-        setCurrentPage(page);
+      return { problems: enriched, hasMore };
+    },
+    getNextPageParam: (lastPage, pages) => {
+      return lastPage.hasMore ? pages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Flatten all pages into single array
+  const problems = useMemo(() => {
+    return data?.pages.flatMap(page => page.problems) ?? [];
+  }, [data]);
+
+  // Delete single problem mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => problemsService.delete(id),
+    onMutate: async (id) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['problems'] });
+
+      // Snapshot previous value
+      const previousProblems = queryClient.getQueryData(['problems', queryParams]);
+
+      // Optimistically update cache
+      queryClient.setQueryData(['problems', queryParams], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            problems: page.problems.filter((p: Problem) => p.id !== id)
+          }))
+        };
+      });
+
+      return { previousProblems };
+    },
+    onError: (err, _id, context) => {
+      // Rollback on error
+      if (context?.previousProblems) {
+        queryClient.setQueryData(['problems', queryParams], context.previousProblems);
       }
-      setHasMore(more);
-    } catch (err) {
-      console.error(err);
-      toast.error(TOAST_MESSAGES.PROBLEM.LOAD_FAILED);
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      console.error('Failed to delete problem:', err);
+      toast.error(TOAST_MESSAGES.PROBLEM.DELETE_FAILED);
+    },
+    onSuccess: () => {
+      toast.success(TOAST_MESSAGES.PROBLEM.DELETED);
+    },
+    onSettled: () => {
+      // Refetch to sync with server
+      queryClient.invalidateQueries({ queryKey: ['problems'] });
     }
-  }, [searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProblems(1, true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchProblems]);
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) =>
+      Promise.all(ids.map(id => problemsService.delete(id))),
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ['problems'] });
+      const previousProblems = queryClient.getQueryData(['problems', queryParams]);
 
-  // Refetch problems when page becomes visible (e.g., navigating back from problem page)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchProblems(1, true);
+      queryClient.setQueryData(['problems', queryParams], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            problems: page.problems.filter((p: Problem) => !ids.includes(p.id))
+          }))
+        };
+      });
+
+      return { previousProblems, count: ids.length };
+    },
+    onError: (err, _ids, context) => {
+      if (context?.previousProblems) {
+        queryClient.setQueryData(['problems', queryParams], context.previousProblems);
       }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [fetchProblems]);
-
-  const loadMore = async () => {
-    if (isLoadingMore || !hasMore) return;
-    await fetchProblems(currentPage + 1, false);
-  };
+      console.error('Failed to delete problems:', err);
+      toast.error(TOAST_MESSAGES.PROBLEM.BULK_DELETE_FAILED);
+    },
+    onSuccess: (_data, _ids, context) => {
+      toast.success({
+        title: TOAST_MESSAGES.PROBLEM.BULK_DELETED.title,
+        description: `Deleted ${context?.count} problems`
+      });
+      setSelectedIds(new Set());
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['problems'] });
+    }
+  });
 
   const handleSort = (key: SortKey) => {
     setSortConfig(current => ({
@@ -112,7 +168,7 @@ export function useProblems() {
     if (selectedIds.size === problems.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(problems.map(p => p.id)));
+      setSelectedIds(new Set(problems.map((p: Problem) => p.id)));
     }
   };
 
@@ -120,76 +176,46 @@ export function useProblems() {
     const newSet = new Set(selectedIds);
 
     if (shiftKey && lastSelectedId) {
-        const start = problems.findIndex(p => p.id === lastSelectedId);
-        const end = problems.findIndex(p => p.id === id);
+      const start = problems.findIndex((p: Problem) => p.id === lastSelectedId);
+      const end = problems.findIndex((p: Problem) => p.id === id);
 
-        if (start !== -1 && end !== -1) {
-            const [lower, upper] = start < end ? [start, end] : [end, start];
-            for (let i = lower; i <= upper; i++) {
-                newSet.add(problems[i].id);
-            }
-        } else {
-             if (newSet.has(id)) newSet.delete(id);
-             else newSet.add(id);
+      if (start !== -1 && end !== -1) {
+        const [lower, upper] = start < end ? [start, end] : [end, start];
+        for (let i = lower; i <= upper; i++) {
+          newSet.add(problems[i].id);
         }
-    } else {
+      } else {
         if (newSet.has(id)) newSet.delete(id);
         else newSet.add(id);
+      }
+    } else {
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
     }
     setSelectedIds(newSet);
   };
 
-  const deleteProblem = async (id: string) => {
-    // Optimistic Update
-    const previousProblems = [...problems];
-    setProblems(problems.filter(p => p.id !== id));
-
-    try {
-      await axios.delete(`/problems/${id}`);
-      toast.success(TOAST_MESSAGES.PROBLEM.DELETED);
-    } catch (err) {
-      console.error('Failed to delete problem:', err);
-      // Rollback
-      setProblems(previousProblems);
-      toast.error(TOAST_MESSAGES.PROBLEM.DELETE_FAILED);
+  const loadMore = async () => {
+    if (!isFetchingNextPage && hasNextPage) {
+      await fetchNextPage();
     }
+  };
+
+  const deleteProblem = async (id: string) => {
+    await deleteMutation.mutateAsync(id);
   };
 
   const bulkDelete = async () => {
     if (selectedIds.size === 0) return;
-
-    // Optimistic Update
-    const previousProblems = [...problems];
-    const previousSelectedIds = new Set(selectedIds);
-
-    setProblems(problems.filter(p => !selectedIds.has(p.id)));
-    setSelectedIds(new Set());
-
-    try {
-      await Promise.all(
-        Array.from(selectedIds).map(id =>
-          axios.delete(`/problems/${id}`)
-        )
-      );
-
-      toast.success({
-        title: TOAST_MESSAGES.PROBLEM.BULK_DELETED.title,
-        description: `Deleted ${previousSelectedIds.size} problems`
-      });
-    } catch (err) {
-      console.error('Failed to delete problems:', err);
-      // Rollback
-      setProblems(previousProblems);
-      setSelectedIds(previousSelectedIds);
-      toast.error(TOAST_MESSAGES.PROBLEM.BULK_DELETE_FAILED);
-    }
+    await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
   };
 
   return {
     problems,
     isLoading,
-    isLoadingMore,
-    hasMore,
+    isLoadingMore: isFetchingNextPage,
+    hasMore: hasNextPage ?? false,
+    error,
     searchQuery,
     setSearchQuery,
     filterDifficulties,

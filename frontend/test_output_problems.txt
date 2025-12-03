@@ -1,0 +1,303 @@
+
+> frontend@0.0.0 test
+> vitest src/pages/problems/ProblemsPage.test.tsx
+
+
+[1m[44m DEV [49m[22m [34mv4.0.14 [39m[90m/Users/siddharthskumar/Documents/Workspace/strkx/frontend[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m [ src/pages/problems/ProblemsPage.test.tsx ][22m
+[31m[1mError[22m: Failed to resolve import "./DesignSystem" from "src/design-system/components/EmptyState.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36m/Users/siddharthskumar/Documents/Workspace/strkx/frontend/src/design-system/components/EmptyState.tsx[39m:4:24
+[33m  2  |  import { cn } from "@/lib/utils";
+  3  |  import { motion } from "framer-motion";
+  4  |  import { scaleIn } from "./DesignSystem";
+     |                           ^
+  5  |  import { Button } from "@/design-system/components";
+  6  |  export default function EmptyState({ icon: Icon, title, description, action, className }) {[39m
+[90m [2m❯[22m TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/config.js:[2m29647:43[22m[39m
+[90m [2m❯[22m TransformPluginContext.error node_modules/vite/dist/node/chunks/config.js:[2m29644:14[22m[39m
+[90m [2m❯[22m normalizeUrl node_modules/vite/dist/node/chunks/config.js:[2m27767:18[22m[39m
+[90m [2m❯[22m node_modules/vite/dist/node/chunks/config.js:[2m27825:32[22m[39m
+[90m [2m❯[22m TransformPluginContext.transform node_modules/vite/dist/node/chunks/config.js:[2m27793:4[22m[39m
+[90m [2m❯[22m EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/config.js:[2m29445:14[22m[39m
+[90m [2m❯[22m loadAndTransform node_modules/vite/dist/node/chunks/config.js:[2m23316:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 19:43:03
+[2m   Duration [22m 2.56s[2m (transform 352ms, setup 328ms, import 0ms, tests 0ms, environment 962ms)[22m
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/EmptyState.tsx [22m[34mx1 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1109[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 506[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 331[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 19:44:16
+[2m   Duration [22m 4.09s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/index.ts [22m[34mx2 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2686[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 1412[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 757[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 20:15:29
+[2m   Duration [22m 11.49s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/Modal.tsx [22m[34mx3 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 7600[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 4008[2mms[22m[39m
+     [33m[2m✓[22m[39m navigates to create problem page on button click [33m 403[2mms[22m[39m
+     [33m[2m✓[22m[39m opens delete confirmation modal when delete is triggered from table [33m 734[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 1933[2mms[22m[39m
+     [33m[2m✓[22m[39m opens add to list modal when triggered from toolbar [33m 352[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 20:56:42
+[2m   Duration [22m 27.81s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/index.ts [22m[34mx4 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [31m❯[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 24840[2mms[22m[39m
+[31m     [31m×[31m renders the page title[39m[33m 14650[2mms[22m[39m
+     [32m✓[39m navigates to create problem page on button click[32m 76[2mms[22m[39m
+     [33m[2m✓[22m[39m opens delete confirmation modal when delete is triggered from table [33m 2034[2mms[22m[39m
+[31m     [31m×[31m calls deleteProblem when delete is confirmed[39m[33m 5777[2mms[22m[39m
+     [33m[2m✓[22m[39m opens add to list modal when triggered from toolbar [33m 1220[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mrenders the page title
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[90m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m80:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mcalls deleteProblem when delete is confirmed
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[90m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m104:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:29:24
+[2m   Duration [22m 75.22s
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/StatusBadge.tsx [22m[34mx5 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [31m❯[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 69678[2mms[22m[39m
+[31m     [31m×[31m renders the page title[39m[33m 28240[2mms[22m[39m
+     [33m[2m✓[22m[39m navigates to create problem page on button click [33m 5905[2mms[22m[39m
+[31m     [31m×[31m opens delete confirmation modal when delete is triggered from table[39m[33m 7281[2mms[22m[39m
+[31m     [31m×[31m calls deleteProblem when delete is confirmed[39m[33m 23263[2mms[22m[39m
+     [33m[2m✓[22m[39m opens add to list modal when triggered from toolbar [33m 2814[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mrenders the page title
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m80:5[22m[39m
+    [90m 78| [39m    })[33m;[39m
+    [90m 79| [39m
+    [90m 80| [39m    [34mit[39m([32m'renders the page title'[39m[33m,[39m () [33m=>[39m {
+    [90m   | [39m    [31m^[39m
+    [90m 81| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 82| [39m        [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'Problems'[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mopens delete confirmation modal when delete is triggered from table
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m93:5[22m[39m
+    [90m 91| [39m    })[33m;[39m
+    [90m 92| [39m
+    [90m 93| [39m    it('opens delete confirmation modal when delete is triggered from …
+    [90m   | [39m    [31m^[39m
+    [90m 94| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 95| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mcalls deleteProblem when delete is confirmed
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m104:5[22m[39m
+    [90m102| [39m    })[33m;[39m
+    [90m103| [39m
+    [90m104| [39m    [34mit[39m([32m'calls deleteProblem when delete is confirmed'[39m[33m,[39m [35masync[39m () [33m=>[39m {
+    [90m   | [39m    [31m^[39m
+    [90m105| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m106| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:31:07
+[2m   Duration [22m 157.01s
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+[vitest-pool]: Timeout terminating forks worker for test files /Users/siddharthskumar/Documents/Workspace/strkx/frontend/src/pages/problems/ProblemsPage.test.tsx.
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/ProgressBar.tsx [22m[34mx6 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mrenders the page title
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m80:5[22m[39m
+    [90m 78| [39m    })[33m;[39m
+    [90m 79| [39m
+    [90m 80| [39m    [34mit[39m([32m'renders the page title'[39m[33m,[39m () [33m=>[39m {
+    [90m   | [39m    [31m^[39m
+    [90m 81| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 82| [39m        [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'Problems'[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mopens delete confirmation modal when delete is triggered from table
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m93:5[22m[39m
+    [90m 91| [39m    })[33m;[39m
+    [90m 92| [39m
+    [90m 93| [39m    it('opens delete confirmation modal when delete is triggered from …
+    [90m   | [39m    [31m^[39m
+    [90m 94| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 95| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/pages/problems/ProblemsPage.test.tsx[2m > [22mProblemsPage[2m > [22mcalls deleteProblem when delete is confirmed
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/pages/problems/ProblemsPage.test.tsx:[2m104:5[22m[39m
+    [90m102| [39m    })[33m;[39m
+    [90m103| [39m
+    [90m104| [39m    [34mit[39m([32m'calls deleteProblem when delete is confirmed'[39m[33m,[39m [35masync[39m () [33m=>[39m {
+    [90m   | [39m    [31m^[39m
+    [90m105| [39m        [34mrender[39m([33m<[39m[33mProblemsPage[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m106| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Unhandled Errors [49m[22m[31m⎯⎯⎯⎯⎯⎯[39m
+[31m[1m
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Unhandled Error [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: [vitest-pool-runner]: Timeout waiting for worker to respond[39m
+[90m [2m❯[22m Timeout.<anonymous> node_modules/vitest/dist/chunks/cli-api.CbjxIXjQ.js:[2m7341:58[22m[39m
+[90m [2m❯[22m listOnTimeout node:internal/timers:[2m588:17[22m[39m
+[90m [2m❯[22m processTimers node:internal/timers:[2m523:7[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (5)[39m
+[2m     Errors [22m [1m[31m1 error[39m[22m
+[2m   Start at [22m 21:35:09
+[2m   Duration [22m 157.01s
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/pages/problems/ProblemsPage.tsx [22m[34mx7 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1214[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 316[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 666[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:41:15
+[2m   Duration [22m 5.27s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/pages/problems/ProblemsPage.tsx [22m[34mx8 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1220[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 589[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 438[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:41:25
+[2m   Duration [22m 3.74s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/features/problems/components/ProblemsTable.tsx [22m[34mx9 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2108[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 969[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 881[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:41:38
+[2m   Duration [22m 7.50s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/features/problems/components/ProblemsTable.tsx [22m[34mx10 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+
+ [32m✓[39m src/pages/problems/ProblemsPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2449[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the page title [33m 924[2mms[22m[39m
+     [33m[2m✓[22m[39m calls deleteProblem when delete is confirmed [33m 982[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 21:41:50
+[2m   Duration [22m 6.41s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/design-system/components/ProgressBar.tsx [22m[34mx11 [34m[39m
+       [2m Filename pattern: [22m[34msrc/pages/problems/ProblemsPage.test.tsx[39m
+

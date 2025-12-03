@@ -1,11 +1,10 @@
-
 import { render, screen } from '@testing-library/react';
 import { TruncatedText } from './truncated-text';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/design-system/components/Tooltip';
 import { vi, describe, it, expect } from 'vitest';
 
 // Mock Tooltip components since they rely on Radix UI which might need setup
-vi.mock('@/components/ui/tooltip', () => ({
+vi.mock('@/design-system/components/Tooltip', () => ({
     Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     TooltipTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     TooltipContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

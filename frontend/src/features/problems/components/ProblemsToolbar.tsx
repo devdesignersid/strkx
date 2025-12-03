@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Search, Filter, Check, X, FolderPlus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Input, Button } from '@/design-system/components';
 
 interface ProblemsToolbarProps {
   searchQuery: string;
@@ -53,24 +54,25 @@ export function ProblemsToolbar({
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Search problems..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+            className="pl-10"
           />
         </div>
 
         {/* Unified Filter */}
         <div className="relative" ref={filterRef}>
-          <button
+          <Button
+            variant="outline"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors",
+              "gap-2",
               isFilterOpen || activeFiltersCount > 0
-                ? "bg-primary/10 text-primary border-primary/20"
-                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Filter className="w-4 h-4" />
@@ -80,7 +82,7 @@ export function ProblemsToolbar({
                 {activeFiltersCount}
               </span>
             )}
-          </button>
+          </Button>
 
           <AnimatePresence>
             {isFilterOpen && (
@@ -139,10 +141,10 @@ export function ProblemsToolbar({
                         </span>
                       ))}
                     </div>
-                    <input
+                    <Input
                       type="text"
                       placeholder="Add tag..."
-                      className="w-full bg-secondary/50 border border-border rounded px-2 py-1 text-xs focus:outline-none focus:border-primary"
+                      className="h-8 text-xs"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleAddTag}
@@ -162,9 +164,9 @@ export function ProblemsToolbar({
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-white/10 rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-popover border border-border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
           >
-            <div className="flex items-center gap-3 border-r border-white/10 pr-6">
+            <div className="flex items-center gap-3 border-r border-border pr-6">
               <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                 {selectedCount}
               </div>
@@ -174,7 +176,7 @@ export function ProblemsToolbar({
             <div className="flex items-center gap-2">
               <button
                 onClick={onAddToList}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary rounded-md transition-colors text-sm font-medium"
               >
                 <FolderPlus className="w-4 h-4" />
                 Add to List
@@ -188,7 +190,7 @@ export function ProblemsToolbar({
               </button>
               <button
                 onClick={onClearSelection}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary rounded-md transition-colors text-sm font-medium text-muted-foreground"
               >
                 <X className="w-4 h-4" />
                 Clear

@@ -58,51 +58,51 @@ export default function ExcalidrawCanvasPage() {
         style.id = 'excalidraw-custom-theme';
         style.innerHTML = `
       .excalidraw {
-        --color-primary: #3ECF8E !important;
-        --color-primary-darker: #34b078 !important;
-        --color-primary-darkest: #2a8f62 !important;
-        --color-primary-light: #65d9a5 !important;
-        --color-brand-active: #3ECF8E !important;
-        --color-brand-hover: #34b078 !important;
+        --color-primary: hsl(var(--primary)) !important;
+        --color-primary-darker: hsl(var(--primary) / 0.8) !important;
+        --color-primary-darkest: hsl(var(--primary) / 0.6) !important;
+        --color-primary-light: hsl(var(--primary) / 0.9) !important;
+        --color-brand-active: hsl(var(--primary)) !important;
+        --color-brand-hover: hsl(var(--primary) / 0.8) !important;
       }
 
       .excalidraw.theme--dark {
         /* Primary Brand Colors */
-        --color-primary: #3ECF8E !important;
-        --color-primary-darker: #34b078 !important;
-        --color-primary-darkest: #2a8f62 !important;
-        --color-primary-light: #65d9a5 !important;
+        --color-primary: hsl(var(--primary)) !important;
+        --color-primary-darker: hsl(var(--primary) / 0.8) !important;
+        --color-primary-darkest: hsl(var(--primary) / 0.6) !important;
+        --color-primary-light: hsl(var(--primary) / 0.9) !important;
 
         /* UI Surface Colors */
-        --color-surface-lowest: #151515 !important;
-        --color-surface-low: #1C1C1C !important;
-        --color-surface-mid: #232323 !important;
-        --color-surface-high: #2E2E2E !important;
+        --color-surface-lowest: hsl(var(--background)) !important;
+        --color-surface-low: hsl(var(--card)) !important;
+        --color-surface-mid: hsl(var(--popover)) !important;
+        --color-surface-high: hsl(var(--secondary)) !important;
 
         /* Text/Icon Colors */
-        --color-on-surface: #EDEDED !important;
-        --icon-fill-color: #EDEDED !important;
+        --color-on-surface: hsl(var(--foreground)) !important;
+        --icon-fill-color: hsl(var(--foreground)) !important;
 
         /* Button States */
-        --button-hover-bg: #2E2E2E !important;
-        --button-active-bg: #262626 !important;
-        --button-active-border: #3ECF8E !important;
+        --button-hover-bg: hsl(var(--secondary)) !important;
+        --button-active-bg: hsl(var(--secondary) / 0.8) !important;
+        --button-active-border: hsl(var(--primary)) !important;
 
         /* Brand Colors for UI */
-        --color-brand-hover: #34b078 !important;
-        --color-brand-active: #3ECF8E !important;
+        --color-brand-hover: hsl(var(--primary) / 0.8) !important;
+        --color-brand-active: hsl(var(--primary)) !important;
 
         /* Primary Container (Active States) */
-        --color-surface-primary-container: rgba(62, 207, 142, 0.15) !important;
-        --color-on-primary-container: #3ECF8E !important;
+        --color-surface-primary-container: hsl(var(--primary) / 0.15) !important;
+        --color-on-primary-container: hsl(var(--primary)) !important;
 
         /* Island (Toolbar) Background */
-        --island-bg-color: #1C1C1C !important;
-        --popup-bg-color: #1C1C1C !important;
-        --popup-secondary-bg-color: #151515 !important;
+        --island-bg-color: hsl(var(--card)) !important;
+        --popup-bg-color: hsl(var(--popover)) !important;
+        --popup-secondary-bg-color: hsl(var(--background)) !important;
 
         /* Selection */
-        --color-selection: #3ECF8E !important;
+        --color-selection: hsl(var(--primary)) !important;
       }
 
       /* User requested fix for active tool icons */
@@ -156,11 +156,11 @@ export default function ExcalidrawCanvasPage() {
     };
 
     return (
-        <div style={{ height: '100vh', width: '100vw', backgroundColor: '#151515' }}>
+        <div style={{ height: '100vh', width: '100vw', backgroundColor: 'hsl(var(--background))' }}>
             <Suspense
                 fallback={
-                    <div className="h-full w-full flex items-center justify-center bg-[#151515]">
-                        <Loader2 className="w-8 h-8 animate-spin text-[#3ECF8E]" />
+                    <div className="h-full w-full flex items-center justify-center bg-background">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
                 }
             >

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSystemDesignProblems } from '@/features/system-design/hooks/useSystemDesignProblems';
 import { SystemDesignToolbar } from '@/features/system-design/components/SystemDesignToolbar';
 import { SystemDesignTable } from '@/features/system-design/components/SystemDesignTable';
-import AddToListModal from '@/components/lists/AddToListModal';
+import AddToListModal from '@/features/lists/components/AddToListModal';
 import type { SystemDesignProblem } from '@/types/system-design';
 
 export default function SystemDesignListPage() {
@@ -91,7 +91,7 @@ export default function SystemDesignListPage() {
                     onToggleSelectAll={toggleSelectAll}
                     onToggleSelectOne={toggleSelectOne}
                     onDelete={(id) => {
-                        const problem = problems.find(p => p.id === id);
+                        const problem = problems.find((p: any) => p.id === id);
                         if (problem) setDeleteConfirmation({ id, title: problem.title });
                     }}
                     onModify={handleModify}

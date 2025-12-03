@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@/test-utils';
-import ProblemsPage from './ProblemsPage';
+import ProblemsPage from './problems/ProblemsPage';
 import { describe, it, expect, vi } from 'vitest';
 import { server } from '@/mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -10,31 +10,37 @@ vi.mock('@/components/lists/AddToListModal', () => ({
 }));
 
 describe('ProblemsPage', () => {
+  import { API_URL } from '@/config';
+
+  // ...
+
   it('renders problems list', async () => {
     server.use(
-      http.get('http://localhost:3000/problems', () => {
+      http.get(`${API_URL}/problems`, () => {
         return HttpResponse.json({
-          problems: [
-            {
-              id: '1',
-              title: 'Two Sum',
-              slug: 'two-sum',
-              difficulty: 'Easy',
-              tags: ['Array', 'Hash Table'],
-              status: 'Solved',
-              acceptance: 50,
-            },
-            {
-              id: '2',
-              title: 'Add Two Numbers',
-              slug: 'add-two-numbers',
-              difficulty: 'Medium',
-              tags: ['Linked List', 'Math'],
-              status: 'Todo',
-              acceptance: 40,
-            },
-          ],
-          hasMore: false,
+          data: {
+            problems: [
+              {
+                id: '1',
+                title: 'Two Sum',
+                slug: 'two-sum',
+                difficulty: 'Easy',
+                tags: ['Array', 'Hash Table'],
+                status: 'Solved',
+                acceptance: 50,
+              },
+              {
+                id: '2',
+                title: 'Add Two Numbers',
+                slug: 'add-two-numbers',
+                difficulty: 'Medium',
+                tags: ['Linked List', 'Math'],
+                status: 'Todo',
+                acceptance: 40,
+              },
+            ],
+            hasMore: false,
+          }
         });
       })
     );
@@ -51,10 +57,12 @@ describe('ProblemsPage', () => {
 
   it('renders empty state', async () => {
     server.use(
-      http.get('http://localhost:3000/problems', () => {
+      http.get(`${API_URL}/problems`, () => {
         return HttpResponse.json({
-          problems: [],
-          hasMore: false,
+          data: {
+            problems: [],
+            hasMore: false,
+          }
         });
       })
     );
@@ -68,19 +76,21 @@ describe('ProblemsPage', () => {
 
   it('handles selection and bulk actions', async () => {
     server.use(
-      http.get('http://localhost:3000/problems', () => {
+      http.get(`${API_URL}/problems`, () => {
         return HttpResponse.json({
-          problems: [
-            {
-              id: '1',
-              title: 'Two Sum',
-              slug: 'two-sum',
-              difficulty: 'Easy',
-              tags: [],
-              status: 'Todo',
-            },
-          ],
-          hasMore: false,
+          data: {
+            problems: [
+              {
+                id: '1',
+                title: 'Two Sum',
+                slug: 'two-sum',
+                difficulty: 'Easy',
+                tags: [],
+                status: 'Todo',
+              },
+            ],
+            hasMore: false,
+          }
         });
       })
     );

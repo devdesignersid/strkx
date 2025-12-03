@@ -1,15 +1,14 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { systemDesignApi } from '../api/systemDesignApi';
+import { systemDesignApi } from '@/services/api/system-design.service';
 import type { SystemDesignProblem } from '@/types/system-design';
 
 export type SortKey = 'title' | 'difficulty' | 'status' | 'createdAt';
 export type SortDirection = 'asc' | 'desc';
 
 export function useSystemDesignProblems() {
-    const [problems, setProblems] = useState<SystemDesignProblem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
     // Filtering & Sorting State
     const [searchQuery, setSearchQuery] = useState('');
@@ -24,58 +23,73 @@ export function useSystemDesignProblems() {
     // Selection State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    // Fetch Problems
-    const fetchProblems = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await systemDesignApi.getAllProblems();
-            setProblems(data);
-            setError(null);
-        } catch (err) {
-            console.error('Failed to fetch problems:', err);
-            setError('Failed to load problems');
-            toast.error('Failed to load problems');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    // Fetch Problems with React Query
+    const { data: problems = [], isLoading, error } = useQuery({
+        queryKey: ['system-design-problems'],
+        queryFn: () => systemDesignApi.getAllProblems(),
+    });
 
-    useEffect(() => {
-        fetchProblems();
-    }, [fetchProblems]);
+    // Delete Mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => systemDesignApi.deleteProblem(id),
+        onMutate: async (id) => {
+            // Optimistic update
+            await queryClient.cancelQueries({ queryKey: ['system-design-problems'] });
+            const previousProblems = queryClient.getQueryData(['system-design-problems']);
 
-    // Delete Problem
-    const deleteProblem = async (id: string) => {
-        try {
-            await systemDesignApi.deleteProblem(id);
-            setProblems(prev => prev.filter(p => p.id !== id));
-            toast.success('Problem deleted successfully');
-        } catch (err) {
-            console.error('Failed to delete problem:', err);
+            queryClient.setQueryData(['system-design-problems'], (old: SystemDesignProblem[] = []) =>
+                old.filter(p => p.id !== id)
+            );
+
+            return { previousProblems };
+        },
+        onError: (_err, _id, context) => {
+            // Rollback on error
+            if (context?.previousProblems) {
+                queryClient.setQueryData(['system-design-problems'], context.previousProblems);
+            }
             toast.error('Failed to delete problem');
+        },
+        onSuccess: () => {
+            toast.success('Problem deleted successfully');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
         }
-    };
+    });
 
-    // Bulk Delete
-    const bulkDelete = async () => {
-        if (selectedIds.size === 0) return;
+    // Bulk Delete Mutation
+    const bulkDeleteMutation = useMutation({
+        mutationFn: (ids: string[]) =>
+            Promise.all(ids.map(id => systemDesignApi.deleteProblem(id))),
+        onMutate: async (ids) => {
+            await queryClient.cancelQueries({ queryKey: ['system-design-problems'] });
+            const previousProblems = queryClient.getQueryData(['system-design-problems']);
 
-        if (!confirm(`Are you sure you want to delete ${selectedIds.size} problems?`)) return;
+            queryClient.setQueryData(['system-design-problems'], (old: SystemDesignProblem[] = []) =>
+                old.filter(p => !ids.includes(p.id))
+            );
 
-        try {
-            await Promise.all(Array.from(selectedIds).map(id => systemDesignApi.deleteProblem(id)));
-            setProblems(prev => prev.filter(p => !selectedIds.has(p.id)));
+            return { previousProblems, count: ids.length };
+        },
+        onError: (_err, _ids, context) => {
+            if (context?.previousProblems) {
+                queryClient.setQueryData(['system-design-problems'], context.previousProblems);
+            }
+            toast.error('Failed to delete some problems');
+        },
+        onSuccess: () => {
             setSelectedIds(new Set());
             toast.success('Problems deleted successfully');
-        } catch (err) {
-            console.error('Failed to delete problems:', err);
-            toast.error('Failed to delete some problems');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
         }
-    };
+    });
 
     // Filter & Sort Logic
     const filteredProblems = useMemo(() => {
-        return problems.filter(problem => {
+        return problems.filter((problem: SystemDesignProblem) => {
             // Search
             if (searchQuery && !problem.title.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false;
@@ -98,7 +112,7 @@ export function useSystemDesignProblems() {
             }
 
             return true;
-        }).sort((a, b) => {
+        }).sort((a: SystemDesignProblem, b: SystemDesignProblem) => {
             const aValue = sortConfig.key === 'status' ? (a.status || '') : a[sortConfig.key];
             const bValue = sortConfig.key === 'status' ? (b.status || '') : b[sortConfig.key];
 
@@ -120,7 +134,7 @@ export function useSystemDesignProblems() {
         if (selectedIds.size === filteredProblems.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(filteredProblems.map(p => p.id)));
+            setSelectedIds(new Set(filteredProblems.map((p: SystemDesignProblem) => p.id)));
         }
     };
 
@@ -128,14 +142,14 @@ export function useSystemDesignProblems() {
         const newSelected = new Set(selectedIds);
 
         if (shiftKey && lastSelectedId) {
-            const currentIndex = filteredProblems.findIndex(p => p.id === id);
-            const lastIndex = filteredProblems.findIndex(p => p.id === lastSelectedId);
+            const currentIndex = filteredProblems.findIndex((p: SystemDesignProblem) => p.id === id);
+            const lastIndex = filteredProblems.findIndex((p: SystemDesignProblem) => p.id === lastSelectedId);
 
             const start = Math.min(currentIndex, lastIndex);
             const end = Math.max(currentIndex, lastIndex);
 
             const range = filteredProblems.slice(start, end + 1);
-            range.forEach(p => newSelected.add(p.id));
+            range.forEach((p: SystemDesignProblem) => newSelected.add(p.id));
         } else {
             if (newSelected.has(id)) {
                 newSelected.delete(id);
@@ -147,10 +161,22 @@ export function useSystemDesignProblems() {
         setSelectedIds(newSelected);
     };
 
+    const deleteProblem = async (id: string) => {
+        await deleteMutation.mutateAsync(id);
+    };
+
+    const bulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+
+        if (!confirm(`Are you sure you want to delete ${selectedIds.size} problems?`)) return;
+
+        await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
+    };
+
     return {
         problems: filteredProblems,
         isLoading,
-        error,
+        error: error ? 'Failed to load problems' : null,
         searchQuery,
         setSearchQuery,
         filterDifficulties,
@@ -167,6 +193,6 @@ export function useSystemDesignProblems() {
         toggleSelectOne,
         deleteProblem,
         bulkDelete,
-        refreshProblems: fetchProblems
+        refreshProblems: () => queryClient.invalidateQueries({ queryKey: ['system-design-problems'] })
     };
 }

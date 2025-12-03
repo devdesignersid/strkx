@@ -4,7 +4,7 @@ import {
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/design-system/components/Tooltip';
 import { cn } from '@/lib/utils';
 
 interface TruncatedTextProps extends React.HTMLAttributes<HTMLSpanElement> {

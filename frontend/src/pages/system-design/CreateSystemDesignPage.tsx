@@ -6,10 +6,10 @@ import remarkBreaks from 'remark-breaks';
 import { Save, ArrowLeft, Loader2, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
-import { systemDesignApi } from '@/features/system-design/api/systemDesignApi';
+import { systemDesignApi } from '@/services/api/system-design.service';
 import { aiService } from '@/lib/ai/aiService';
 import { PROMPTS } from '@/lib/ai/prompts';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '@/design-system/components';
 
 export default function CreateSystemDesignPage() {
     const navigate = useNavigate();

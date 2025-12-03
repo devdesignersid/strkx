@@ -1,5 +1,5 @@
 import { BrainCircuit, Loader2, CheckCircle2, AlertTriangle, TrendingUp, Shield, Eye } from 'lucide-react';
-import EmptyState from '@/components/ui/EmptyState';
+import { EmptyState, Button } from '@/design-system/components';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import { exportToBlob } from '@excalidraw/excalidraw';
@@ -95,13 +95,15 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
             {/* Header with Re-analyze button */}
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Analysis Results</h3>
-                <button
+                <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={onAnalyze}
                     disabled={isAnalyzing}
-                    className="text-xs px-3 py-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+                    className="text-xs bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
                 >
                     {isAnalyzing ? 'Analyzing...' : 'Re-analyze Design'}
-                </button>
+                </Button>
             </div>
 
             {/* Snapshot Preview */}
