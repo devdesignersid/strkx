@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoadingThunder } from '@/design-system/components';
 import '@excalidraw/excalidraw/index.css';
 
 // Lazy load Excalidraw
@@ -160,7 +160,7 @@ export default function ExcalidrawCanvasPage() {
             <Suspense
                 fallback={
                     <div className="h-full w-full flex items-center justify-center bg-background">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <LoadingThunder size="lg" />
                     </div>
                 }
             >

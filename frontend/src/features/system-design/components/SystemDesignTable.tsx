@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
+import { EmptyCanvasIllustration } from '@/design-system/illustrations';
 import {
     CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
     Circle, MoreHorizontal, Edit, Trash2, Filter
@@ -23,6 +24,7 @@ interface SystemDesignTableProps {
     onDelete: (id: string) => void;
     onModify: (problem: SystemDesignProblem) => void;
     onClearFilters: () => void;
+    hasFilters?: boolean;
 }
 
 export function SystemDesignTable({
@@ -35,7 +37,8 @@ export function SystemDesignTable({
     onToggleSelectOne,
     onDelete,
     onModify,
-    onClearFilters
+    onClearFilters,
+    hasFilters = false
 }: SystemDesignTableProps) {
     const navigate = useNavigate();
     const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -235,13 +238,14 @@ export function SystemDesignTable({
 
             {!isLoading && problems.length === 0 && (
                 <EmptyState
-                    icon={Filter}
-                    title="No problems found"
-                    description="Try adjusting your filters or search query."
-                    action={{
-                        label: "Clear all filters",
-                        onClick: onClearFilters
-                    }}
+                    illustration={<EmptyCanvasIllustration className="w-full h-full" />}
+                    title="No system design problems yet"
+                    description={hasFilters ? "Try adjusting your filters or search query." : "Start building your practice library by creating your first system design problem."}
+                    action={hasFilters ? {
+                        label: "Clear filters",
+                        onClick: onClearFilters,
+                        icon: Filter
+                    } : undefined}
                     className="py-12"
                 />
             )}

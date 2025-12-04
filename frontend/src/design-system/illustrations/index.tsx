@@ -80,6 +80,46 @@ export function EmptyDashboardIllustration({ className }: IllustrationProps) {
 }
 
 /**
+ * Empty Activity Illustration
+ * Used when there's no recent activity in the activity feed
+ */
+export function EmptyActivityIllustration({ className }: IllustrationProps) {
+    return (
+        <svg
+            viewBox="0 0 120 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={className}
+        >
+            {/* Background circle */}
+            <circle cx="60" cy="60" r="56" className="fill-primary/10" />
+
+            {/* Clock body */}
+            <circle cx="60" cy="55" r="28" className="fill-card stroke-primary/30" strokeWidth="2" />
+            <circle cx="60" cy="55" r="23" className="fill-primary/5" />
+
+            {/* Clock hands - stopped/waiting */}
+            <path d="M60 55V40" className="stroke-primary/60" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M60 55L72 55" className="stroke-primary/40" strokeWidth="2" strokeLinecap="round" />
+
+            {/* Center dot */}
+            <circle cx="60" cy="55" r="3" className="fill-primary" />
+
+            {/* Hour markers */}
+            <circle cx="60" cy="35" r="2" className="fill-primary/40" />
+            <circle cx="80" cy="55" r="2" className="fill-primary/40" />
+            <circle cx="60" cy="75" r="2" className="fill-primary/40" />
+            <circle cx="40" cy="55" r="2" className="fill-primary/40" />
+
+            {/* Zzz sleep/idle indicator */}
+            <text x="82" y="35" className="fill-primary/50" fontSize="10" fontWeight="bold">z</text>
+            <text x="88" y="30" className="fill-primary/40" fontSize="8" fontWeight="bold">z</text>
+            <text x="93" y="26" className="fill-primary/30" fontSize="6" fontWeight="bold">z</text>
+        </svg>
+    );
+}
+
+/**
  * Error State Illustration
  * Used for error boundaries and failed requests
  */
@@ -187,6 +227,40 @@ export function LoadingIllustration({ className }: IllustrationProps) {
 
             {/* Center dot */}
             <circle cx="60" cy="60" r="6" className="fill-primary/40" />
+        </svg>
+    );
+}
+
+/**
+ * Empty Lists Illustration
+ * Used when there are no lists or no problems in a list
+ */
+export function EmptyListsIllustration({ className }: IllustrationProps) {
+    return (
+        <svg
+            viewBox="0 0 120 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={className}
+        >
+            {/* Background circle */}
+            <circle cx="60" cy="60" r="56" className="fill-primary/10" />
+
+            {/* Folder stack */}
+            <rect x="30" y="55" width="50" height="35" rx="3" className="fill-primary/20" />
+            <rect x="35" y="50" width="50" height="35" rx="3" className="fill-primary/40" />
+            <rect x="40" y="45" width="50" height="35" rx="3" className="fill-card stroke-primary/30" strokeWidth="1.5" />
+
+            {/* Folder tab */}
+            <path d="M40 45H55L60 40H85C86.6569 40 88 41.3431 88 43V45H40Z" className="fill-card stroke-primary/30" strokeWidth="1.5" />
+
+            {/* Plus icon */}
+            <circle cx="65" cy="62" r="12" className="fill-primary/20" />
+            <path d="M65 57V67M60 62H70" className="stroke-primary" strokeWidth="2" strokeLinecap="round" />
+
+            {/* Sparkles */}
+            <circle cx="85" cy="35" r="3" className="fill-primary/40" />
+            <circle cx="28" cy="45" r="2" className="fill-primary/30" />
         </svg>
     );
 }

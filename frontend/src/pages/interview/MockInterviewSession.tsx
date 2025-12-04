@@ -2,14 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { type OnMount } from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Loader2 } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import * as monaco from 'monaco-editor';
 import { ProblemDescription } from '@/features/problem/components/ProblemDescription';
 import { CodeEditor } from '@/features/problem/components/CodeEditor';
 import { MockInterviewHeader } from './MockInterviewHeader';
 import type { Problem } from '@/types/problem';
-import { Modal, Button } from '@/design-system/components';
+import { Modal, Button, LoadingThunder } from '@/design-system/components';
 import { interviewService } from '@/services/api/interview.service';
 import { executionService } from '@/services/api/execution.service';
 
@@ -359,14 +358,14 @@ const MockInterviewSession: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-background text-foreground">
         <div className="text-center">
-          <Loader2 className="animate-spin mx-auto mb-4" />
+          <LoadingThunder className="mx-auto mb-4" size="lg" />
           <p>Redirecting to summary...</p>
         </div>
       </div>
     );
   }
 
-  if (!session) return <div className="flex items-center justify-center h-screen bg-background text-foreground"><Loader2 className="animate-spin" /></div>;
+  if (!session) return <div className="flex items-center justify-center h-screen bg-background text-foreground"><LoadingThunder size="lg" /></div>;
 
   const currentQuestion = session.questions[currentQuestionIndex];
   if (!currentQuestion) return <div>Error: Question not found</div>;

@@ -1,5 +1,5 @@
-import { BrainCircuit, Loader2, CheckCircle2, AlertTriangle, TrendingUp, Shield, Eye } from 'lucide-react';
-import { EmptyState, Button } from '@/design-system/components';
+import { BrainCircuit, CheckCircle2, AlertTriangle, TrendingUp, Shield, Eye } from 'lucide-react';
+import { EmptyState, Button, LoadingThunder } from '@/design-system/components';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import { exportToBlob } from '@excalidraw/excalidraw';
@@ -82,7 +82,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
     if (isAnalyzing) {
         return (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                <LoadingThunder size="lg" className="text-purple-400" />
                 <p className="text-muted-foreground">Analyzing your design...</p>
             </div>
         );

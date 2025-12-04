@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
-import { Loader2 } from 'lucide-react';
+import { LoadingThunder } from '@/design-system/components';
 import { aiService } from '@/lib/ai/aiService';
 
 import { useProblemPage } from '@/hooks/useProblemPage';
@@ -151,7 +151,7 @@ export default function ProblemPage() {
 
   if (!problem) return (
     <div className="flex items-center justify-center h-full text-muted-foreground bg-background">
-      <Loader2 className="w-6 h-6 animate-spin" />
+      <LoadingThunder size="lg" />
     </div>
   );
 

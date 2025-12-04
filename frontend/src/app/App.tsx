@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from '@/components/ui/GlobalErrorBoundary';
 import { AuthProvider } from '../context/AuthContext';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { LoadingThunder } from '@/design-system/components';
 
 // Eager imports for critical routes
 import Layout from './Layout';
@@ -45,7 +46,7 @@ const queryClient = new QueryClient({
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    <LoadingThunder size="xl" />
   </div>
 );
 

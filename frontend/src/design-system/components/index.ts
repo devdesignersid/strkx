@@ -17,3 +17,4 @@ export * from './PageHeader';
 export * from './ProgressBar';
 export * from './StatusBadge';
 export * from './FormField';
+export * from './LoadingThunder';

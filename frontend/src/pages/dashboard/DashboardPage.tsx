@@ -1,7 +1,7 @@
-import { Activity, CheckCircle2, Ghost } from 'lucide-react';
+import { Activity, CheckCircle2 } from 'lucide-react';
 import { EmptyState, PageHeader, StatusBadge, Button, getDifficultyVariant } from '@/design-system/components';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyDashboardIllustration } from '@/design-system/illustrations';
+import { EmptyDashboardIllustration, EmptyActivityIllustration } from '@/design-system/illustrations';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <EmptyState
-                  icon={Ghost}
+                  illustration={<EmptyActivityIllustration className="w-full h-full" />}
                   title="No recent activity"
                   description="Solve your first problem to see your progress here."
                   action={{

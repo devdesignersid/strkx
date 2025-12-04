@@ -3,7 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
-import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, Loader2, PanelLeftClose, Trash2 } from 'lucide-react';
+import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, PanelLeftClose, Trash2 } from 'lucide-react';
+import { LoadingThunder } from '@/design-system/components';
 import type { Problem, Submission, Solution } from '@/types/problem';
 import { EmptyState, Button } from '@/design-system/components';
 import { fadeIn } from '@/design-system/animations';
@@ -248,7 +249,7 @@ export function ProblemDescription({
                 />
               ) : isAnalyzing ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                  <LoadingThunder size="lg" className="text-purple-400" />
                   <p className="text-muted-foreground">Analyzing your solution...</p>
                 </div>
               ) : (

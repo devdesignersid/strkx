@@ -109,6 +109,7 @@ export default function ProblemsPage() {
             setFilterStatus([]);
             setFilterTags([]);
           }}
+          hasFilters={searchQuery !== '' || filterDifficulties.length > 0 || filterStatus.length > 0 || filterTags.length > 0}
         />
       </div>
 

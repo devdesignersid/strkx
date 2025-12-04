@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/design-system/components';
+import { EmptyListsIllustration } from '@/design-system/illustrations';
 import { Skeleton } from '@/design-system/components/Skeleton';
 import { Input, Button } from '@/design-system/components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -502,7 +503,7 @@ export default function ListDetailPage() {
 
             {!isLoading && processedProblems.length === 0 && (
               <EmptyState
-                icon={Filter}
+                illustration={<EmptyListsIllustration className="w-full h-full" />}
                 title="No problems in this list"
                 description="Add problems from the main Problems page."
                 action={{

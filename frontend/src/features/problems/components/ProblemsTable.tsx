@@ -25,6 +25,7 @@ interface ProblemsTableProps {
   onDelete: (id: string) => void;
   onLoadMore: () => void;
   onClearFilters: () => void;
+  hasFilters?: boolean;
 }
 
 export function ProblemsTable({
@@ -39,7 +40,8 @@ export function ProblemsTable({
   onToggleSelectOne,
   onDelete,
   onLoadMore,
-  onClearFilters
+  onClearFilters,
+  hasFilters = false
 }: ProblemsTableProps) {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -247,12 +249,12 @@ export function ProblemsTable({
         <EmptyState
           illustration={<EmptyProblemsIllustration className="w-full h-full" />}
           title="No problems found"
-          description="Try adjusting your filters or search query."
-          action={{
+          description={hasFilters ? "Try adjusting your filters or search query." : "Create your first problem to get started."}
+          action={hasFilters ? {
             label: "Clear all filters",
             onClick: onClearFilters,
             icon: X
-          }}
+          } : undefined}
           className="py-12"
         />
       )}

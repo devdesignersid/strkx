@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Button } from '@/design-system/components';
+import { Button, LoadingThunder } from '@/design-system/components';
 
 const LoginPage: React.FC = () => {
   const { login, isAuthenticated, loading } = useAuth();
@@ -10,10 +10,7 @@ const LoginPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4 animate-pulse">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-        </div>
-        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+        <LoadingThunder size="xl" />
       </div>
     );
   }

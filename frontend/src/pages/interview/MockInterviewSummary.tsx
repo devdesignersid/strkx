@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, XCircle, Clock, Home, RefreshCw, Trophy, Activity, Timer } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/design-system/components';
+import { Button, LoadingThunder } from '@/design-system/components';
 import { interviewService } from '@/services/api/interview.service';
 
 interface QuestionResult {
@@ -69,7 +68,7 @@ const MockInterviewSummary: React.FC = () => {
         }, 250);
     };
 
-    if (!summary) return <div className="flex items-center justify-center h-screen bg-background text-foreground"><Loader2 className="animate-spin" /></div>;
+    if (!summary) return <div className="flex items-center justify-center h-screen bg-background text-foreground"><LoadingThunder size="lg" /></div>;
 
     const passedCount = summary.questions.filter(q => q.outcome === 'PASSED').length;
     const totalCount = summary.questions.length;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Check, Loader2, FolderPlus } from 'lucide-react';
+import { LoadingThunder } from '@/design-system/components';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { listsService } from '@/services/api/lists.service';
@@ -171,7 +172,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
               <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {isLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <LoadingThunder size="md" className="text-muted-foreground" />
                   </div>
                 ) : lists.length === 0 && !isCreating ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">

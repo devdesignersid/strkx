@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Folder, Trash2, Clock, List as ListIcon, Loader2 } from 'lucide-react';
+import { Plus, Search, Folder, Trash2, Clock, Loader2 } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { Modal, Input, Button, Card, PageHeader, ProgressBar, Textarea } from '@/design-system/components';
+import { Modal, Input, Button, Card, PageHeader, ProgressBar, Textarea, EmptyState } from '@/design-system/components';
+import { EmptyListsIllustration } from '@/design-system/illustrations';
 import { useLists, useCreateList, useDeleteList } from '@/hooks/useLists';
 
 interface List {
@@ -119,23 +120,12 @@ export default function ListsPage() {
           ))}
         </div>
       ) : filteredLists.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-xl bg-secondary/5">
-          <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mb-4">
-            <ListIcon className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium mb-2">No lists found</h3>
-          <p className="text-muted-foreground text-sm max-w-sm mb-6">
-            Create your first list to start organizing problems.
-          </p>
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            variant="secondary"
-            className="gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Create List
-          </Button>
-        </div>
+        <EmptyState
+          illustration={<EmptyListsIllustration className="w-full h-full" />}
+          title="No lists found"
+          description="Create your first list to start organizing problems."
+          className="py-12 border border-dashed border-border rounded-xl bg-secondary/5"
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLists.map((list: List) => (
