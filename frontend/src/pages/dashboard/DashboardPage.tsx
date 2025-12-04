@@ -135,12 +135,7 @@ export default function DashboardPage() {
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className={cn(
-                            "text-xs font-semibold uppercase tracking-wider",
-                            activity.status === 'Solved' ? "text-green-500" : "text-yellow-500"
-                          )}>
-                            {activity.status}
-                          </span>
+
                           <Link
                             to={activity.type === 'system-design' ? `/system-design/${activity.slug}` : `/problems/${activity.slug}`}
                             className="font-medium hover:underline"

@@ -41,12 +41,12 @@ class AIService {
   }
 
   setEnabled(enabled: boolean) {
-      this._isEnabled = enabled;
-      localStorage.setItem('ai_enabled', String(enabled));
+    this._isEnabled = enabled;
+    localStorage.setItem('ai_enabled', String(enabled));
   }
 
   isEnabled(): boolean {
-      return this._isEnabled;
+    return this._isEnabled;
   }
 
   loadFromStorage() {
@@ -55,7 +55,7 @@ class AIService {
     const enabledStr = localStorage.getItem('ai_enabled');
 
     if (enabledStr !== null) {
-        this._isEnabled = enabledStr === 'true';
+      this._isEnabled = enabledStr === 'true';
     }
 
     if (providerId && configStr) {
@@ -82,7 +82,25 @@ class AIService {
   }
 
   isConfigured(): boolean {
-      return this.activeProvider !== null;
+    return this.activeProvider !== null;
+  }
+
+  getStoredProvider(): string | null {
+    return localStorage.getItem('ai_provider');
+  }
+
+  getStoredConfig(): AIConfig | null {
+    const configStr = localStorage.getItem('ai_config');
+    if (!configStr) return null;
+    try {
+      return JSON.parse(configStr);
+    } catch {
+      return null;
+    }
+  }
+
+  getStorageKeys(): string[] {
+    return ['ai_provider', 'ai_config', 'ai_enabled'];
   }
 }
 

@@ -6,7 +6,7 @@ import { aiService } from '../../lib/ai/aiService';
 import type { AIProviderMetadata } from '../../lib/ai/types';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Input, Modal, Label } from '@/design-system/components';
+import { Button, Input, Modal, Label, Select } from '@/design-system/components';
 import { userService } from '@/services/api/user.service';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +30,11 @@ export default function SettingsPage() {
     aiService.loadFromStorage();
     setIsEnabled(aiService.isEnabled());
 
-    const savedProvider = localStorage.getItem('ai_provider');
+    const savedProvider = aiService.getStoredProvider();
     if (savedProvider) setSelectedProvider(savedProvider);
 
-    const savedConfigStr = localStorage.getItem('ai_config');
-    if (savedConfigStr) {
-      const config = JSON.parse(savedConfigStr);
+    const config = aiService.getStoredConfig();
+    if (config) {
       if (config.apiKey) setApiKey(config.apiKey);
       if (config.model) setModel(config.model);
     }
@@ -76,6 +75,22 @@ export default function SettingsPage() {
     setIsResetting(true);
     try {
       await userService.resetAccount();
+
+      // Clear local storage but preserve auth/config
+      const keysToPreserve = aiService.getStorageKeys();
+      const preservedData: Record<string, string | null> = {};
+
+      keysToPreserve.forEach(key => {
+        preservedData[key] = localStorage.getItem(key);
+      });
+
+      localStorage.clear();
+
+      // Restore preserved data
+      Object.entries(preservedData).forEach(([key, value]) => {
+        if (value) localStorage.setItem(key, value);
+      });
+
       toast.success(TOAST_MESSAGES.SETTINGS.RESET_SUCCESS);
       setShowConfirmDialog(false);
 
@@ -188,22 +203,18 @@ export default function SettingsPage() {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-4 max-w-xl pt-2">
+                <div className="space-y-4 max-w-xl pt-2 px-1">
                   <div>
                     <Label className="mb-1.5 block">Provider</Label>
                     <div className="relative">
-                      <select
+                      <Select
                         value={selectedProvider}
-                        onChange={(e) => setSelectedProvider(e.target.value)}
-                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-input transition-colors appearance-none cursor-pointer"
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProvider(e.target.value)}
                       >
                         {providers.map(p => (
                           <option key={p.id} value={p.id} className="bg-popover text-popover-foreground">{p.name}</option>
                         ))}
-                      </select>
-                      <div className="absolute right-3 top-2.5 pointer-events-none text-muted-foreground">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                      </div>
+                      </Select>
                     </div>
                   </div>
 
@@ -218,7 +229,7 @@ export default function SettingsPage() {
                           setKeyStatus('idle');
                         }}
                         placeholder="sk-..."
-                        className="pr-10"
+                        className="pr-10 pl-3"
                       />
                       {keyStatus === 'valid' && (
                         <Check className="absolute right-3 top-2.5 w-4 h-4 text-green-500" />

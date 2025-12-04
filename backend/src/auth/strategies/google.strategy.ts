@@ -6,10 +6,14 @@ import { AuthService } from '../auth.service';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private authService: AuthService) {
+    const callbackURL = process.env.AUTH_REDIRECT_URL || 'http://localhost:3000/auth/google/callback';
+    const clientID = process.env.GOOGLE_CLIENT_ID || '';
+    console.log('GoogleStrategy initialized with callbackURL:', callbackURL);
+    console.log('GoogleStrategy initialized with clientID:', clientID.substring(0, 15) + '...');
     super({
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: process.env.AUTH_REDIRECT_URL || 'http://localhost:3000/auth/google/callback',
+      callbackURL,
       scope: ['email', 'profile'],
     });
   }

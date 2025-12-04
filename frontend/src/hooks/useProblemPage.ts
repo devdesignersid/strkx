@@ -237,45 +237,47 @@ export function useProblemPage(slug: string | undefined) {
   };
 
   const handleCompleteCode = async (currentCode: string) => {
-     if (!aiService.isConfigured()) {
-        toast.error(TOAST_MESSAGES.AUTH.API_KEY_MISSING);
-        return;
+    if (!aiService.isConfigured()) {
+      toast.error(TOAST_MESSAGES.AUTH.API_KEY_MISSING);
+      return;
     }
 
     setIsCompletingCode(true);
     try {
-        let testResultsStr = 'No test results available.';
-        if (output && output.results) {
-            const failingTests = output.results.filter(r => !r.passed);
-            if (failingTests.length > 0) {
-                testResultsStr = 'Failing Tests:\n' + failingTests.map(t =>
-                    `Input: ${t.input}\nExpected: ${t.expectedOutput}\nActual: ${t.actualOutput}\nError: ${t.error || 'N/A'}`
-                ).join('\n\n');
-            } else if (output.results.length > 0) {
-                testResultsStr = 'All previous tests passed.';
-            }
+      let testResultsStr = 'No test results available.';
+      if (output && output.results) {
+        const failingTests = output.results.filter(r => !r.passed);
+        if (failingTests.length > 0) {
+          testResultsStr = 'Failing Tests:\n' + failingTests.map(t =>
+            `Input: ${t.input}\nExpected: ${t.expectedOutput}\nActual: ${t.actualOutput}\nError: ${t.error || 'N/A'}`
+          ).join('\n\n');
+        } else if (output.results.length > 0) {
+          testResultsStr = 'All previous tests passed.';
         }
+      }
 
-        const testCasesStr = problem?.testCases?.map((tc: any, i: number) =>
-            `Test Case ${i + 1}:\nInput: ${tc.input}\nExpected Output: ${tc.expectedOutput}`
-        ).join('\n\n') || 'No test cases available.';
+      const testCasesStr = problem?.testCases?.map((tc: any, i: number) =>
+        `Test Case ${i + 1}:\nInput: ${tc.input}\nExpected Output: ${tc.expectedOutput}`
+      ).join('\n\n') || 'No test cases available.';
 
-        const prompt = PROMPTS.SOLUTION_COMPLETION
-            .replace('{problemDescription}', problem?.description || '')
-            .replace('{userCode}', currentCode)
-            .replace('{testCases}', testCasesStr)
-            .replace('{testResults}', testResultsStr);
+      const prompt = PROMPTS.SOLUTION_COMPLETION
+        .replace('{problemTitle}', problem?.title || '')
+        .replace('{problemDescription}', problem?.description || '')
+        .replace('{starterCode}', problem?.starterCode || '')
+        .replace('{userCode}', currentCode)
+        .replace('{testCases}', testCasesStr)
+        .replace('{testResults}', testResultsStr);
 
-        const completion = await aiService.generateCompletion(prompt);
-        const cleanCode = completion.replace(/```javascript\n?|```typescript\n?|```\n?|\n?```/g, '');
+      const completion = await aiService.generateCompletion(prompt);
+      const cleanCode = completion.replace(/```javascript\n?|```typescript\n?|```\n?|\n?```/g, '');
 
-        setCode(cleanCode);
-        toast.success(TOAST_MESSAGES.AI.CODE_COMPLETED);
+      setCode(cleanCode);
+      toast.success(TOAST_MESSAGES.AI.CODE_COMPLETED);
     } catch (error) {
-        console.error('Failed to complete code:', error);
-        toast.error(TOAST_MESSAGES.GENERAL.ERROR);
+      console.error('Failed to complete code:', error);
+      toast.error(TOAST_MESSAGES.GENERAL.ERROR);
     } finally {
-        setIsCompletingCode(false);
+      setIsCompletingCode(false);
     }
   };
 

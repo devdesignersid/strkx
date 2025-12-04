@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
 import AddToListModal from '@/features/lists/components/AddToListModal';
@@ -31,8 +31,21 @@ export default function ProblemsPage() {
     toggleSelectOne,
     loadMore,
     deleteProblem,
-    bulkDelete
+    bulkDelete,
+    refetch
   } = useProblems();
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      refetch();
+      // Clear state to avoid infinite refetch if we were to depend on it, 
+      // but react-router state persists until navigation.
+      // We can replace history to clear it, but simple refetch is fine as it's idempotent-ish.
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, refetch, navigate, location.pathname]);
 
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; title: string } | null>(null);

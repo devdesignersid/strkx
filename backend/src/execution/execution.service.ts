@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { ExecuteCodeDto } from './dto/execute-code.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { DriverGenerator } from './driver-generator';
 import * as vm from 'vm';
 
 @Injectable()
@@ -9,7 +10,10 @@ export class ExecutionService {
   private activeExecutions = 0;
   private readonly MAX_CONCURRENT_EXECUTIONS = 10;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private driverGenerator: DriverGenerator,
+  ) { }
 
   async execute(executeCodeDto: ExecuteCodeDto, user?: any) {
     if (this.activeExecutions >= this.MAX_CONCURRENT_EXECUTIONS) {
@@ -92,7 +96,7 @@ export class ExecutionService {
       let inputData;
       let args: any[] = [];
 
-        let parsedDirectlyAsArray = false;
+      let parsedDirectlyAsArray = false;
 
       try {
         if (typeof testCase.input === 'string') {
@@ -101,9 +105,9 @@ export class ExecutionService {
 
           // Attempt to fix common JS object notation issues
           if (!jsonString.startsWith('{') && !jsonString.startsWith('[')) {
-             // Heuristic: if it looks like "key: value", wrap in braces?
-             // Or maybe it's just values "1, 2".
-             // Let's try to wrap in [] if it fails initial parse
+            // Heuristic: if it looks like "key: value", wrap in braces?
+            // Or maybe it's just values "1, 2".
+            // Let's try to wrap in [] if it fails initial parse
           }
 
           // Replace key: with "key":
@@ -114,29 +118,29 @@ export class ExecutionService {
           try {
             inputData = JSON.parse(jsonString);
           } catch (e) {
-             // Try wrapping in array
-             try {
-               inputData = JSON.parse(`[${jsonString}]`);
-             } catch (e2) {
-               throw new Error(`Failed to parse input: ${testCase.input}`);
-             }
+            // Try wrapping in array
+            try {
+              inputData = JSON.parse(`[${jsonString}]`);
+            } catch (e2) {
+              throw new Error(`Failed to parse input: ${testCase.input}`);
+            }
           }
 
           if (Array.isArray(inputData)) {
-             // Check if the original string started with '[' to determine if it was explicitly an array
-             // or if we wrapped it (or if it was just a list of values that JSON.parse accepted as array? No, JSON.parse only accepts single value)
-             // Actually, if we successfully parsed `jsonString` and it is an array, it means the input WAS an array (e.g. "[1, 2]" or "[\"\"]")
-             // UNLESS we fell back to the `try wrapping in array` block.
+            // Check if the original string started with '[' to determine if it was explicitly an array
+            // or if we wrapped it (or if it was just a list of values that JSON.parse accepted as array? No, JSON.parse only accepts single value)
+            // Actually, if we successfully parsed `jsonString` and it is an array, it means the input WAS an array (e.g. "[1, 2]" or "[\"\"]")
+            // UNLESS we fell back to the `try wrapping in array` block.
 
-             // Let's refine this.
-             // If the first try succeeded:
-             //   If jsonString started with '[', then it is explicitly an array.
-             //   If it didn't start with '[', it's unlikely to be an array unless it was just "null" or something, but we are checking Array.isArray.
+            // Let's refine this.
+            // If the first try succeeded:
+            //   If jsonString started with '[', then it is explicitly an array.
+            //   If it didn't start with '[', it's unlikely to be an array unless it was just "null" or something, but we are checking Array.isArray.
 
-             // Wait, if input is `1, 2`, the first JSON.parse fails. The second one `[1, 2]` succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be FALSE (it's a list of args).
-             // If input is `[1, 2]`, the first JSON.parse succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be TRUE (it's a single argument that is an array).
+            // Wait, if input is `1, 2`, the first JSON.parse fails. The second one `[1, 2]` succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be FALSE (it's a list of args).
+            // If input is `[1, 2]`, the first JSON.parse succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be TRUE (it's a single argument that is an array).
 
-             // We need to know WHICH try block succeeded.
+            // We need to know WHICH try block succeeded.
           }
         } else {
           inputData = testCase.input;
@@ -145,60 +149,90 @@ export class ExecutionService {
 
         // Re-implementing the parsing logic to capture the flag
         if (typeof testCase.input === 'string') {
-            let jsonString = testCase.input.trim();
-            jsonString = jsonString.replace(/(\w+):/g, '"$1":');
-            jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
+          let jsonString = testCase.input.trim();
+          jsonString = jsonString.replace(/(\w+):/g, '"$1":');
+          jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
 
-            let firstParseSuccess = false;
-            try {
-                inputData = JSON.parse(jsonString);
-                firstParseSuccess = true;
-            } catch (e) {
-                // Fallback
-            }
+          let firstParseSuccess = false;
+          try {
+            inputData = JSON.parse(jsonString);
+            firstParseSuccess = true;
+          } catch (e) {
+            // Fallback
+          }
 
-            if (firstParseSuccess) {
-                if (Array.isArray(inputData)) {
-                    args = inputData;
-                    parsedDirectlyAsArray = true; // It was "[...]"
-                } else {
-                    args = [inputData];
-                    parsedDirectlyAsArray = false; // It was "1" or "true" or "{...}"
-                }
+          if (firstParseSuccess) {
+            if (Array.isArray(inputData)) {
+              args = inputData;
+              parsedDirectlyAsArray = true; // It was "[...]"
             } else {
-                // Try wrapping
-                try {
-                    inputData = JSON.parse(`[${jsonString}]`);
-                    args = inputData;
-                    parsedDirectlyAsArray = false; // It was "1, 2" -> became [1, 2] -> args list
-                } catch (e2) {
-                    throw new Error(`Failed to parse input: ${testCase.input}`);
-                }
+              args = [inputData];
+              parsedDirectlyAsArray = false; // It was "1" or "true" or "{...}"
             }
+          } else {
+            // Try wrapping
+            try {
+              inputData = JSON.parse(`[${jsonString}]`);
+              args = inputData;
+              parsedDirectlyAsArray = false; // It was "1, 2" -> became [1, 2] -> args list
+            } catch (e2) {
+              throw new Error(`Failed to parse input: ${testCase.input}`);
+            }
+          }
         } else {
-             // Non-string input (already parsed?)
-             inputData = testCase.input;
-             args = [inputData];
-             parsedDirectlyAsArray = false; // Treat as single arg
+          // Non-string input (already parsed?)
+          inputData = testCase.input;
+          args = [inputData];
+          parsedDirectlyAsArray = false; // Treat as single arg
         }
 
       } catch (err: any) {
-         allPassed = false;
-         results.push({
-           testCaseId: testCase.id,
-           passed: false,
-           input: testCase.input,
-           expectedOutput: testCase.expectedOutput,
-           error: `Input parsing error: ${err.message}`,
-           logs: [],
-           executionTimeMs: 0,
-           memoryUsedBytes: 0,
-         });
-         continue;
+        allPassed = false;
+        results.push({
+          testCaseId: testCase.id,
+          passed: false,
+          input: testCase.input,
+          expectedOutput: testCase.expectedOutput,
+          error: `Input parsing error: ${err.message}`,
+          logs: [],
+          executionTimeMs: 0,
+          memoryUsedBytes: 0,
+        });
+        continue;
       }
 
       try {
         const startTime = performance.now();
+
+        let scriptToRun = code;
+        let isDesignProblem = false;
+
+        if (problem.type === 'DESIGN' && problem.className) {
+          isDesignProblem = true;
+          const driverScript = this.driverGenerator.generate(problem.className);
+          scriptToRun = code + '\n' + driverScript;
+
+          // For Design problems, inputs are { commands: [], values: [] }
+          // We need to make sure 'commands' and 'values' are available in the context
+          if (args.length === 1 && typeof args[0] === 'object' && args[0].commands && args[0].values) {
+            sandbox['commands'] = args[0].commands;
+            sandbox['values'] = args[0].values;
+          } else {
+            // Handle case where input might be parsed differently or raw string
+            // If it's a raw string that parses to the structure
+            if (args.length === 1 && typeof args[0] === 'string') {
+              try {
+                const parsed = JSON.parse(args[0]);
+                if (parsed.commands && parsed.values) {
+                  sandbox['commands'] = parsed.commands;
+                  sandbox['values'] = parsed.values;
+                }
+              } catch (e) {
+                // ignore
+              }
+            }
+          }
+        }
 
         const context = vm.createContext({
           ...sandbox,
@@ -208,17 +242,20 @@ export class ExecutionService {
 
         vm.runInNewContext(
           `
-          ${code}
+          ${scriptToRun}
           try {
-             if (typeof ${functionName} === 'function') {
-               if (parsedDirectlyAsArray) {
-                   result = ${functionName}(args);
-               } else {
-                   result = ${functionName}(...args);
-               }
-             } else {
-               throw new Error('Function ${functionName} not found');
+             if (!${isDesignProblem}) {
+                if (typeof ${functionName} === 'function') {
+                   if (parsedDirectlyAsArray) {
+                       result = ${functionName}(args);
+                   } else {
+                       result = ${functionName}(...args);
+                   }
+                } else {
+                   throw new Error('Function ${functionName} not found');
+                }
              }
+             // For Design problems, the driver script sets 'result' directly
           } catch (e) {
             throw e;
           }
@@ -277,7 +314,7 @@ export class ExecutionService {
         });
 
         if (error.message && error.message.includes('Script execution timed out')) {
-             break;
+          break;
         }
       }
     }

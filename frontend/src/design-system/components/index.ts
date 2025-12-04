@@ -2,6 +2,7 @@ export * from "./Box";
 export * from "./Text";
 export * from "./Stack";
 export * from './Button';
+export * from './Select';
 export * from './Input';
 export * from './Modal';
 export * from './Card';

@@ -50,6 +50,14 @@ export class CreateProblemDto {
   @IsOptional()
   difficulty?: Difficulty;
 
+  @IsEnum(['ALGORITHM', 'DESIGN'])
+  @IsOptional()
+  type?: 'ALGORITHM' | 'DESIGN';
+
+  @IsString()
+  @IsOptional()
+  className?: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

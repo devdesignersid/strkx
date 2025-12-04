@@ -30,7 +30,7 @@ export const useProblems = () => {
   const [page, setPage] = useState(1);
   const LIMIT = 20;
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['problems', page, searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig],
     queryFn: async () => {
       const params = {
@@ -149,9 +149,11 @@ export const useProblems = () => {
     setSelectedIds,
     toggleSelectAll,
     toggleSelectOne,
+    toggleSelectOne,
     loadMore,
     deleteProblem,
-    bulkDelete
+    bulkDelete,
+    refetch
   };
 };
 

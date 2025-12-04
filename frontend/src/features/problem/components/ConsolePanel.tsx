@@ -9,6 +9,31 @@ interface ConsolePanelProps {
   onCollapse: () => void;
 }
 
+const formatValue = (value: any) => {
+  if (value === undefined) return 'undefined';
+  if (value === null) return 'null';
+  if (value === '') return 'Empty String';
+
+  if (typeof value === 'string') {
+    try {
+      // Try to parse as JSON to see if it's a structured object/array
+      const parsed = JSON.parse(value);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return JSON.stringify(parsed, null, 2);
+      }
+    } catch (e) {
+      // Not JSON, return as is
+    }
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value, null, 2);
+  }
+
+  return String(value);
+};
+
 export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProps) {
   return (
     <div className="flex flex-col h-full bg-card border-t border-border">
@@ -65,19 +90,23 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="text-muted-foreground block mb-1">Input</span>
-                      <code className="bg-black/30 px-2 py-1 rounded block">{result.input}</code>
+                      <pre className="bg-black/30 px-3 py-2 rounded-md block whitespace-pre-wrap max-h-[150px] overflow-y-auto font-mono text-[11px] leading-relaxed border border-white/5">
+                        {formatValue(result.input)}
+                      </pre>
                     </div>
                     <div>
                       <span className="text-muted-foreground block mb-1">Expected Output</span>
-                      <code className="bg-black/30 px-2 py-1 rounded block">{result.expectedOutput}</code>
+                      <pre className="bg-black/30 px-3 py-2 rounded-md block whitespace-pre-wrap max-h-[150px] overflow-y-auto font-mono text-[11px] leading-relaxed border border-white/5">
+                        {formatValue(result.expectedOutput)}
+                      </pre>
                     </div>
                   </div>
                   {!result.passed && (
                     <div className="mt-2 pt-2 border-t border-border">
                       <span className="text-muted-foreground block mb-1 text-xs">Actual Output</span>
-                      <code className="bg-destructive/10 text-destructive px-2 py-1 rounded block text-xs">
-                        {result.actualOutput === undefined ? 'undefined' : (result.actualOutput === null ? 'null' : (result.actualOutput === '' ? 'Empty String' : result.actualOutput))}
-                      </code>
+                      <pre className="bg-destructive/10 text-destructive px-2 py-1 rounded block text-xs whitespace-pre-wrap">
+                        {formatValue(result.actualOutput)}
+                      </pre>
                       {result.error && (
                         <div className="mt-2 text-destructive text-xs bg-destructive/10 px-2 py-1 rounded border border-destructive/20">
                           <span className="font-semibold mr-1">Error:</span>

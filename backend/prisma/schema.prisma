@@ -43,24 +43,31 @@ enum InterviewQuestionOutcome {
   PARTIAL
 }
 
+enum ProblemType {
+  ALGORITHM
+  DESIGN
+}
+
 model Problem {
-  id          String       @id @default(uuid())
+  id          String      @id @default(uuid())
   slug        String
   title       String
   description String
   starterCode String?
-  difficulty  Difficulty   @default(Medium)
-  timeLimit   Int          @default(45) // Minutes
+  difficulty  Difficulty  @default(Medium)
+  type        ProblemType @default(ALGORITHM)
+  className   String?     // Required for DESIGN problems
+  timeLimit   Int         @default(45) // Minutes
   tags        String[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   testCases   TestCase[]
   submissions Submission[]
   lists       ProblemsOnLists[]
   interviewQuestions InterviewQuestion[]
 
   userId      String
-  user        User         @relation(fields: [userId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([difficulty])

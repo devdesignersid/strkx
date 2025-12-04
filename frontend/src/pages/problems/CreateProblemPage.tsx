@@ -23,6 +23,8 @@ export default function CreateProblemPage() {
     title: '',
     slug: '',
     difficulty: 'Medium',
+    type: 'ALGORITHM',
+    className: '',
     tags: '',
     description: '## Problem Description\n\nWrite a function that...',
     starterCode: '// Write your code here\n',
@@ -33,8 +35,17 @@ export default function CreateProblemPage() {
   ]);
 
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const cleanDescription = (desc: string) => {
+    if (!desc) return '';
+    return desc
+      .replace(/\\n/g, '\n') // Fix escaped newlines
+      .replace(/\\/g, '')    // Remove stray backslashes
+      .replace(/^"|"$/g, '');  // Remove surrounding quotes if any
+  };
 
   const insertMarkdown = (prefix: string, suffix: string = '') => {
     const textarea = document.getElementById('description-editor') as HTMLTextAreaElement;
@@ -69,6 +80,8 @@ export default function CreateProblemPage() {
             title: problem.title || '',
             slug: problem.slug || '',
             difficulty: problem.difficulty || 'Medium',
+            type: problem.type || 'ALGORITHM',
+            className: problem.className || '',
             tags: Array.isArray(problem.tags) ? problem.tags.join(', ') : '',
             description: problem.description || '',
             starterCode: problem.starterCode || '',
@@ -132,7 +145,10 @@ export default function CreateProblemPage() {
 
     setIsGenerating(true);
     try {
-      const prompt = PROMPTS.PROBLEM_GENERATION.replaceAll('{topic}', formData.title);
+      const promptTemplate = formData.type === 'DESIGN'
+        ? PROMPTS.DESIGN_PROBLEM_GENERATION
+        : PROMPTS.PROBLEM_GENERATION;
+      const prompt = promptTemplate.replaceAll('{topic}', formData.title);
       const response = await aiService.generateCompletion(prompt);
 
       // Clean up response if it contains markdown code blocks
@@ -142,17 +158,56 @@ export default function CreateProblemPage() {
       setFormData(prev => ({
         ...prev,
         difficulty: generated.difficulty || prev.difficulty,
-        description: generated.description ? generated.description.replace(/\\n/g, '\n') : prev.description,
+        description: generated.description
+          ? cleanDescription(generated.description)
+          : prev.description,
         tags: Array.isArray(generated.tags) ? generated.tags.join(', ') : prev.tags,
-        starterCode: generated.starterCode ? generated.starterCode.replace(/\\n/g, '\n') : prev.starterCode,
+        starterCode: generated.starterCode
+          ? generated.starterCode.replace(/\\n/g, '\n').replace(/\\$/gm, '')
+          : prev.starterCode,
+        className: generated.className || prev.className,
         // We could also set constraints if we had a field for it, or append to description
       }));
 
       if (generated.examples && Array.isArray(generated.examples)) {
         // Map examples to test cases
         const newTestCases = generated.examples.map((ex: any) => {
-          // Sanitize input/output to remove variable names if present (e.g. "nums = [...]" -> "[...]")
-          const cleanInput = String(ex.input).replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+          let cleanInput = String(ex.input);
+
+          // Special handling for DESIGN problems to ensure valid JSON structure
+          if (formData.type === 'DESIGN') {
+            try {
+              // If it's already valid JSON, keep it (but ensure it has commands/values)
+              JSON.parse(cleanInput);
+            } catch (e) {
+              // If not valid JSON, try to extract two arrays
+              const matches = cleanInput.match(/\[.*?\]/g); // Simple regex to find arrays
+              // Better regex to handle nested arrays for values: \[.*\]
+              // Actually, values is an array of arrays, so we need to be careful.
+              // Let's try to find "commands" part and "values" part if possible, or just take first two arrays.
+
+              // Fallback: try to find the part that looks like commands and values
+              // commands = [...], values = [...]
+              const commandsMatch = cleanInput.match(/(?:commands\s*=\s*)?(\[.*?\])(?:,|$)/s);
+              const valuesMatch = cleanInput.match(/(?:values\s*=\s*)?(\[.*\])/s);
+
+              if (commandsMatch && valuesMatch) {
+                // This is risky if regex is too simple. Let's try a more robust approach:
+                // Split by "values =" if present
+                const parts = cleanInput.split(/values\s*=\s*/);
+                if (parts.length === 2) {
+                  let cmds = parts[0].replace(/commands\s*=\s*/, '').trim();
+                  if (cmds.endsWith(',')) cmds = cmds.slice(0, -1).trim();
+                  let vals = parts[1].trim();
+                  cleanInput = `{\n  "commands": ${cmds},\n  "values": ${vals}\n}`;
+                }
+              }
+            }
+          } else {
+            // Standard cleaning for Algorithm problems
+            cleanInput = cleanInput.replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
+          }
+
           const cleanOutput = String(ex.output).replace(/^[a-zA-Z0-9_]+\s*=\s*/, '');
           return {
             input: cleanInput,
@@ -216,7 +271,8 @@ export default function CreateProblemPage() {
       } else {
         await problemsService.create(payload);
       }
-      navigate('/problems');
+      // Pass refresh state to trigger refetch
+      navigate('/problems', { state: { refresh: true } });
     } catch (error) {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} problem:`, error);
       setErrorMessage(`Failed to ${isEditMode ? 'update' : 'create'} problem. Please check your input and try again.`);
@@ -259,7 +315,15 @@ export default function CreateProblemPage() {
           <section className="space-y-4">
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Title</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">Title</label>
+                  {isAIEnabled && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Wand2 className="w-3 h-3 text-purple-400" />
+                      AI uses this to generate the problem
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={formData.title}
@@ -292,6 +356,53 @@ export default function CreateProblemPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">Problem Type</label>
+                  {isAIEnabled && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Wand2 className="w-3 h-3 text-purple-400" />
+                      AI uses this
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsTypeOpen(!isTypeOpen)}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors"
+                  >
+                    <span>{formData.type}</span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {isTypeOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-xl z-50 overflow-hidden">
+                      {['ALGORITHM', 'DESIGN'].map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              type,
+                              // Reset starter code if switching types
+                              starterCode: type === 'DESIGN'
+                                ? `class ${formData.className || 'Solution'} {\n  constructor() {\n    \n  }\n}`
+                                : '// Write your code here\n'
+                            });
+                            setIsTypeOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-secondary/50 transition-colors"
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Difficulty</label>
                 <div className="relative">
@@ -335,6 +446,9 @@ export default function CreateProblemPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Tags (comma separated)</label>
                 <input
@@ -345,6 +459,28 @@ export default function CreateProblemPage() {
                   placeholder="E.g. Array, Hash Table"
                 />
               </div>
+
+              {formData.type === 'DESIGN' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Class Name</label>
+                  <input
+                    type="text"
+                    value={formData.className}
+                    onChange={(e) => {
+                      const newClassName = e.target.value;
+                      setFormData({
+                        ...formData,
+                        className: newClassName,
+                        starterCode: formData.starterCode.includes('class ')
+                          ? formData.starterCode.replace(/class \w+/, `class ${newClassName}`)
+                          : `class ${newClassName} {\n  constructor() {\n    \n  }\n}`
+                      });
+                    }}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                    placeholder="E.g. LRUCache"
+                  />
+                </div>
+              )}
             </div>
           </section>
           {/* Description */}
@@ -433,12 +569,19 @@ export default function CreateProblemPage() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="grid grid-cols-2 gap-4">
+
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-foreground/80">Input</label>
+                      <label className="text-xs font-medium text-foreground/80">
+                        {formData.type === 'DESIGN' ? 'Input (JSON: { commands: [], values: [] })' : 'Input'}
+                      </label>
                       <textarea
                         value={tc.input}
                         onChange={(e) => updateTestCase(i, 'input', e.target.value)}
-                        className="w-full bg-black/20 border border-white/5 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none h-20"
+                        className={clsx(
+                          "w-full bg-black/20 border border-white/5 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none",
+                          formData.type === 'DESIGN' ? "h-32" : "h-20"
+                        )}
+                        placeholder={formData.type === 'DESIGN' ? '{\n  "commands": ["LRUCache", "put", "get"],\n  "values": [[2], [1, 1], [1]]\n}' : ''}
                       />
                     </div>
                     <div className="space-y-1">
@@ -446,7 +589,11 @@ export default function CreateProblemPage() {
                       <textarea
                         value={tc.expectedOutput}
                         onChange={(e) => updateTestCase(i, 'expectedOutput', e.target.value)}
-                        className="w-full bg-black/20 border border-white/5 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none h-20"
+                        className={clsx(
+                          "w-full bg-black/20 border border-white/5 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none",
+                          formData.type === 'DESIGN' ? "h-32" : "h-20"
+                        )}
+                        placeholder={formData.type === 'DESIGN' ? '[null, null, 1]' : ''}
                       />
                     </div>
                   </div>
