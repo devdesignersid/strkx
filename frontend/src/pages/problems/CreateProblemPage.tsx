@@ -180,12 +180,7 @@ export default function CreateProblemPage() {
               // If it's already valid JSON, keep it (but ensure it has commands/values)
               JSON.parse(cleanInput);
             } catch (e) {
-              // If not valid JSON, try to extract two arrays
-              const matches = cleanInput.match(/\[.*?\]/g); // Simple regex to find arrays
-              // Better regex to handle nested arrays for values: \[.*\]
-              // Actually, values is an array of arrays, so we need to be careful.
-              // Let's try to find "commands" part and "values" part if possible, or just take first two arrays.
-
+              // If not valid JSON, try to extract commands and values
               // Fallback: try to find the part that looks like commands and values
               // commands = [...], values = [...]
               const commandsMatch = cleanInput.match(/(?:commands\s*=\s*)?(\[.*?\])(?:,|$)/s);

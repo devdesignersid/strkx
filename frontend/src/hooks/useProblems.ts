@@ -149,7 +149,6 @@ export const useProblems = () => {
     setSelectedIds,
     toggleSelectAll,
     toggleSelectOne,
-    toggleSelectOne,
     loadMore,
     deleteProblem,
     bulkDelete,
