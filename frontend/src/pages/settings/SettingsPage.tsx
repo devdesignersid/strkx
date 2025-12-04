@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity, User, LogOut } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useStudyTimer } from '../../context/StudyTimerContext';
 import { useAuth } from '../../context/AuthContext';
 import { aiService } from '../../lib/ai/aiService';
@@ -15,6 +16,7 @@ export default function SettingsPage() {
   const [isResetting, setIsResetting] = useState(false);
   const { isEnabled: isTimerEnabled, toggleEnabled, triggerTestReminder } = useStudyTimer();
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
 
   // AI Settings State
   const [providers] = useState<AIProviderMetadata[]>(aiService.getAvailableProviders());
@@ -90,6 +92,9 @@ export default function SettingsPage() {
       Object.entries(preservedData).forEach(([key, value]) => {
         if (value) localStorage.setItem(key, value);
       });
+
+      // Clear all React Query cache to ensure fresh data on reload
+      queryClient.clear();
 
       toast.success(TOAST_MESSAGES.SETTINGS.RESET_SUCCESS);
       setShowConfirmDialog(false);
