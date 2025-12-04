@@ -1,7 +1,7 @@
 import { Activity, CheckCircle2, Ghost } from 'lucide-react';
-import { EmptyState, PageHeader, StatusBadge } from '@/design-system/components';
+import { EmptyState, PageHeader, StatusBadge, Button, getDifficultyVariant } from '@/design-system/components';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { cn } from '@/lib/utils';
+import { EmptyDashboardIllustration } from '@/design-system/illustrations';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
@@ -80,31 +80,21 @@ export default function DashboardPage() {
           <>
             {/* Empty State for New Users */}
             {stats.solved === 0 ? (
-              <Card className="p-12 text-center mb-8">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Ghost className="w-8 h-8 text-primary" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-2">Start Your Journey!</h2>
-                  <p className="text-muted-foreground mb-6">
-                    No practice activity yet. Let's get started with your first problem or mock interview.
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <Link
-                      to="/problems"
-                      className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Browse Problems
-                    </Link>
-                    <Link
-                      to="/mock-interview"
-                      className="bg-secondary text-foreground px-6 py-3 rounded-lg font-medium hover:bg-secondary/80 transition-colors inline-flex items-center gap-2"
-                    >
-                      <Activity className="w-4 h-4" />
-                      Start Mock Interview
-                    </Link>
-                  </div>
+              <Card className="mb-8">
+                <EmptyState
+                  illustration={<EmptyDashboardIllustration className="w-full h-full" />}
+                  title="Start Your Journey!"
+                  description="No practice activity yet. Let's get started with your first problem or mock interview."
+                />
+                <div className="flex gap-3 justify-center pb-8">
+                  <Button size="lg" onClick={() => window.location.href = '/problems'}>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Browse Problems
+                  </Button>
+                  <Button variant="secondary" size="lg" onClick={() => window.location.href = '/mock-interview'}>
+                    <Activity className="w-4 h-4" />
+                    Start Mock Interview
+                  </Button>
                 </div>
               </Card>
             ) : (
@@ -146,13 +136,10 @@ export default function DashboardPage() {
                         <div className="text-xs text-muted-foreground">{activity.time}</div>
                       </div>
                     </div>
-                    <span className={cn(
-                      "font-medium",
-                      activity.difficulty === 'Easy' && "text-green-500",
-                      activity.difficulty === 'Medium' && "text-yellow-500",
-                      activity.difficulty === 'Hard' && "text-red-500",
-                      activity.difficulty === 'System Design' && "text-purple-500",
-                    )}>{activity.difficulty}</span>
+                    <StatusBadge
+                      status={activity.difficulty}
+                      variant={getDifficultyVariant(activity.difficulty)}
+                    />
                   </div>
                 ))
               ) : (

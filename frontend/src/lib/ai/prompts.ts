@@ -210,7 +210,7 @@ Return ONLY valid JSON (no markdown, no backticks):
     {
       "input": "commands = [\\"ClassName\\", \\"method1\\"], values = [[param], [param]]",
       "output": "[null, result]",
-      "explanation": "**Explanation**\\\\\\\\n{ClassName} obj = new {ClassName}();\\\\\\\\nobj.method1(param); // return result"
+      "explanation": "\\\\\\\\\\\\\\\\n\`\`\`javascript\\\\\\\\\\\\\\\\nconst obj = new {ClassName}(param);\\\\\\\\\\\\\\\\nobj.method1(param); // returns result\\\\\\\\\\\\\\\\n\`\`\`\\\\\\\\\\\\\\\\n\\\\\\\\\\\\\\\\n**Step-by-step:**\\\\\\\\\\\\\\\\n1. Initialize the object with the given parameters\\\\\\\\\\\\\\\\n2. Call method1 which performs X and returns Y"
     }
   ],
   "testCases": [
@@ -240,6 +240,13 @@ DESCRIPTION REQUIREMENTS:
 1. **Format**: Follow LeetCode style exactly.
 2. **Methods**: List each method with its signature (e.g., \`void postTweet(int userId, int tweetId)\`) and a brief description.
 3. **Example**: Provide a clear example with Input, Output, and Explanation sections.
+
+EXPLANATION REQUIREMENTS:
+- WRAP ALL CODE in markdown code blocks using triple backticks with \`javascript\` language tag
+- Use JavaScript syntax (const obj = new ClassName(), not C# or Java style)
+- DO NOT start with "Explanation:" or "**Explanation**" - just start with the code block
+- After the code block, include a **Step-by-step:** section explaining the logic
+- Show WHAT each method does and WHY the output is correct
 
 STARTER CODE REQUIREMENTS:
 - Must be a JavaScript/TypeScript class.

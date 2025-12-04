@@ -1,5 +1,8 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { ErrorIllustration } from '@/design-system/illustrations';
+import { Button, Card } from '@/design-system/components';
+import { RefreshCw } from 'lucide-react';
 
 interface Props {
   children?: ReactNode;
@@ -27,24 +30,25 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#151515] text-white p-4">
-          <div className="max-w-md w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg p-8 shadow-2xl text-center">
-            <h1 className="text-2xl font-bold text-red-500 mb-4">Something went wrong</h1>
-            <p className="text-gray-400 mb-6">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <Card className="max-w-md w-full p-8 text-center">
+            <div className="w-32 h-32 mx-auto mb-6">
+              <ErrorIllustration className="w-full h-full" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Something went wrong</h1>
+            <p className="text-muted-foreground mb-6">
               We apologize for the inconvenience. The application has encountered an unexpected error.
             </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 font-medium"
-            >
+            <Button onClick={() => window.location.reload()}>
+              <RefreshCw className="w-4 h-4" />
               Reload Application
-            </button>
+            </Button>
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mt-8 text-left overflow-auto max-h-48 bg-black/50 p-4 rounded text-xs font-mono text-red-300">
+              <div className="mt-6 text-left overflow-auto max-h-32 bg-secondary/50 p-3 rounded-lg text-xs font-mono text-destructive">
                 {this.state.error.toString()}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       );
     }

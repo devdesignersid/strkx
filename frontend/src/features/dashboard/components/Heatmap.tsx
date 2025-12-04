@@ -1,5 +1,6 @@
 import { useState, memo } from 'react';
 import { format, isSameDay, addDays, startOfDay, getDay, subDays } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Card } from '@/design-system/components';
 
@@ -148,16 +149,22 @@ export const Heatmap = memo(({ data }: { data: HeatmapItem[] }) => {
                 </div>
             </div>
 
-            {/* Custom Tooltip */}
-            {hoveredDay && (
-                <div
-                    className="fixed z-50 px-3 py-1.5 bg-popover text-popover-foreground text-xs rounded-md shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full -mt-2 border border-border"
-                    style={{ left: hoveredDay.x, top: hoveredDay.y }}
-                >
-                    <div className="font-medium">{format(hoveredDay.date, 'MMM d, yyyy')}</div>
-                    <div className="text-muted-foreground">{hoveredDay.count} submission{hoveredDay.count !== 1 ? 's' : ''}</div>
-                </div>
-            )}
+            {/* Animated Tooltip */}
+            <AnimatePresence>
+                {hoveredDay && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed z-50 px-3 py-1.5 bg-popover text-popover-foreground text-xs rounded-md shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full -mt-2 border border-border"
+                        style={{ left: hoveredDay.x, top: hoveredDay.y }}
+                    >
+                        <div className="font-medium">{format(hoveredDay.date, 'MMM d, yyyy')}</div>
+                        <div className="text-muted-foreground">{hoveredDay.count} submission{hoveredDay.count !== 1 ? 's' : ''}</div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </Card>
     );
 });

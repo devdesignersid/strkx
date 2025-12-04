@@ -1,4 +1,5 @@
 import { Terminal as TerminalIcon, CheckCircle2, XCircle, PanelBottomClose } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { ExecutionResult } from '@/types/problem';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components';
@@ -60,13 +61,22 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
           <div className="text-muted-foreground animate-pulse pb-4">Running code...</div>
         )}
         {output && (
-          <div className="space-y-4">
-            <div className={cn(
-              "p-3 rounded-lg border",
-              output.passed
-                ? "bg-green-500/10 border-green-500/20 text-green-500"
-                : "bg-destructive/10 border-destructive/20 text-destructive"
-            )}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className={cn(
+                "p-3 rounded-lg border",
+                output.passed
+                  ? "bg-green-500/10 border-green-500/20 text-green-500"
+                  : "bg-destructive/10 border-destructive/20 text-destructive"
+              )}
+            >
               <div className="flex items-center gap-2 font-medium mb-1">
                 {output.passed ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                 {output.passed ? 'All Test Cases Passed' : 'Test Cases Failed'}
@@ -74,7 +84,7 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
               {output.error && (
                 <div className="text-xs mt-1 opacity-90 whitespace-pre-wrap">{output.error}</div>
               )}
-            </div>
+            </motion.div>
 
             <div className="space-y-2">
               {output.results.map((result, i) => (
@@ -131,7 +141,7 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

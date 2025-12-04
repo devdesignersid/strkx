@@ -1,17 +1,24 @@
 import { memo } from 'react';
-import { Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { Clock, Trophy, Zap, Target, Flame, PenTool, Timer } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useStudyTimer } from '@/context/StudyTimerContext';
 import { Card } from '@/design-system/components';
+import { staggerContainer } from '@/design-system/animations';
 
 export const StatsCard = memo(({ stats }: { stats: any }) => {
     const { isEnabled } = useStudyTimer();
 
     return (
-        <div className={cn(
-            "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8",
-            isEnabled ? "lg:grid-cols-4" : "lg:grid-cols-3"
-        )}>
+        <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className={cn(
+                "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8",
+                isEnabled ? "lg:grid-cols-4" : "lg:grid-cols-3"
+            )}
+        >
             {/* Study Time Card */}
             {isEnabled && (
                 <Card className="p-6 flex flex-col justify-between h-32 relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
@@ -21,7 +28,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                             <div className="text-4xl font-bold tracking-tight text-foreground">{stats.studyTime || '0m'}</div>
                         </div>
                         <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                            <Activity className="w-5 h-5" />
+                            <Timer className="w-5 h-5" />
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -38,7 +45,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.totalHours || 0}</div>
                     </div>
                     <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                        <Activity className="w-5 h-5" />
+                        <Clock className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -54,7 +61,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.solved}</div>
                     </div>
                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                        <TrendingUp className="w-5 h-5" />
+                        <Trophy className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -72,7 +79,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.easy}</div>
                     </div>
                     <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
-                        <CheckCircle2 className="w-5 h-5" />
+                        <Zap className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -88,7 +95,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.medium}</div>
                     </div>
                     <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
-                        <TrendingUp className="w-5 h-5" />
+                        <Target className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -104,7 +111,7 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.hard}</div>
                     </div>
                     <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
-                        <Activity className="w-5 h-5" />
+                        <Flame className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
@@ -120,13 +127,14 @@ export const StatsCard = memo(({ stats }: { stats: any }) => {
                         <div className="text-4xl font-bold tracking-tight text-foreground">{stats.systemDesignSolved || 0}</div>
                     </div>
                     <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
-                        <Activity className="w-5 h-5" />
+                        <PenTool className="w-5 h-5" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
                     <span className="text-purple-500 font-medium">Architect</span>
                 </div>
             </Card>
-        </div>
+        </motion.div>
     );
 });
+

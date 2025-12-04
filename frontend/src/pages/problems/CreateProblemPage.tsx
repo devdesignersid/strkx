@@ -222,7 +222,11 @@ export default function CreateProblemPage() {
           exampleText += `\n\n**Example ${i + 1}:**\n\n`;
           exampleText += `**Input:** \`${ex.input}\`\n\n`;
           exampleText += `**Output:** \`${ex.output}\`\n\n`;
-          if (ex.explanation) exampleText += `**Explanation:** ${ex.explanation}\n\n`;
+          if (ex.explanation) {
+            // Clean explanation: convert literal \n to newlines
+            const cleanedExplanation = cleanDescription(ex.explanation);
+            exampleText += `**Explanation:**\n\n${cleanedExplanation}\n\n`;
+          }
         });
 
         setFormData(prev => ({

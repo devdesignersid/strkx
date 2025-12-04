@@ -32,9 +32,11 @@ const ExcalidrawCanvasPage = lazy(() => import('../pages/system-design/Excalidra
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 seconds
+      staleTime: 0, // Data considered stale immediately for refetch on mount
       gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
       refetchOnWindowFocus: false,
+      refetchOnMount: 'always', // Always refetch when component mounts (navigation)
+      refetchOnReconnect: true, // Refetch when network reconnects
       retry: 1,
     },
   },

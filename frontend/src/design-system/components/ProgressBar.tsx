@@ -17,7 +17,8 @@ export function ProgressBar({
     showLabel = false,
     label
 }: ProgressBarProps) {
-    const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+    // Handle edge case: if max is 0, show 0% progress (not NaN or 100%)
+    const percentage = max === 0 ? 0 : Math.min(100, Math.max(0, (value / max) * 100));
 
     return (
         <div className={cn("w-full", className)}>

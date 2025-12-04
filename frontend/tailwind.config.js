@@ -86,6 +86,15 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      boxShadow: {
+        // Elevation system for premium depth
+        'elevation-1': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'elevation-2': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+        'elevation-3': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
+        // Glow effect for highlighted elements
+        'glow-primary': '0 0 20px hsl(var(--primary) / 0.3)',
+        'glow-success': '0 0 20px hsl(142 76% 36% / 0.3)',
+      },
     },
   },
   plugins: [

@@ -4,11 +4,12 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import {
   CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
-  CheckCircle2, Circle, MoreHorizontal, Edit, Trash2, Filter, ChevronDown as ChevronDownIcon
+  CheckCircle2, Circle, MoreHorizontal, Edit, Trash2, ChevronDown as ChevronDownIcon, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyState, Button, StatusBadge } from '@/design-system/components';
+import { EmptyState, Button, StatusBadge, getDifficultyVariant } from '@/design-system/components';
+import { EmptyProblemsIllustration } from '@/design-system/illustrations';
 import type { Problem, SortKey, SortDirection } from '@/features/problems/hooks/useProblems';
 
 interface ProblemsTableProps {
@@ -167,14 +168,10 @@ export function ProblemsTable({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                      problem.difficulty === 'Easy' && "bg-green-500/10 text-green-500 border-green-500/20",
-                      problem.difficulty === 'Medium' && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-                      problem.difficulty === 'Hard' && "bg-red-500/10 text-red-500 border-red-500/20",
-                    )}>
-                      {problem.difficulty}
-                    </span>
+                    <StatusBadge
+                      status={problem.difficulty}
+                      variant={getDifficultyVariant(problem.difficulty)}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center flex-wrap gap-1.5">
@@ -236,34 +233,25 @@ export function ProblemsTable({
       {!isLoading && hasMore && problems.length > 0 && (
         <div className="flex justify-center py-6">
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={onLoadMore}
-            disabled={isLoadingMore}
-            className="gap-2"
+            isLoading={isLoadingMore}
           >
-            {isLoadingMore ? (
-              <>
-                <div className="w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-                Loading...
-              </>
-            ) : (
-              <>
-                <ChevronDownIcon className="w-4 h-4" />
-                Load More
-              </>
-            )}
+            <ChevronDownIcon className="w-4 h-4" />
+            Load More
           </Button>
         </div>
       )}
 
       {!isLoading && problems.length === 0 && (
         <EmptyState
-          icon={Filter}
+          illustration={<EmptyProblemsIllustration className="w-full h-full" />}
           title="No problems found"
           description="Try adjusting your filters or search query."
           action={{
             label: "Clear all filters",
-            onClick: onClearFilters
+            onClick: onClearFilters,
+            icon: X
           }}
           className="py-12"
         />
