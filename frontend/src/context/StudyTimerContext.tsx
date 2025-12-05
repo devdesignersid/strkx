@@ -271,7 +271,6 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         duration: seconds,
         timestamp: new Date().toISOString()
       });
-      console.log('Synced to backend:', seconds);
     } catch (error) {
       console.error('Failed to sync study stats:', error);
     }
@@ -290,7 +289,6 @@ export const StudyTimerProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     try {
       await studyService.resetStats();
-      console.log('Timer reset successfully');
     } catch (error) {
       console.error('Failed to reset timer:', error);
     }

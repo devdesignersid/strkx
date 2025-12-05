@@ -132,7 +132,6 @@ const MockInterviewSetup: React.FC = () => {
       if (tagList.length > 0) payload.tags = tagList;
 
       const response = await interviewService.createSession(payload);
-      console.log('Created session:', response);
 
       // Backend wraps response in a "data" object via TransformInterceptor
       const session = response.data || response;

@@ -80,7 +80,6 @@ export default function ListDetailPage() {
     ...p.problem,
     acceptance: p.problem.acceptance || Math.floor(Math.random() * 60) + 20,
   })) || [];
-  console.log('ListDetailPage problems length:', problems.length, 'isLoading:', isLoading);
   const hasMore = list?.hasMore || false;
   const isLoadingMore = isFetching && problems.length > 0;
 
@@ -384,7 +383,6 @@ export default function ListDetailPage() {
                     ))
                   ) : (
                     processedProblems.map((problem: Problem) => {
-                      console.log('Rendering problem:', problem.title);
                       return (
                         <tr
                           key={problem.id}

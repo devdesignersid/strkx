@@ -8,7 +8,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateGoogleUser(profile: any): Promise<User> {
     const { id, emails, photos, displayName } = profile;
@@ -74,21 +74,24 @@ export class AuthService {
 
   // For E2E testing bypass
   async validateTestUser(email: string): Promise<User> {
-      if (process.env.E2E_AUTH_BYPASS !== 'true' && process.env.NODE_ENV === 'production') {
-          throw new Error('E2E Auth Bypass is not enabled');
-      }
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('E2E Auth Bypass is DISABLED in production');
+    }
+    if (process.env.E2E_AUTH_BYPASS !== 'true') {
+      throw new Error('E2E Auth Bypass is not enabled');
+    }
 
-      let user = await this.prisma.user.findUnique({ where: { email } });
-      if (!user) {
-          user = await this.prisma.user.create({
-              data: {
-                  email,
-                  name: 'Test User',
-                  googleId: `test-${Date.now()}`,
-                  lastLogin: new Date(),
-              }
-          });
-      }
-      return user;
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name: 'Test User',
+          googleId: `test-${Date.now()}`,
+          lastLogin: new Date(),
+        }
+      });
+    }
+    return user;
   }
 }

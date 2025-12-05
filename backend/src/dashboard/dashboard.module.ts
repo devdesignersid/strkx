@@ -8,5 +8,6 @@ import { CacheService } from '../common/cache.service';
   imports: [PrismaModule],
   controllers: [DashboardController],
   providers: [DashboardService],
+  exports: [DashboardService],
 })
-export class DashboardModule {}
+export class DashboardModule { }

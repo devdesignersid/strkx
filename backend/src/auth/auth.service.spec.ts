@@ -123,7 +123,7 @@ describe('AuthService', () => {
       process.env.E2E_AUTH_BYPASS = 'false';
 
       try {
-        await expect(service.validateTestUser('test@example.com')).rejects.toThrow('E2E Auth Bypass is not enabled');
+        await expect(service.validateTestUser('test@example.com')).rejects.toThrow('E2E Auth Bypass is DISABLED in production');
       } finally {
         process.env.NODE_ENV = originalEnv;
       }

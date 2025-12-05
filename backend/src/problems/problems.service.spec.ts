@@ -13,8 +13,10 @@ describe('ProblemsService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     testCase: {
       deleteMany: jest.fn(),
@@ -29,6 +31,7 @@ describe('ProblemsService', () => {
     interviewQuestion: {
       deleteMany: jest.fn(),
     },
+    $transaction: jest.fn((promises) => Promise.all(promises)),
   };
 
   beforeEach(async () => {
@@ -80,18 +83,20 @@ describe('ProblemsService', () => {
     it('should return paginated and enriched problems', async () => {
       const user = { id: 'user1' };
       const problems = [
-        { id: '1', title: 'P1', difficulty: 'Easy', createdAt: new Date() },
-        { id: '2', title: 'P2', difficulty: 'Medium', createdAt: new Date() },
+        { id: '1', title: 'P1', difficulty: 'Easy', createdAt: new Date(), submissions: [{ status: 'ACCEPTED' }] },
+        { id: '2', title: 'P2', difficulty: 'Medium', createdAt: new Date(), submissions: [] },
       ];
-      const submissions = [{ problemId: '1', status: 'ACCEPTED' }];
+      const total = 2;
 
       mockPrismaService.problem.findMany.mockResolvedValue(problems);
-      mockPrismaService.submission.findMany.mockResolvedValue(submissions);
+      mockPrismaService.problem.count.mockResolvedValue(total);
 
-      const result = await service.findAll(1, 10, undefined, undefined, undefined, undefined, undefined, undefined, user);
+      const result = await service.findAll({ page: 1, limit: 10, skip: 0, take: 10 } as any, undefined, undefined, undefined, user);
 
       expect(prisma.problem.findMany).toHaveBeenCalled();
       expect(result.problems).toHaveLength(2);
+      expect(result.meta).toBeDefined();
+      expect(result.meta.total).toBe(2);
       expect(result.problems[0].status).toBe('Solved');
       expect(result.problems[1].status).toBe('Todo');
     });
@@ -99,8 +104,9 @@ describe('ProblemsService', () => {
     it('should filter by difficulty', async () => {
       const user = { id: 'user1' };
       mockPrismaService.problem.findMany.mockResolvedValue([]);
+      mockPrismaService.problem.count.mockResolvedValue(0);
 
-      await service.findAll(1, 10, undefined, 'Easy', undefined, undefined, undefined, undefined, user);
+      await service.findAll({ page: 1, limit: 10, skip: 0, take: 10 } as any, 'Easy', undefined, undefined, user);
 
       expect(prisma.problem.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -116,7 +122,7 @@ describe('ProblemsService', () => {
     it('should return problem if owned by user', async () => {
       const user = { id: 'user1' };
       const problem = { id: '1', slug: 'slug', userId: 'user1' };
-      mockPrismaService.problem.findUnique.mockResolvedValue(problem);
+      mockPrismaService.problem.findFirst.mockResolvedValue(problem);
 
       const result = await service.findOne('slug', user.id);
       expect(result).toEqual(problem);
@@ -124,8 +130,7 @@ describe('ProblemsService', () => {
 
     it('should throw NotFoundException if not owned by user', async () => {
       const user = { id: 'user1' };
-      const problem = { id: '1', slug: 'slug', userId: 'other' };
-      mockPrismaService.problem.findUnique.mockResolvedValue(problem);
+      mockPrismaService.problem.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('slug', user.id)).rejects.toThrow(NotFoundException);
     });

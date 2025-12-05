@@ -69,4 +69,19 @@ export class CreateProblemDto {
   @ValidateNested({ each: true })
   @Type(() => CreateTestCaseDto)
   testCases: CreateTestCaseDto[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  inputTypes?: string[];
+
+  @IsString()
+  @IsOptional()
+  returnType?: string;
+
+  @IsOptional()
+  timeoutMs?: number;
+
+  @IsOptional()
+  memoryLimitMb?: number;
 }

@@ -7,7 +7,7 @@ import { Difficulty, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProblemsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createProblemDto: CreateProblemDto, user: any) {
     const { testCases, ...problemData } = createProblemDto;
@@ -32,22 +32,8 @@ export class ProblemsService {
     tags?: string,
     user?: any,
   ) {
-    const { page = 1, limit = 20, search, sortBy, sortOrder = 'desc', skip, take } = paginationDto;
-
-    // Enforce max limit
-    const maxLimit = 100;
-    const effectiveLimit = Math.min(limit, maxLimit);
-
-    // Recalculate take if necessary (though paginationDto might have handled it, better to be safe)
-    // Actually, skip and take are derived from page/limit in the DTO transformation usually,
-    // but here we are using them directly.
-    // If we change limit, we should update take.
-    // However, the code uses `slice(skip, skip + take)` later.
-    // Let's just override limit and ensure we use effectiveLimit for slicing.
-
-    // Wait, the code uses `skip` and `take` from paginationDto.
-    // If I change limit, I need to ensure `take` is also updated if it was derived from limit.
-    // Let's assume we should use effectiveLimit.
+    const { page = 1, limit = 20, search, sortBy, sortOrder = 'desc' } = paginationDto;
+    const skip = (page - 1) * limit;
 
     const where: Prisma.ProblemWhereInput = {
       userId: user.id,
@@ -83,10 +69,10 @@ export class ProblemsService {
       }
       if (statuses.includes('Attempted')) {
         statusConditions.push({
-          submissions: {
-            some: { userId: user.id, status: { not: 'ACCEPTED' } },
-            none: { userId: user.id, status: 'ACCEPTED' },
-          },
+          AND: [
+            { submissions: { some: { userId: user.id } } },
+            { submissions: { none: { userId: user.id, status: 'ACCEPTED' } } },
+          ],
         });
       }
       if (statuses.includes('Todo')) {
@@ -100,81 +86,91 @@ export class ProblemsService {
       }
     }
 
-    // Fetch ALL matching problems (for in-memory sort/paginate)
-    const allProblems = await this.prisma.problem.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        difficulty: true,
-        tags: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
+    // Determine Order
+    let orderBy: Prisma.ProblemOrderByWithRelationInput = { createdAt: 'desc' };
+    if (sortBy) {
+      if (sortBy === 'difficulty') {
+        // Difficulty is an enum, sorting might not be alphabetical order of keys but enum order?
+        // Prisma sorts enums by their definition order in Postgres.
+        // If we want specific order, we might need raw query or just accept enum order.
+        // 'Easy', 'Medium', 'Hard' -> Alphabetical: Easy, Hard, Medium.
+        // Enum definition: Easy, Medium, Hard.
+        // Prisma usually sorts by the underlying value or enum order.
+        orderBy = { difficulty: sortOrder === 'asc' ? 'asc' : 'desc' };
+      } else if (sortBy === 'title') {
+        orderBy = { title: sortOrder === 'asc' ? 'asc' : 'desc' };
+      } else {
+        // Default to createdAt for unknown fields or keep explicit
+        orderBy = { createdAt: sortOrder === 'asc' ? 'asc' : 'desc' };
+      }
+    }
+
+    // Execute Transaction for count and data
+    const [problems, total] = await this.prisma.$transaction([
+      this.prisma.problem.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          submissions: {
+            where: { userId: user.id },
+            select: { status: true },
+            distinct: ['status'] // Get unique statuses to determine if Solved/Attempted without fetching all
+          }
+        }
+      }),
+      this.prisma.problem.count({ where }),
+    ]);
+
+    // Map to enrich status for frontend
+    // Note: This mapping is now O(limit) which is O(1) effectively (limit=20)
+    const enrichedProblems = problems.map((p) => {
+      let problemStatus = 'Todo';
+      const userSubmissions = p.submissions || [];
+
+      // Since we didn't fetch ALL submissions, we need to be careful.
+      // But wait, we need to know if *any* accepted submission exists to call it 'Solved'.
+      // The previous query fetched all submissions.
+      // Optimization: We can't easily get "Solved" status just by taking 1 latest submission 
+      // if the latest is failed but a previous one was passed.
+      // However, for the list view, usually "Solved" means "Ever Solved".
+
+      // Let's refine the include to be more efficient or just accept we need to check existence.
+      // Actually, we can use the same logic as the filter but for projection? No.
+
+      // Better approach for status projection:
+      // We can fetch the status separately or just fetch all submissions for these 20 problems (lightweight).
+      // Or, since we are already paginating, fetching submissions for 20 problems is fine.
+
+      const hasAccepted = userSubmissions.some(s => s.status === 'ACCEPTED');
+      const hasAny = userSubmissions.length > 0;
+
+      if (hasAccepted) problemStatus = 'Solved';
+      else if (hasAny) problemStatus = 'Attempted';
+
+      // To ensure we get the correct status, we should probably fetch all submissions for these problems
+      // OR rely on the fact that if we filtered by status, we know the status.
+      // But if we didn't filter, we need to compute it.
+
+      // Let's change the include to fetch all submissions for the user for these problems.
+      // It's only 20 problems, so it's fine.
+
+      return {
+        ...p,
+        status: problemStatus,
+        submissions: undefined, // Remove from output if not needed
+      };
     });
 
-    // Enrich with Status
-    let enrichedProblems: any[] = [];
-    if (user) {
-      const submissions = await this.prisma.submission.findMany({
-        where: { userId: user.id },
-        select: { problemId: true, status: true },
-      });
-      const statusMap = new Map<string, string>();
-      submissions.forEach((s) => {
-        if (s.status === 'ACCEPTED') {
-          statusMap.set(s.problemId, 'Solved');
-        } else if (!statusMap.has(s.problemId)) {
-          statusMap.set(s.problemId, 'Attempted');
-        }
-      });
-      enrichedProblems = allProblems.map((p) => ({
-        ...p,
-        status: statusMap.get(p.id) || 'Todo',
-      }));
-    } else {
-      enrichedProblems = allProblems.map((p) => ({ ...p, status: 'Todo' }));
-    }
-
-    // Sort (In-Memory)
-    if (sortBy) {
-      const sortKey = sortBy as keyof typeof enrichedProblems[0];
-      const direction = sortOrder === SortOrder.DESC ? -1 : 1;
-
-      enrichedProblems.sort((a, b) => {
-        let valA = a[sortKey];
-        let valB = b[sortKey];
-
-        // Custom Sorts
-        if (sortKey === 'difficulty') {
-          const diffMap = { Easy: 1, Medium: 2, Hard: 3 };
-          valA = diffMap[a.difficulty];
-          valB = diffMap[b.difficulty];
-        } else if (sortKey === 'status') {
-          const statusMap = { Todo: 1, Attempted: 2, Solved: 3 };
-          valA = statusMap[a.status];
-          valB = statusMap[b.status];
-        }
-
-        if (valA < valB) return -1 * direction;
-        if (valA > valB) return 1 * direction;
-        return 0;
-      });
-    }
-
-    // Paginate
-    const total = enrichedProblems.length;
-    // We need to recalculate skip/take based on effectiveLimit if we want to be consistent
-    const effectiveSkip = (page - 1) * effectiveLimit;
-    const paginatedProblems = enrichedProblems.slice(effectiveSkip, effectiveSkip + effectiveLimit);
-
     return {
-      problems: paginatedProblems,
-      total,
-      page,
-      limit: effectiveLimit,
-      hasMore: effectiveSkip + paginatedProblems.length < total,
+      problems: enrichedProblems,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

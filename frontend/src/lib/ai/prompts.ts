@@ -16,7 +16,7 @@ Return ONLY valid JSON (no markdown, no backticks):
 {
   "difficulty": "<<Easy/Medium/Hard based on {topic}>>",
   "description": "Clear problem statement for {topic} in Markdown. Use \\\\\\\\n\\\\\\\\n for paragraphs.\\\\\\\\n\\\\\\\\nMust include:\\\\\\\\n- EXACT input format and parameter names\\\\\\\\n- EXACT output format with specific type (array of indices, array of arrays, number, boolean, etc.)\\\\\\\\n- Whether elements can be reused\\\\\\\\n- How to handle multiple valid answers\\\\\\\\n\\\\\\\\n**DO NOT include a 'Constraints' section or header in the description. These will be added automatically from the constraints array.**",
-  "starterCode": "function solution(<<params for {topic}>>) {\\\\\\\\n  // Your code here\\\\\\\\n  return result;\\\\\\\\n}",
+  "starterCode": "/**\\\\\\\\n * @param {type} param1\\\\\\\\n * @param {type} param2\\\\\\\\n * @return {type}\\\\\\\\n */\\\\\\\\nvar solution = function(param1, param2) {\\\\\\\\n    \\\\\\\\n};",
   "examples": [
     {
       "input": "<<REALISTIC EXAMPLE INPUT FOR {topic}>>",
@@ -56,6 +56,10 @@ Return ONLY valid JSON (no markdown, no backticks):
       "description": "Special case for {topic} (negatives, zeros, duplicates, etc.)"
     }
   ],
+  "inputTypes": ["<<MUST BE ONE OF: number, string, boolean, number[], string[], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode>>"],
+  "returnType": "<<MUST BE ONE OF: number, string, boolean, number[], string[], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode, void>>",
+  "timeoutMs": "<<INTEGER: Suggested time limit in ms (e.g. 2000 for O(N), 5000 for O(N^2))>>",
+  "memoryLimitMb": "<<INTEGER: Suggested memory limit in MB (e.g. 128 for standard, 256 for heavy DP)>>",
   "constraints": ["<<CONSTRAINT 1 SPECIFIC TO {topic}>>", "<<CONSTRAINT 2 SPECIFIC TO {topic}>>", "<<CONSTRAINT 3 SPECIFIC TO {topic}>>"],
   "tags": ["<<RELEVANT TAG 1 FOR {topic}>>", "<<RELEVANT TAG 2 FOR {topic}>>"]
 }
@@ -120,18 +124,37 @@ GOOD DESCRIPTION EXAMPLE:
 - Clear: Return indices (not values), format is [i, j], exactly one solution, cannot reuse
 
 STARTER CODE REQUIREMENTS:
-- Function name MUST be "solution"
-- Parameter names MUST match those used in the description
-- Include a return statement template
-- Match the expected signature exactly
+- **MUST USE JSDoc comments** to specify parameter types and return type.
+- **MUST USE \`var solution = function (...)\` syntax** (LeetCode style).
+- **MUST INCLUDE structure definitions** in comments if using ListNode, TreeNode, GraphNode, or RandomListNode.
+- Example for Linked List:
+  \`\`\`javascript
+  /**
+   * Definition for singly-linked list.
+   * function ListNode(val, next) {
+   *     this.val = (val===undefined ? 0 : val)
+   *     this.next = (next===undefined ? null : next)
+   * }
+   */
+  /**
+   * @param {ListNode} head
+   * @return {ListNode}
+   */
+  var solution = function (head) {
 
-Good examples:
-  function solution(nums, target) { return []; }
-  function solution(s) { return false; }
+  };
+  \`\`\`
+- Example for Array:
+  \`\`\`javascript
+/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var solution = function (nums, target) {
 
-Bad examples:
-  function solve(arr, n) { }
-  function twoSum(numbers, target) { }
+};
+\`\`\`
 
 EXAMPLES REQUIREMENTS:
 - Provide 2-3 diverse examples
@@ -159,6 +182,8 @@ INPUT/OUTPUT FORMAT IN TEST CASES:
 - Boolean: "true" or "false"
 - Number: "42" or "-3.14"
 - NEVER include variable names like "nums = [1,2,3], target = 5"
+- NEVER use function calls like "createLinkedList([1,2,3])" or "new ListNode(1)"
+- FOR DATA STRUCTURES (Linked Lists, Trees): Use the raw array representation (e.g. "[1,2,3,4,5]")
 - Use valid JSON that can be parsed with JSON.parse()
 
 CONSTRAINTS REQUIREMENTS:
@@ -249,10 +274,11 @@ EXPLANATION REQUIREMENTS:
 - Show WHAT each method does and WHY the output is correct
 
 STARTER CODE REQUIREMENTS:
-- Must be a JavaScript/TypeScript class.
+- Must be a JavaScript class.
+- **MUST USE JSDoc comments** for the class and each method.
 - Include constructor and all required methods.
 - **DO NOT IMPLEMENT THE LOGIC.**
-- **ONLY provide method signatures with empty bodies or simple return statements (e.g. \`return null;\` or \`return -1;\`).**
+- **ONLY provide method signatures with empty bodies or simple return statements.**
 - Use comments like \`// Implement this method\` inside the body.
 
 TEST CASES REQUIREMENTS:
@@ -460,6 +486,9 @@ CURRENT USER CODE:
 
 AVAILABLE TEST CASES:
 {testCases}
+
+AVAILABLE DATA STRUCTURES:
+{structureDefinitions}
 
 TEST EXECUTION RESULTS:
 {testResults}

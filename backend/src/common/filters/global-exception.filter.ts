@@ -46,6 +46,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = HttpStatus.NOT_FOUND;
         message = 'Record not found';
         error = 'NotFound';
+      } else if (exception.code === 'P2003') {
+        status = HttpStatus.BAD_REQUEST;
+        const field = (exception.meta?.field_name as string) || 'Foreign key';
+        message = `Foreign key constraint violation: ${field}`;
+        error = 'ForeignKeyViolation';
       }
     }
 

@@ -1,8 +1,26 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionService } from './execution.service';
 import { DriverGenerator } from './driver-generator';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventEmitter } from 'events';
+
+// Mock Worker class
+class MockWorker extends EventEmitter {
+    constructor(public path: string, public options: any) {
+        super();
+        setTimeout(() => {
+            // Simulate successful execution for design problem
+            // We assume the code is correct as per the test case
+            this.emit('message', { success: true, result: [null, null, 1], logs: [] });
+            this.emit('exit', 0);
+        }, 10);
+    }
+    terminate() { return Promise.resolve(); }
+}
+
+jest.mock('worker_threads', () => ({
+    Worker: jest.fn().mockImplementation((path, options) => new MockWorker(path, options)),
+}));
 
 describe('ExecutionService (Design Problems)', () => {
     let service: ExecutionService;

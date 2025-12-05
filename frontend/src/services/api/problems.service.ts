@@ -6,6 +6,22 @@ import { apiClient } from './client';
  * Provides methods for managing coding problems including CRUD operations,
  * submissions, and solutions.
  */
+export interface CreateProblemDto {
+  title: string;
+  slug: string;
+  description: string;
+  difficulty: string;
+  tags: string[];
+  starterCode?: string;
+  testCases: { input: string; expectedOutput: string }[];
+  type?: 'ALGORITHM' | 'DESIGN';
+  className?: string;
+  inputTypes?: string[];
+  returnType?: string;
+}
+
+export interface UpdateProblemDto extends Partial<CreateProblemDto> { }
+
 export const problemsService = {
   /**
    * Fetch all problems with optional filtering, sorting, and pagination
@@ -40,7 +56,7 @@ export const problemsService = {
    * @param data - Problem data including title, description, test cases, etc.
    * @returns Promise with created problem data
    */
-  create: async (data: any) => {
+  create: async (data: CreateProblemDto) => {
     const response = await apiClient.post('/problems', data);
     return response.data;
   },
@@ -62,7 +78,7 @@ export const problemsService = {
    * @returns Promise with problem data
    */
   getById: async (id: string) => {
-    const response = await apiClient.get(`/problems/${id}`);
+    const response = await apiClient.get(`/problems/id/${id}`);
     return response.data;
   },
 

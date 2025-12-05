@@ -68,8 +68,7 @@ export const interviewService = {
    * @param sessionId - Session ID
    */
   endSession: async (sessionId: string) => {
-    // Placeholder for future implementation
-    console.log('Ending session:', sessionId);
+    await apiClient.post(`/interview-sessions/${sessionId}/end`);
   },
 
   /**

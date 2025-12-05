@@ -260,12 +260,41 @@ export function useProblemPage(slug: string | undefined) {
         `Test Case ${i + 1}:\nInput: ${tc.input}\nExpected Output: ${tc.expectedOutput}`
       ).join('\n\n') || 'No test cases available.';
 
+      const STRUCTURE_DEFINITIONS_TEXT = `
+// Definition for singly-linked list.
+function ListNode(val, next) {
+    this.val = (val===undefined ? 0 : val)
+    this.next = (next===undefined ? null : next)
+}
+
+// Definition for a binary tree node.
+function TreeNode(val, left, right) {
+    this.val = (val===undefined ? 0 : val)
+    this.left = (left===undefined ? null : left)
+    this.right = (right===undefined ? null : right)
+}
+
+// Definition for a Node (Graph).
+function Node(val, neighbors) {
+    this.val = val === undefined ? 0 : val;
+    this.neighbors = neighbors === undefined ? [] : neighbors;
+}
+
+// Definition for a Node (Random List).
+function Node(val, next, random) {
+    this.val = val === undefined ? 0 : val;
+    this.next = next === undefined ? null : next;
+    this.random = random === undefined ? null : random;
+}
+`;
+
       const prompt = PROMPTS.SOLUTION_COMPLETION
         .replace('{problemTitle}', problem?.title || '')
         .replace('{problemDescription}', problem?.description || '')
         .replace('{starterCode}', problem?.starterCode || '')
         .replace('{userCode}', currentCode)
         .replace('{testCases}', testCasesStr)
+        .replace('{structureDefinitions}', STRUCTURE_DEFINITIONS_TEXT)
         .replace('{testResults}', testResultsStr);
 
       const completion = await aiService.generateCompletion(prompt);

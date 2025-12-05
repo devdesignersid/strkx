@@ -40,4 +40,10 @@ export class UpdateProblemDto extends PartialType(CreateProblemDto) {
   @Type(() => CreateTestCaseDto)
   @IsOptional()
   testCases?: CreateTestCaseDto[];
+
+  @IsOptional()
+  timeoutMs?: number;
+
+  @IsOptional()
+  memoryLimitMb?: number;
 }

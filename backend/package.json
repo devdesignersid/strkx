@@ -38,6 +38,7 @@
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.1.0",
+    "isolated-vm": "^6.0.2",
     "nestjs-pino": "^4.5.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",

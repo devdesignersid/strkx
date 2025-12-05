@@ -50,7 +50,8 @@ export const useProblems = () => {
   });
 
   const problems = data?.data?.problems || [];
-  const hasMore = data?.data?.hasMore || false;
+  const meta = data?.data?.meta;
+  const hasMore = meta ? meta.page < meta.totalPages : false;
 
   const handleSort = (key: SortKey) => {
     setSortConfig(current => ({

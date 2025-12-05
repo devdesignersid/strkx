@@ -58,7 +58,17 @@ model Problem {
   type        ProblemType @default(ALGORITHM)
   className   String?     // Required for DESIGN problems
   timeLimit   Int         @default(45) // Minutes
+  
+  // Execution Constraints
+  timeoutMs       Int      @default(2000) // Execution time limit in milliseconds
+  memoryLimitMb   Int      @default(128)  // Memory limit in megabytes
+
   tags        String[]
+  
+  // Execution Metadata
+  inputTypes  String[]    @default([]) // e.g. ["ListNode", "number"]
+  returnType  String?     // e.g. "ListNode"
+  
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   testCases   TestCase[]
@@ -71,6 +81,7 @@ model Problem {
 
   @@index([userId])
   @@index([difficulty])
+  @@index([userId, difficulty])
   @@unique([userId, slug])
 }
 

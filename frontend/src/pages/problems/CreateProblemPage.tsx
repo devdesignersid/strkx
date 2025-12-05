@@ -11,6 +11,7 @@ import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { clsx } from 'clsx';
 import { Modal } from '@/design-system/components';
 import { problemsService } from '@/services/api/problems.service';
+import { InputSignatureEditor } from '@/features/problems/components/InputSignatureEditor';
 
 export default function CreateProblemPage() {
   const navigate = useNavigate();
@@ -28,6 +29,10 @@ export default function CreateProblemPage() {
     tags: '',
     description: '## Problem Description\n\nWrite a function that...',
     starterCode: '// Write your code here\n',
+    inputTypes: [] as string[],
+    returnType: 'void',
+    timeoutMs: 2000,
+    memoryLimitMb: 128,
   });
 
   const [testCases, setTestCases] = useState([
@@ -74,7 +79,6 @@ export default function CreateProblemPage() {
       // Use the GET endpoint that accepts ID parameter
       problemsService.getById(id)
         .then(res => {
-          console.log('Fetched problem data:', res); // Debug log
           const problem = res.data; // Access the nested data property
           setFormData({
             title: problem.title || '',
@@ -85,6 +89,10 @@ export default function CreateProblemPage() {
             tags: Array.isArray(problem.tags) ? problem.tags.join(', ') : '',
             description: problem.description || '',
             starterCode: problem.starterCode || '',
+            inputTypes: problem.inputTypes || [],
+            returnType: problem.returnType || 'void',
+            timeoutMs: problem.timeoutMs || 2000,
+            memoryLimitMb: problem.memoryLimitMb || 128,
           });
           if (problem.testCases && problem.testCases.length > 0) {
             setTestCases(problem.testCases.map((tc: { input: string, expectedOutput: string }) => ({
@@ -92,12 +100,6 @@ export default function CreateProblemPage() {
               expectedOutput: tc.expectedOutput
             })));
           }
-          console.log('Form data set:', { // Debug log
-            title: problem.title,
-            slug: problem.slug,
-            difficulty: problem.difficulty,
-            testCasesCount: problem.testCases?.length
-          });
         })
         .catch(err => {
           console.error('Failed to fetch problem:', err);
@@ -130,6 +132,25 @@ export default function CreateProblemPage() {
     const newTestCases = [...testCases];
     newTestCases[index][field] = value;
     setTestCases(newTestCases);
+  };
+
+  const handleSignatureChange = (inputTypes: string[], returnType: string) => {
+    // Generate starter code based on signature
+    const args = inputTypes.map((_, i) => `arg${i + 1}`).join(', ');
+    const starterCode = `/**
+ * @param {${inputTypes.join(', ')}} ${args}
+ * @return {${returnType}}
+ */
+function solution(${args}) {
+  // Your code here
+}`;
+
+    setFormData({
+      ...formData,
+      inputTypes,
+      returnType,
+      starterCode: formData.type === 'ALGORITHM' ? starterCode : formData.starterCode
+    });
   };
 
   const handleAIGenerate = async () => {
@@ -166,7 +187,10 @@ export default function CreateProblemPage() {
           ? generated.starterCode.replace(/\\n/g, '\n').replace(/\\$/gm, '')
           : prev.starterCode,
         className: generated.className || prev.className,
-        // We could also set constraints if we had a field for it, or append to description
+        inputTypes: Array.isArray(generated.inputTypes) ? generated.inputTypes : prev.inputTypes,
+        returnType: generated.returnType || prev.returnType,
+        timeoutMs: generated.timeoutMs || prev.timeoutMs,
+        memoryLimitMb: generated.memoryLimitMb || prev.memoryLimitMb,
       }));
 
       if (generated.examples && Array.isArray(generated.examples)) {
@@ -261,6 +285,7 @@ export default function CreateProblemPage() {
     try {
       const payload = {
         ...formData,
+        type: formData.type as 'ALGORITHM' | 'DESIGN',
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
         testCases,
       };
@@ -481,6 +506,39 @@ export default function CreateProblemPage() {
                 </div>
               )}
             </div>
+
+            {/* Execution Constraints */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Time Limit (ms)</label>
+                <input
+                  type="number"
+                  value={formData.timeoutMs}
+                  onChange={(e) => setFormData({ ...formData, timeoutMs: parseInt(e.target.value) || 2000 })}
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                  placeholder="2000"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Memory Limit (MB)</label>
+                <input
+                  type="number"
+                  value={formData.memoryLimitMb}
+                  onChange={(e) => setFormData({ ...formData, memoryLimitMb: parseInt(e.target.value) || 128 })}
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                  placeholder="128"
+                />
+              </div>
+            </div>
+
+            {/* Signature Editor */}
+            {formData.type === 'ALGORITHM' && (
+              <InputSignatureEditor
+                inputTypes={formData.inputTypes}
+                returnType={formData.returnType}
+                onChange={handleSignatureChange}
+              />
+            )}
           </section>
           {/* Description */}
           <section className="space-y-2">

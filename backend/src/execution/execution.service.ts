@@ -2,21 +2,32 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { ExecuteCodeDto } from './dto/execute-code.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { DriverGenerator } from './driver-generator';
-import * as vm from 'vm';
+import { Worker } from 'worker_threads';
+import * as path from 'path';
+
+import { HydrationService } from './hydration.service';
+
+import { DashboardService } from '../dashboard/dashboard.service';
 
 @Injectable()
 export class ExecutionService {
   private readonly logger = new Logger(ExecutionService.name);
   private activeExecutions = 0;
   private readonly MAX_CONCURRENT_EXECUTIONS = 10;
+  private readonly QUEUE_TIMEOUT_MS = 30000; // 30s queue timeout
 
   constructor(
     private prisma: PrismaService,
     private driverGenerator: DriverGenerator,
+    private hydrationService: HydrationService,
+    private dashboardService: DashboardService,
   ) { }
 
   async execute(executeCodeDto: ExecuteCodeDto, user?: any) {
+    // Simple in-memory concurrency control
+    // In a real production environment with multiple instances, use Redis/Postgres
     if (this.activeExecutions >= this.MAX_CONCURRENT_EXECUTIONS) {
+      // Simple retry logic or fail fast
       throw new Error('Server is busy, please try again later.');
     }
 
@@ -46,154 +57,78 @@ export class ExecutionService {
     const results: any[] = [];
     let allPassed = true;
     let totalExecutionTime = 0;
-    let totalMemoryUsed = 0;
 
+    // Run sequentially to avoid log interleaving and race conditions
     for (const testCase of problem.testCases) {
-      const logs: string[] = [];
-      const sandbox = {
-        console: {
-          log: (...args: any[]) => {
-            if (logs.length < 100) {
-              logs.push(args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
-            }
-          },
-          error: (...args: any[]) => {
-            if (logs.length < 100) {
-              logs.push('[ERROR] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
-            }
-          },
-          warn: (...args: any[]) => {
-            if (logs.length < 100) {
-              logs.push('[WARN] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
-            }
-          },
-          info: (...args: any[]) => {
-            if (logs.length < 100) {
-              logs.push('[INFO] ' + args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
-            }
-          },
-        },
-        result: undefined,
-      };
+      let args: any[];
+      let inputData: any;
+      let isDesignProblem = false;
 
-      let functionName = 'solution';
-      // Try to extract from user code first
-      let match = code.match(/var\s+(\w+)\s*=/);
-      if (!match) match = code.match(/function\s+(\w+)\s*\(/);
-      if (!match) match = code.match(/const\s+(\w+)\s*=/);
-      if (!match) match = code.match(/let\s+(\w+)\s*=/);
-
-      // Fallback to problem starter code
-      if (!match && problem.starterCode) {
-        match = problem.starterCode.match(/var\s+(\w+)\s*=/);
-        if (!match) match = problem.starterCode.match(/function\s+(\w+)\s*\(/);
-      }
-
-      if (match && match[1]) {
-        functionName = match[1];
-      }
-
-      let inputData;
-      let args: any[] = [];
-
-      let parsedDirectlyAsArray = false;
-
+      // --- Input Parsing ---
       try {
-        if (typeof testCase.input === 'string') {
-          // Robust JSON parsing
-          let jsonString = testCase.input.trim();
-
-          // Attempt to fix common JS object notation issues
-          if (!jsonString.startsWith('{') && !jsonString.startsWith('[')) {
-            // Heuristic: if it looks like "key: value", wrap in braces?
-            // Or maybe it's just values "1, 2".
-            // Let's try to wrap in [] if it fails initial parse
-          }
-
-          // Replace key: with "key":
-          jsonString = jsonString.replace(/(\w+):/g, '"$1":');
-          // Remove variable assignments
-          jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
-
-          try {
-            inputData = JSON.parse(jsonString);
-          } catch (e) {
-            // Try wrapping in array
-            try {
-              inputData = JSON.parse(`[${jsonString}]`);
-            } catch (e2) {
-              throw new Error(`Failed to parse input: ${testCase.input}`);
-            }
-          }
-
-          if (Array.isArray(inputData)) {
-            // Check if the original string started with '[' to determine if it was explicitly an array
-            // or if we wrapped it (or if it was just a list of values that JSON.parse accepted as array? No, JSON.parse only accepts single value)
-            // Actually, if we successfully parsed `jsonString` and it is an array, it means the input WAS an array (e.g. "[1, 2]" or "[\"\"]")
-            // UNLESS we fell back to the `try wrapping in array` block.
-
-            // Let's refine this.
-            // If the first try succeeded:
-            //   If jsonString started with '[', then it is explicitly an array.
-            //   If it didn't start with '[', it's unlikely to be an array unless it was just "null" or something, but we are checking Array.isArray.
-
-            // Wait, if input is `1, 2`, the first JSON.parse fails. The second one `[1, 2]` succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be FALSE (it's a list of args).
-            // If input is `[1, 2]`, the first JSON.parse succeeds. `inputData` is `[1, 2]`. `parsedDirectlyAsArray` should be TRUE (it's a single argument that is an array).
-
-            // We need to know WHICH try block succeeded.
-          }
-        } else {
-          inputData = testCase.input;
+        if (problem.type === 'DESIGN') {
+          isDesignProblem = true;
+          inputData = JSON.parse(testCase.input);
           args = [inputData];
-        }
-
-        // Re-implementing the parsing logic to capture the flag
-        if (typeof testCase.input === 'string') {
-          let jsonString = testCase.input.trim();
-          jsonString = jsonString.replace(/(\w+):/g, '"$1":');
-          jsonString = jsonString.replace(/[a-zA-Z0-9_]+\s*=\s*/g, '');
-
-          let firstParseSuccess = false;
-          try {
-            inputData = JSON.parse(jsonString);
-            firstParseSuccess = true;
-          } catch (e) {
-            // Fallback
-          }
-
-          if (firstParseSuccess) {
-            if (Array.isArray(inputData)) {
-              args = inputData;
-              parsedDirectlyAsArray = true; // It was "[...]"
-            } else {
-              args = [inputData];
-              parsedDirectlyAsArray = false; // It was "1" or "true" or "{...}"
-            }
-          } else {
-            // Try wrapping
-            try {
-              inputData = JSON.parse(`[${jsonString}]`);
-              args = inputData;
-              parsedDirectlyAsArray = false; // It was "1, 2" -> became [1, 2] -> args list
-            } catch (e2) {
-              throw new Error(`Failed to parse input: ${testCase.input}`);
-            }
-          }
         } else {
-          // Non-string input (already parsed?)
-          inputData = testCase.input;
-          args = [inputData];
-          parsedDirectlyAsArray = false; // Treat as single arg
-        }
+          try {
+            inputData = JSON.parse(testCase.input);
+          } catch (e) {
+            // Fallback: Try parsing as space/newline-separated JSON values
+            // This handles cases like "2 [[1,0]]" or "2\n[[1,0]]"
+            // We use a regex to replace whitespace between valid JSON tokens with commas
+            // Regex explanation:
+            // Lookbehind: End of a value (digit, ], }, ", true, false, null)
+            // Match: One or more whitespace characters
+            // Lookahead: Start of a value ([, {, ", digit, -, true, false, null)
+            const regex = /(?<=[\]}"\d]|true|false|null)\s+(?=[\[{"\d-]|true|false|null)/g;
+            const fixedInput = testCase.input.replace(regex, ',');
 
-      } catch (err: any) {
+            try {
+              inputData = JSON.parse(`[${fixedInput}]`);
+            } catch (e2) {
+              // If that fails, try the simple line split as a last resort
+              const lines = testCase.input.split('\n').map(l => l.trim()).filter(l => l);
+              if (lines.length > 1) {
+                try {
+                  inputData = lines.map(line => JSON.parse(line));
+                } catch (e3) {
+                  throw new Error(`Input parsing error: ${e.message}`);
+                }
+              } else {
+                throw new Error(`Input parsing error: ${e.message}`);
+              }
+            }
+          }
+
+          const parsedDirectlyAsArray = Array.isArray(inputData);
+          args = parsedDirectlyAsArray ? inputData : [inputData];
+
+          if (problem.inputTypes && problem.inputTypes.length === 1 && parsedDirectlyAsArray) {
+            const type = problem.inputTypes[0];
+            const isStructure = type === 'ListNode' || type === 'TreeNode' || type === 'GraphNode';
+
+            if (args.length > 1) {
+              args = [args];
+            } else if (args.length === 1 && isStructure && !Array.isArray(args[0]) && args[0] !== null) {
+              args = [args];
+            } else if (type === 'GraphNode' && Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
+              // Special case for GraphNode: input is [[], []] (Adjacency List)
+              // We parsed it as args = [[], []].
+              // But we want args = [[[], []]] (One argument which is the Adjacency List).
+              // So we must wrap it.
+              args = [args];
+            }
+          }
+        }
+      } catch (e) {
         allPassed = false;
         results.push({
           testCaseId: testCase.id,
           passed: false,
           input: testCase.input,
           expectedOutput: testCase.expectedOutput,
-          error: `Input parsing error: ${err.message}`,
+          error: `Input parsing error: ${e.message}`,
           logs: [],
           executionTimeMs: 0,
           memoryUsedBytes: 0,
@@ -201,77 +136,66 @@ export class ExecutionService {
         continue;
       }
 
-      try {
-        const startTime = performance.now();
+      let scriptToRun = '';
+      if (problem.type === 'DESIGN') {
+        // Determine the class name - use explicit className from problem, or fallback to first command (constructor name)
+        const className = problem.className || args[0].commands[0];
 
-        let scriptToRun = code;
-        let isDesignProblem = false;
+        scriptToRun = `
+          ${code}
 
-        if (problem.type === 'DESIGN' && problem.className) {
-          isDesignProblem = true;
-          const driverScript = this.driverGenerator.generate(problem.className);
-          scriptToRun = code + '\n' + driverScript;
+          const commands = ${JSON.stringify(args[0].commands)};
+          const values = ${JSON.stringify(args[0].values)};
+          const results = [];
 
-          // For Design problems, inputs are { commands: [], values: [] }
-          // We need to make sure 'commands' and 'values' are available in the context
-          if (args.length === 1 && typeof args[0] === 'object' && args[0].commands && args[0].values) {
-            sandbox['commands'] = args[0].commands;
-            sandbox['values'] = args[0].values;
-          } else {
-            // Handle case where input might be parsed differently or raw string
-            // If it's a raw string that parses to the structure
-            if (args.length === 1 && typeof args[0] === 'string') {
-              try {
-                const parsed = JSON.parse(args[0]);
-                if (parsed.commands && parsed.values) {
-                  sandbox['commands'] = parsed.commands;
-                  sandbox['values'] = parsed.values;
-                }
-              } catch (e) {
-                // ignore
+          let obj = null;
+
+          for (let i = 0; i < commands.length; i++) {
+            const cmd = commands[i];
+            const cmdArgs = values[i];
+
+            if (i === 0) {
+              // Constructor - use explicit class name
+              obj = new ${className}(...cmdArgs);
+              results.push(null);
+            } else {
+              if (obj && typeof obj[cmd] === 'function') {
+                const retVal = obj[cmd](...cmdArgs);
+                results.push(retVal === undefined ? null : retVal);
+              } else {
+                results.push(null);
               }
             }
           }
-        }
 
-        const context = vm.createContext({
-          ...sandbox,
-          args,
-          parsedDirectlyAsArray,
-        });
-
-        vm.runInNewContext(
-          `
-          ${scriptToRun}
-          try {
-             if (!${isDesignProblem}) {
-                if (typeof ${functionName} === 'function') {
-                   if (parsedDirectlyAsArray) {
-                       result = ${functionName}(args);
-                   } else {
-                       result = ${functionName}(...args);
-                   }
-                } else {
-                   throw new Error('Function ${functionName} not found');
-                }
-             }
-             // For Design problems, the driver script sets 'result' directly
-          } catch (e) {
-            throw e;
-          }
-          `,
-          context,
-          {
-            timeout: 1000,
-            displayErrors: true,
-          }
+          global.result = results;
+        `;
+      } else {
+        // Algorithmic Problem with Hydration
+        scriptToRun = this.hydrationService.generateWrapper(
+          code,
+          problem.inputTypes || [], // Default to empty if not set
+          problem.returnType
         );
+      }
+
+      // Execute in Worker
+      const startTime = performance.now();
+      try {
+        const workerResult = await this.runInWorker(scriptToRun, {
+          args,
+          commands: isDesignProblem && args.length === 1 ? args[0].commands : undefined,
+          values: isDesignProblem && args.length === 1 ? args[0].values : undefined,
+          timeoutMs: problem.timeoutMs,
+          memoryLimitMb: problem.memoryLimitMb,
+        });
 
         const endTime = performance.now();
         const executionTime = endTime - startTime;
         totalExecutionTime += executionTime;
 
-        const actual = context.result;
+        const actual = workerResult.result;
+        const logs = workerResult.logs || [];
 
         let expected: any;
         if (typeof testCase.expectedOutput === 'string') {
@@ -285,8 +209,7 @@ export class ExecutionService {
           expected = testCase.expectedOutput;
         }
 
-        const isCorrect = JSON.stringify(actual) === JSON.stringify(expected);
-
+        const isCorrect = this.compareResults(actual, expected);
         if (!isCorrect) allPassed = false;
 
         results.push({
@@ -308,14 +231,10 @@ export class ExecutionService {
           input: testCase.input,
           expectedOutput: testCase.expectedOutput,
           error: error.message,
-          logs: logs,
+          logs: error.logs || [],
           executionTimeMs: 0,
           memoryUsedBytes: 0,
         });
-
-        if (error.message && error.message.includes('Script execution timed out')) {
-          break;
-        }
       }
     }
 
@@ -333,6 +252,10 @@ export class ExecutionService {
             memoryUsed: 0,
           },
         });
+
+        // Invalidate dashboard cache so stats update immediately
+        this.dashboardService.invalidateUserCache(user.id);
+
       } catch (error) {
         this.logger.error('Failed to save submission', error);
       }
@@ -342,5 +265,56 @@ export class ExecutionService {
       passed: allPassed,
       results,
     };
+  }
+
+  private compareResults(actual: any, expected: any): boolean {
+    const actualStr = JSON.stringify(actual);
+    const expectedStr = JSON.stringify(expected);
+
+    if (actualStr === expectedStr) return true;
+
+    // Special handling for empty structures (null vs [])
+    // Many problems treat null and [] as equivalent for empty Lists/Trees/Graphs
+    if (
+      (actual === null && Array.isArray(expected) && expected.length === 0) ||
+      (expected === null && Array.isArray(actual) && actual.length === 0)
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private runInWorker(code: string, context: any): Promise<{ result: any, logs: string[] }> {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(path.join(__dirname, 'execution.worker.js'), {
+        workerData: {
+          code,
+          context,
+          timeout: (context.timeoutMs || 2000),
+          memoryLimitMb: (context.memoryLimitMb || 128),
+        },
+      });
+
+      worker.on('message', (message) => {
+        if (message.success) {
+          resolve(message);
+        } else {
+          reject(message);
+        }
+        worker.terminate();
+      });
+
+      worker.on('error', (error) => {
+        reject({ message: error.message, logs: [] });
+        worker.terminate();
+      });
+
+      worker.on('exit', (code) => {
+        if (code !== 0) {
+          reject({ message: `Worker stopped with exit code ${code}`, logs: [] });
+        }
+      });
+    });
   }
 }
