@@ -11,7 +11,6 @@ import {
     Req,
 } from '@nestjs/common';
 import { Response } from 'express';
-import 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ExportService } from './services/export.service';
@@ -19,6 +18,13 @@ import { ImportService } from './services/import.service';
 import { ExportOptionsDto } from './dto/export.dto';
 import { ImportOptionsDto, ImportResultDto, ImportPreviewDto } from './dto/import.dto';
 import { IMPORT_LIMITS } from './validators/schemas';
+
+interface MulterFile {
+    buffer: Buffer;
+    originalname: string;
+    mimetype: string;
+    size: number;
+}
 
 /**
  * DataPortController
@@ -74,7 +80,7 @@ export class DataPortController {
         }),
     )
     async previewImport(
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFile() file: MulterFile,
         @Body('data') dataString?: string,
     ): Promise<ImportPreviewDto> {
         let data: unknown;
@@ -111,7 +117,7 @@ export class DataPortController {
         }),
     )
     async importData(
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFile() file: MulterFile,
         @Body('options') optionsString: string,
         @Body('data') dataString: string,
         @Req() req: any,
