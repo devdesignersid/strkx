@@ -69,7 +69,7 @@ describe('Authentication (E2E)', () => {
         .expect((res) => {
           const cookies = res.get('Set-Cookie');
           expect(cookies).toBeDefined();
-          expect(cookies.some((c) => c.includes('Authentication=;'))).toBe(true);
+          expect(cookies?.some((c) => c.includes('Authentication=;'))).toBe(true);
         });
     });
   });

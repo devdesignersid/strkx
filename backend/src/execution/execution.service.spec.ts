@@ -3,6 +3,8 @@ import { ExecutionService } from './execution.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
 import { DriverGenerator } from './driver-generator';
+import { HydrationService } from './hydration.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { EventEmitter } from 'events';
 
 // Mock Worker class
@@ -63,12 +65,22 @@ describe('ExecutionService', () => {
     generate: jest.fn().mockReturnValue('// driver code'),
   };
 
+  const mockHydrationService = {
+    generateWrapper: jest.fn().mockReturnValue('global.result = solution(...args);'),
+  };
+
+  const mockDashboardService = {
+    invalidateUserCache: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExecutionService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: DriverGenerator, useValue: mockDriverGenerator },
+        { provide: HydrationService, useValue: mockHydrationService },
+        { provide: DashboardService, useValue: mockDashboardService },
       ],
     }).compile();
 

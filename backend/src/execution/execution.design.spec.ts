@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionService } from './execution.service';
 import { DriverGenerator } from './driver-generator';
 import { PrismaService } from '../prisma/prisma.service';
+import { HydrationService } from './hydration.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { EventEmitter } from 'events';
 
 // Mock Worker class
@@ -35,12 +37,22 @@ describe('ExecutionService (Design Problems)', () => {
         },
     };
 
+    const mockHydrationService = {
+        generateWrapper: jest.fn().mockReturnValue('global.result = solution(...args);'),
+    };
+
+    const mockDashboardService = {
+        invalidateUserCache: jest.fn(),
+    };
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ExecutionService,
                 DriverGenerator,
                 { provide: PrismaService, useValue: mockPrismaService },
+                { provide: HydrationService, useValue: mockHydrationService },
+                { provide: DashboardService, useValue: mockDashboardService },
             ],
         }).compile();
 
@@ -110,6 +122,7 @@ describe('ExecutionService (Design Problems)', () => {
 
         expect(result.passed).toBe(true);
         expect(result.results[0].passed).toBe(true);
-        expect(JSON.parse(result.results[0].actualOutput)).toEqual([null, null, 1]);
+        expect(result.results[0].actualOutput).toBeDefined();
+        expect(JSON.parse(result.results[0].actualOutput!)).toEqual([null, null, 1]);
     });
 });

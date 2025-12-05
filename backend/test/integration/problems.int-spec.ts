@@ -3,8 +3,7 @@ import { ProblemsService } from '../../src/problems/problems.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { TestDb } from '../utils/test-db';
 import { AuthHelper } from '../utils/auth-helper';
-import { Difficulty } from '@prisma/client';
-import { CreateProblemDto } from '../../src/problems/dto/create-problem.dto';
+import { CreateProblemDto, Difficulty } from '../../src/problems/dto/create-problem.dto';
 
 describe('ProblemsService (Integration)', () => {
   let service: ProblemsService;
@@ -44,7 +43,7 @@ describe('ProblemsService (Integration)', () => {
         description: 'Description',
         difficulty: Difficulty.Medium,
         tags: ['dp'],
-        testCases: [{ input: '1', expectedOutput: '1', isHidden: false }],
+        testCases: [{ input: '1', expectedOutput: '1' }],
       };
 
       const result = await service.create(dto, user);
@@ -83,7 +82,8 @@ describe('ProblemsService (Integration)', () => {
         title: 'Hard P', slug: 'hard-p', description: 'D', difficulty: Difficulty.Hard, tags: [], testCases: []
       }, user);
 
-      const result = await service.findAll(1, 10, undefined, 'Easy', undefined, undefined, undefined, undefined, user);
+      const paginationDto = { page: 1, limit: 10, skip: 0, take: 10 } as any;
+      const result = await service.findAll(paginationDto, 'Easy', undefined, undefined, user);
       expect(result.problems).toHaveLength(1);
       expect(result.problems[0].title).toBe('Easy P');
     });

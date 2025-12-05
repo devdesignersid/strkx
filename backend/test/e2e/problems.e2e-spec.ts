@@ -5,8 +5,7 @@ import { AppModule } from '../../src/app.module';
 import { TestDb } from '../utils/test-db';
 import { AuthHelper } from '../utils/auth-helper';
 import cookieParser from 'cookie-parser';
-import { CreateProblemDto } from '../../src/problems/dto/create-problem.dto';
-import { Difficulty } from '@prisma/client';
+import { CreateProblemDto, Difficulty } from '../../src/problems/dto/create-problem.dto';
 
 describe('Problems (E2E)', () => {
   let app: INestApplication;
@@ -49,7 +48,7 @@ describe('Problems (E2E)', () => {
         description: 'Desc',
         difficulty: Difficulty.Medium,
         tags: ['e2e'],
-        testCases: [{ input: '1', expectedOutput: '1', isHidden: false }],
+        testCases: [{ input: '1', expectedOutput: '1' }],
       };
 
       return request(app.getHttpServer())
@@ -77,7 +76,7 @@ describe('Problems (E2E)', () => {
         .post('/problems')
         .set('Cookie', [cookie])
         .send({
-          title: 'P1', slug: 'p1', description: 'D', difficulty: 'Easy', tags: [], testCases: []
+          title: 'P1', slug: 'p1', description: 'D', difficulty: Difficulty.Easy, tags: [], testCases: []
         });
 
       return request(app.getHttpServer())
@@ -97,7 +96,7 @@ describe('Problems (E2E)', () => {
         .post('/problems')
         .set('Cookie', [cookie])
         .send({
-          title: 'P1', slug: 'p1', description: 'D', difficulty: 'Easy', tags: [], testCases: []
+          title: 'P1', slug: 'p1', description: 'D', difficulty: Difficulty.Easy, tags: [], testCases: []
         });
 
       return request(app.getHttpServer())
@@ -123,7 +122,7 @@ describe('Problems (E2E)', () => {
         .post('/problems')
         .set('Cookie', [cookie])
         .send({
-          title: 'To Delete', slug: 'delete-me', description: 'D', difficulty: 'Easy', tags: [], testCases: []
+          title: 'To Delete', slug: 'delete-me', description: 'D', difficulty: Difficulty.Easy, tags: [], testCases: []
         });
 
       const id = createRes.body.id;
