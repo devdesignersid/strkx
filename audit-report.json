@@ -1,0 +1,349 @@
+{
+    "summary": {
+        "timestamp": "2025-12-06T03:52:00+05:30",
+        "branch": "audit/cleanup-20251206",
+        "totalFilesScanned": 298,
+        "totalLinesOfCode": 26172,
+        "issuesFound": 38,
+        "safeDeletionCandidates": 9,
+        "manualReviewItems": 12,
+        "autoFixable": 17,
+        "ai_slope_index": 0.23,
+        "topIssueCategories": [
+            {
+                "category": "Debug Artifacts",
+                "count": 9
+            },
+            {
+                "category": "Console Statements",
+                "count": 30
+            },
+            {
+                "category": "Type Safety",
+                "count": 20
+            },
+            {
+                "category": "Pre-existing Test Issues",
+                "count": 12
+            }
+        ]
+    },
+    "orphans": [
+        {
+            "path": "frontend/test_debug_output.txt",
+            "lastCommit": "2025-12-03",
+            "size": 199772,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output.txt",
+            "lastCommit": "2025-12-03",
+            "size": 132114,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output_2.txt",
+            "lastCommit": "2025-12-03",
+            "size": 100145,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output_3.txt",
+            "lastCommit": "2025-12-03",
+            "size": 95673,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output_dashboard.txt",
+            "lastCommit": "2025-12-03",
+            "size": 2833,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output_problempage.txt",
+            "lastCommit": "2025-12-03",
+            "size": 270620,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "frontend/test_output_problems.txt",
+            "lastCommit": "2025-12-03",
+            "size": 19597,
+            "classification": "safe-delete",
+            "reason": "Debug output from test run"
+        },
+        {
+            "path": "backend/reproduce_issue.js",
+            "lastCommit": "2025-12-05",
+            "size": 1719,
+            "classification": "safe-delete",
+            "reason": "Isolated-vm debugging script"
+        },
+        {
+            "path": "backend/test-ivm.js",
+            "lastCommit": "2025-12-05",
+            "size": 341,
+            "classification": "safe-delete",
+            "reason": "Isolated-vm test script"
+        }
+    ],
+    "unused_deps": {
+        "status": "manual-review-needed",
+        "note": "depcheck requires manual installation - recommend running separately"
+    },
+    "unused_exports": {
+        "status": "skipped",
+        "totalExportingFiles": 161,
+        "note": "ts-prune not available; manual review recommended for large modules"
+    },
+    "commented_blocks": [
+        {
+            "file": "backend/src/data-port/validators/schemas.ts",
+            "lineCount": 28,
+            "classification": "manual-review",
+            "reason": "Contains validation schema comments, may be intentional documentation"
+        },
+        {
+            "file": "frontend/src/design-system/icons.ts",
+            "lineCount": 18,
+            "classification": "manual-review",
+            "reason": "Icon documentation comments"
+        }
+    ],
+    "console_statements": [
+        {
+            "file": "frontend/src/features/system-design/hooks/useSystemDesignProblem.ts",
+            "count": 7
+        },
+        {
+            "file": "frontend/src/pages/interview/MockInterviewSession.tsx",
+            "count": 5
+        },
+        {
+            "file": "backend/src/execution/execution.service.spec.ts",
+            "count": 5
+        },
+        {
+            "file": "frontend/src/hooks/useProblemPage.ts",
+            "count": 4
+        },
+        {
+            "file": "frontend/src/pages/system-design/CreateSystemDesignPage.tsx",
+            "count": 3
+        },
+        {
+            "file": "frontend/src/pages/problems/CreateProblemPage.tsx",
+            "count": 3
+        },
+        {
+            "file": "frontend/src/pages/interview/MockInterviewSetup.tsx",
+            "count": 3
+        },
+        {
+            "file": "frontend/src/features/lists/components/AddToListModal.tsx",
+            "count": 3
+        },
+        {
+            "file": "frontend/src/context/StudyTimerContext.tsx",
+            "count": 3
+        },
+        {
+            "file": "backend/src/execution/hydration.service.ts",
+            "count": 3
+        }
+    ],
+    "duplicates": {
+        "status": "skipped",
+        "note": "jscpd not run - use --run-heavy flag to include"
+    },
+    "complexity_hotspots": [
+        {
+            "file": "frontend/src/lib/ai/prompts.ts",
+            "lines": 745,
+            "reason": "Largest file - AI prompt definitions"
+        },
+        {
+            "file": "frontend/src/pages/problems/CreateProblemPage.tsx",
+            "lines": 681,
+            "reason": "Complex form with many handlers"
+        },
+        {
+            "file": "frontend/src/pages/lists/ListDetailPage.tsx",
+            "lines": 610,
+            "reason": "Complex list management UI"
+        },
+        {
+            "file": "backend/src/data-port/services/import.service.ts",
+            "lines": 691,
+            "reason": "Complex import logic with many branches"
+        },
+        {
+            "file": "backend/src/lists/lists.service.ts",
+            "lines": 426,
+            "functions": 14,
+            "reason": "Many service methods"
+        },
+        {
+            "file": "frontend/src/pages/interview/MockInterviewSession.tsx",
+            "lines": 479,
+            "reason": "Complex interview state management"
+        },
+        {
+            "file": "frontend/src/pages/settings/SettingsPage.tsx",
+            "lines": 463,
+            "reason": "Multiple configuration sections"
+        },
+        {
+            "file": "frontend/src/features/data-port/ImportSection.tsx",
+            "lines": 460,
+            "functions": 5,
+            "reason": "Complex import UI"
+        },
+        {
+            "file": "frontend/src/pages/interview/MockInterviewSetup.tsx",
+            "lines": 423,
+            "reason": "Multi-step interview setup"
+        },
+        {
+            "file": "backend/src/problems/problems.service.ts",
+            "lines": 408,
+            "reason": "CRUD + AI generation"
+        }
+    ],
+    "type_safety_issues": [
+        {
+            "file": "backend/src/lists/lists.service.ts",
+            "anyCount": 11,
+            "reason": "High any type usage"
+        },
+        {
+            "file": "backend/src/problems/problems.controller.ts",
+            "anyCount": 10,
+            "reason": "High any type usage"
+        },
+        {
+            "file": "backend/src/execution/execution.service.ts",
+            "anyCount": 9,
+            "reason": "High any type usage"
+        },
+        {
+            "file": "frontend/src/services/api/data-port.service.ts",
+            "anyCount": 7,
+            "reason": "High any type usage"
+        },
+        {
+            "file": "frontend/src/features/system-design/hooks/useSystemDesignProblem.ts",
+            "anyCount": 7,
+            "reason": "High any type usage"
+        }
+    ],
+    "ai_slope_flags": [
+        {
+            "file": "backend/src/system-design/system-design.service.ts",
+            "snippet": "// TODO: Integrate with actual AI service (Gemini/OpenAI)",
+            "reasons": [
+                "Contains AI integration TODO",
+                "Indicates incomplete implementation"
+            ],
+            "confidence": "low",
+            "remediation": [
+                "Implement or remove TODO comment"
+            ]
+        },
+        {
+            "file": "frontend/src/pages/problems/CreateProblemPage.tsx",
+            "reasons": [
+                "High any type count",
+                "Complex generated content parsing with multiple fallbacks"
+            ],
+            "confidence": "low",
+            "remediation": [
+                "Add strong typing for AI response parsing",
+                "Extract parsing logic to utility"
+            ]
+        }
+    ],
+    "preexisting_issues": {
+        "testFailures": [
+            {
+                "file": "backend/src/execution/execution.design.spec.ts",
+                "reason": "HydrationService not provided in test module"
+            },
+            {
+                "file": "backend/src/execution/execution.service.spec.ts",
+                "reason": "HydrationService not provided in test module"
+            }
+        ],
+        "typeErrors": [
+            {
+                "file": "backend/test/e2e/auth.e2e-spec.ts",
+                "line": 72,
+                "error": "'cookies' is possibly 'undefined'"
+            },
+            {
+                "file": "backend/test/e2e/problems.e2e-spec.ts",
+                "line": 50,
+                "error": "Type 'Medium' not assignable to Difficulty"
+            },
+            {
+                "file": "backend/test/e2e/problems.e2e-spec.ts",
+                "line": 52,
+                "error": "'isHidden' does not exist in type 'CreateTestCaseDto'"
+            }
+        ]
+    },
+    "actions": [
+        {
+            "type": "delete-candidate",
+            "priority": "high",
+            "files": [
+                "frontend/test_debug_output.txt",
+                "frontend/test_output.txt",
+                "frontend/test_output_2.txt",
+                "frontend/test_output_3.txt",
+                "frontend/test_output_dashboard.txt",
+                "frontend/test_output_problempage.txt",
+                "frontend/test_output_problems.txt",
+                "backend/reproduce_issue.js",
+                "backend/test-ivm.js"
+            ],
+            "totalSizeBytes": 822814
+        },
+        {
+            "type": "manual-review",
+            "priority": "medium",
+            "description": "Review and remove console.log statements from production code",
+            "fileCount": 30
+        },
+        {
+            "type": "manual-review",
+            "priority": "medium",
+            "description": "Fix pre-existing test failures by adding HydrationService to test modules",
+            "files": [
+                "backend/src/execution/execution.design.spec.ts",
+                "backend/src/execution/execution.service.spec.ts"
+            ]
+        },
+        {
+            "type": "manual-review",
+            "priority": "low",
+            "description": "Add stronger typing to reduce 'any' usage in high-count files",
+            "files": [
+                "backend/src/lists/lists.service.ts",
+                "backend/src/problems/problems.controller.ts",
+                "backend/src/execution/execution.service.ts"
+            ]
+        }
+    ],
+    "git": {
+        "branch": "audit/cleanup-20251206",
+        "commitsCreated": [],
+        "undoCommand": "git checkout main && git branch -D audit/cleanup-20251206"
+    }
+}

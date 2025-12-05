@@ -4,20 +4,21 @@ import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 import { ManageListProblemsDto } from './dto/manage-list-problems.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../common/types/auth.types';
 
 @Controller('lists')
 @UseGuards(JwtAuthGuard)
 export class ListsController {
-  constructor(private readonly listsService: ListsService) {}
+  constructor(private readonly listsService: ListsService) { }
 
   @Post()
-  create(@Body() createListDto: CreateListDto, @Req() req: any) {
+  create(@Body() createListDto: CreateListDto, @Req() req: AuthenticatedRequest) {
     return this.listsService.create(createListDto, req.user);
   }
 
   @Get()
   findAll(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Query('page') page: string,
     @Query('limit') limit: string,
     @Query('search') search: string,
@@ -39,7 +40,7 @@ export class ListsController {
     @Query('tags') tags: string,
     @Query('sort') sort: string,
     @Query('order') order: 'asc' | 'desc',
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
@@ -58,22 +59,22 @@ export class ListsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateListDto: UpdateListDto, @Req() req: any) {
+  update(@Param('id') id: string, @Body() updateListDto: UpdateListDto, @Req() req: AuthenticatedRequest) {
     return this.listsService.update(id, updateListDto, req.user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: any) {
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.listsService.remove(id, req.user);
   }
 
   @Post(':id/problems')
-  addProblems(@Param('id') id: string, @Body() dto: ManageListProblemsDto, @Req() req: any) {
+  addProblems(@Param('id') id: string, @Body() dto: ManageListProblemsDto, @Req() req: AuthenticatedRequest) {
     return this.listsService.addProblems(id, dto, req.user);
   }
 
   @Delete(':id/problems')
-  removeProblems(@Param('id') id: string, @Body() dto: ManageListProblemsDto, @Req() req: any) {
+  removeProblems(@Param('id') id: string, @Body() dto: ManageListProblemsDto, @Req() req: AuthenticatedRequest) {
     return this.listsService.removeProblems(id, dto, req.user);
   }
 }

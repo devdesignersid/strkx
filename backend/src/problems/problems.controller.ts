@@ -15,14 +15,15 @@ import { CreateProblemDto } from './dto/create-problem.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../common/types/auth.types';
 
 @Controller('problems')
 @UseGuards(JwtAuthGuard)
 export class ProblemsController {
-  constructor(private readonly problemsService: ProblemsService) {}
+  constructor(private readonly problemsService: ProblemsService) { }
 
   @Post()
-  create(@Body() createProblemDto: CreateProblemDto, @Req() req: any) {
+  create(@Body() createProblemDto: CreateProblemDto, @Req() req: AuthenticatedRequest) {
     return this.problemsService.create(createProblemDto, req.user);
   }
 
@@ -32,7 +33,7 @@ export class ProblemsController {
     @Query('difficulty') difficulty: string,
     @Query('status') status: string,
     @Query('tags') tags: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.problemsService.findAll(
       paginationDto,
@@ -44,7 +45,7 @@ export class ProblemsController {
   }
 
   @Get(':slug/submissions')
-  findSubmissions(@Param('slug') slug: string, @Req() req: any) {
+  findSubmissions(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.findSubmissions(slug, req.user);
   }
 
@@ -53,7 +54,7 @@ export class ProblemsController {
     @Param('slug') slug: string,
     @Param('id') id: string,
     @Body() body: { isSolution: boolean; solutionName?: string },
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.problemsService.updateSubmissionSolution(
       slug,
@@ -65,32 +66,32 @@ export class ProblemsController {
   }
 
   @Delete(':slug/submissions/:id')
-  deleteSubmission(@Param('id') id: string, @Req() req: any) {
+  deleteSubmission(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.deleteSubmission(id, req.user.id);
   }
 
   @Get(':slug/solutions')
-  findSolutions(@Param('slug') slug: string, @Req() req: any) {
+  findSolutions(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.findSolutions(slug, req.user);
   }
 
   @Get('id/:id')
-  findById(@Param('id') id: string, @Req() req: any) {
+  findById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.findById(id, req.user.id);
   }
 
   @Get(':slug')
-  findOne(@Param('slug') slug: string, @Req() req: any) {
+  findOne(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.findOne(slug, req.user.id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProblemDto: UpdateProblemDto, @Req() req: any) {
+  update(@Param('id') id: string, @Body() updateProblemDto: UpdateProblemDto, @Req() req: AuthenticatedRequest) {
     return this.problemsService.update(id, updateProblemDto, req.user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: any) {
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.problemsService.remove(id, req.user.id);
   }
 }

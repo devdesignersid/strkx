@@ -8,6 +8,7 @@ import * as path from 'path';
 import { HydrationService } from './hydration.service';
 
 import { DashboardService } from '../dashboard/dashboard.service';
+import { TestCaseResult, WorkerResult, WorkerContext, DesignProblemInput, ExecutionUser } from './execution.types';
 
 @Injectable()
 export class ExecutionService {
@@ -23,7 +24,7 @@ export class ExecutionService {
     private dashboardService: DashboardService,
   ) { }
 
-  async execute(executeCodeDto: ExecuteCodeDto, user?: any) {
+  async execute(executeCodeDto: ExecuteCodeDto, user?: ExecutionUser) {
     // Simple in-memory concurrency control
     // In a real production environment with multiple instances, use Redis/Postgres
     if (this.activeExecutions >= this.MAX_CONCURRENT_EXECUTIONS) {
@@ -39,8 +40,12 @@ export class ExecutionService {
     }
   }
 
-  private async executeSafe(executeCodeDto: ExecuteCodeDto, user?: any) {
+  private async executeSafe(executeCodeDto: ExecuteCodeDto, user?: ExecutionUser) {
     const { code, problemSlug } = executeCodeDto;
+
+    if (!user) {
+      throw new NotFoundException('User not authenticated');
+    }
 
     const problem = await this.prisma.problem.findFirst({
       where: {
@@ -54,13 +59,16 @@ export class ExecutionService {
       throw new NotFoundException('Problem not found');
     }
 
-    const results: any[] = [];
+    const results: TestCaseResult[] = [];
     let allPassed = true;
     let totalExecutionTime = 0;
 
     // Run sequentially to avoid log interleaving and race conditions
     for (const testCase of problem.testCases) {
+      // Using any for args/inputData due to dynamic JSON parsing from test cases
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let args: any[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let inputData: any;
       let isDesignProblem = false;
 
