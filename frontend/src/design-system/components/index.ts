@@ -7,6 +7,7 @@ export * from './Input';
 export * from './Modal';
 export * from './Card';
 export * from './Tooltip';
+export * from './Checkbox';
 export * from './Skeleton';
 export * from './Label';
 export * from './Tabs';

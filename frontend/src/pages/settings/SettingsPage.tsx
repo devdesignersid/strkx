@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity, User, LogOut } from 'lucide-react';
+import { Trash2, AlertTriangle, Bot, Check, X, Loader2, Activity, User, LogOut, Download, Upload } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStudyTimer } from '../../context/StudyTimerContext';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Input, Modal, Label, Select } from '@/design-system/components';
 import { userService } from '@/services/api/user.service';
 import { cn } from '@/lib/utils';
+import { ExportSection, ImportSection } from '@/features/data-port';
 
 export default function SettingsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -112,8 +113,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="h-full overflow-auto bg-background">
-      <div className="max-w-4xl mx-auto p-8">
+    <>
+      <div className="w-full max-w-4xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
@@ -338,6 +339,38 @@ export default function SettingsPage() {
           </AnimatePresence>
         </div>
 
+        {/* Data Export */}
+        <div className="mb-8 border border-border rounded-lg p-6 bg-card">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Download className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-1">Data Export</h2>
+              <p className="text-sm text-muted-foreground">
+                Export your problems, lists, and solutions to a JSON file for backup or transfer.
+              </p>
+            </div>
+          </div>
+          <ExportSection />
+        </div>
+
+        {/* Data Import */}
+        <div className="mb-8 border border-border rounded-lg p-6 bg-card">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Upload className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-1">Data Import</h2>
+              <p className="text-sm text-muted-foreground">
+                Import problems and lists from a previously exported JSON file.
+              </p>
+            </div>
+          </div>
+          <ImportSection />
+        </div>
+
         {/* Danger Zone */}
         <div className="border border-destructive/30 rounded-lg p-6 bg-destructive/5">
           <div className="flex items-start gap-4">
@@ -425,6 +458,6 @@ export default function SettingsPage() {
           </div>
         </Modal>
       </div>
-    </div>
+    </>
   );
 }

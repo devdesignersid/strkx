@@ -17,7 +17,7 @@ export default function Layout() {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar */}
       <aside className={`border-r border-border bg-card flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-16' : 'w-64'}`}>
         {/* Logo */}
@@ -105,8 +105,10 @@ export default function Layout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 relative">
+        <div className="absolute inset-0 overflow-y-auto w-full">
+          <Outlet />
+        </div>
       </main>
       <FloatingTimer />
       <ReminderSystem />
