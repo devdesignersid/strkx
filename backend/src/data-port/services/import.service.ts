@@ -19,6 +19,7 @@ import {
 import { DuplicateHandler } from '../handlers/duplicate.handler';
 import { ErrorAggregator } from '../handlers/error-aggregator';
 import { Difficulty, ProblemType } from '@prisma/client';
+import { DashboardService } from '../../dashboard/dashboard.service';
 
 /**
  * ImportService
@@ -32,6 +33,7 @@ export class ImportService {
         private prisma: PrismaService,
         private duplicateHandler: DuplicateHandler,
         private errorAggregator: ErrorAggregator,
+        private dashboardService: DashboardService,
     ) { }
 
     /**
@@ -139,6 +141,10 @@ export class ImportService {
         await this.performImport(userId, validated, options, duplicates, result);
 
         result.success = result.errors.length === 0;
+
+        // Invalidate dashboard cache for this user so they see new data immediately
+        this.dashboardService.invalidateUserCache(userId);
+
         return result;
     }
 
