@@ -227,9 +227,23 @@ export class ImportService {
         const importedProblemSlugs = new Map<string, string>(); // slug -> id
         const importedSystemDesignSlugs = new Map<string, string>(); // slug -> id
 
+        // Helper for batched execution
+        const processBatched = async <T>(
+            items: T[],
+            batchSize: number,
+            processor: (item: T, index: number) => Promise<any>
+        ) => {
+            for (let i = 0; i < items.length; i += batchSize) {
+                const batch = items.slice(i, i + batchSize);
+                await Promise.all(batch.map((item, batchIndex) => processor(item, i + batchIndex)));
+            }
+        };
+
+        const BATCH_SIZE = 10;
+
         // Import coding problems
-        for (let i = 0; i < (validated.codingProblems?.length || 0); i++) {
-            const problem = validated.codingProblems![i];
+        const codingProblems = validated.codingProblems || [];
+        await processBatched(codingProblems, BATCH_SIZE, async (problem, i) => {
             try {
                 const imported = await this.importCodingProblem(
                     userId,
@@ -251,13 +265,12 @@ export class ImportService {
                         (error as Error).message
                     )
                 );
-                // Continue to next problem!
             }
-        }
+        });
 
         // Import system design problems
-        for (let i = 0; i < (validated.systemDesignProblems?.length || 0); i++) {
-            const problem = validated.systemDesignProblems![i];
+        const systemDesignProblems = validated.systemDesignProblems || [];
+        await processBatched(systemDesignProblems, BATCH_SIZE, async (problem, i) => {
             try {
                 const imported = await this.importSystemDesignProblem(
                     userId,
@@ -280,7 +293,7 @@ export class ImportService {
                     )
                 );
             }
-        }
+        });
 
         // Get all existing problem slugs for list reference resolution
         const existingProblems = await this.prisma.problem.findMany({
@@ -304,8 +317,8 @@ export class ImportService {
         }
 
         // Import lists
-        for (let i = 0; i < (validated.lists?.length || 0); i++) {
-            const list = validated.lists![i];
+        const lists = validated.lists || [];
+        await processBatched(lists, BATCH_SIZE, async (list, i) => {
             try {
                 await this.importList(
                     userId,
@@ -327,7 +340,7 @@ export class ImportService {
                     )
                 );
             }
-        }
+        });
     }
 
     /**
