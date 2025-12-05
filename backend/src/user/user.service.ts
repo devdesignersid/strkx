@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService } from '../common/cache.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private cacheService: CacheService,
+    private dashboardService: DashboardService,
   ) { }
 
   async resetUserData(user: any) {
@@ -72,10 +74,9 @@ export class UserService {
       }),
     ]);
 
-    // Invalidate dashboard cache for this user (explicit keys)
-    this.cacheService.invalidatePattern(`dashboard:stats:${user.id}`);
-    this.cacheService.invalidatePattern(`dashboard:activity:${user.id}`);
-    this.cacheService.invalidatePattern(`dashboard:heatmap:${user.id}`);
+
+    // Invalidate dashboard cache for this user via DashboardService
+    this.dashboardService.invalidateUserCache(user.id);
 
     return {
       success: true,
