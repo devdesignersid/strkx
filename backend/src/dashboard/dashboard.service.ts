@@ -27,7 +27,7 @@ export class DashboardService {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
-  ) {}
+  ) { }
 
   async getStats(user: any): Promise<DashboardStatsDto> {
     if (!user) {
@@ -256,6 +256,11 @@ export class DashboardService {
    * Useful when new submissions are created
    */
   invalidateUserCache(userId: string): void {
-    this.cache.invalidatePattern(`dashboard:${userId}`);
+    // Delete each dashboard cache key individually
+    // Pattern matching with `dashboard:${userId}` doesn't work because
+    // userId comes after the cache type (e.g., dashboard:stats:userId)
+    this.cache.delete(`dashboard:stats:${userId}`);
+    this.cache.delete(`dashboard:activity:${userId}`);
+    this.cache.delete(`dashboard:heatmap:${userId}`);
   }
 }

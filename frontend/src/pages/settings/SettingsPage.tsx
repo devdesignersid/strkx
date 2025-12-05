@@ -97,6 +97,16 @@ export default function SettingsPage() {
       // Clear all React Query cache to ensure fresh data on reload
       queryClient.clear();
 
+      // Explicitly invalidate all major queries to ensure fresh data
+      // This is defensive - clear() should work, but invalidation ensures refetch
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['problems'] }),
+        queryClient.invalidateQueries({ queryKey: ['lists'] }),
+        queryClient.invalidateQueries({ queryKey: ['system-design-problems'] }),
+        queryClient.invalidateQueries({ queryKey: ['study-stats'] }),
+      ]);
+
       toast.success(TOAST_MESSAGES.SETTINGS.RESET_SUCCESS);
       setShowConfirmDialog(false);
 
