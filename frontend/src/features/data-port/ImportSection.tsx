@@ -85,6 +85,8 @@ export function ImportSection() {
                 queryClient.invalidateQueries({ queryKey: ['problems'] });
                 queryClient.invalidateQueries({ queryKey: ['systemDesign'] });
                 queryClient.invalidateQueries({ queryKey: ['lists'] });
+                // Also invalidate dashboard queries so stats/activity/heatmap reflect the import
+                queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             } else if (result.duplicates.length > 0) {
                 toast.info('Some items already exist. Choose how to handle them below.');
             } else if (result.errors.length > 0) {
@@ -114,6 +116,8 @@ export function ImportSection() {
                 queryClient.invalidateQueries({ queryKey: ['problems'] });
                 queryClient.invalidateQueries({ queryKey: ['systemDesign'] });
                 queryClient.invalidateQueries({ queryKey: ['lists'] });
+                // Also invalidate dashboard queries so stats/activity/heatmap reflect the import
+                queryClient.invalidateQueries({ queryKey: ['dashboard'] });
             }
         },
         onError: (error: any) => {
