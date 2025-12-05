@@ -11,6 +11,7 @@ import {
     Req,
 } from '@nestjs/common';
 import { Response } from 'express';
+import 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ExportService } from './services/export.service';
