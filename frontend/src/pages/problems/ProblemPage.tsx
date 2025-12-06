@@ -10,6 +10,7 @@ import { ProblemDescription } from '@/features/problem/components/ProblemDescrip
 import { CodeEditor } from '@/features/problem/components/CodeEditor';
 import { ConsolePanel } from '@/features/problem/components/ConsolePanel';
 import { SolutionModal } from '@/features/problem/components/SolutionModal';
+import { Scratchpad } from '@/features/problem/components/Scratchpad';
 
 export default function ProblemPage() {
   const { slug } = useParams();
@@ -47,6 +48,7 @@ export default function ProblemPage() {
   const [autocompleteEnabled, setAutocompleteEnabled] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
 
   const descriptionPanelRef = useRef<ImperativePanelHandle>(null);
   const consolePanelRef = useRef<ImperativePanelHandle>(null);
@@ -238,6 +240,8 @@ export default function ProblemPage() {
                       if (isConsoleCollapsed) consolePanelRef.current?.expand();
                     }, currentCode);
                   }}
+                  isScratchpadOpen={isScratchpadOpen}
+                  onToggleScratchpad={() => setIsScratchpadOpen(!isScratchpadOpen)}
                 />
               </Panel>
 
@@ -267,6 +271,12 @@ export default function ProblemPage() {
         onClose={() => setSolutionModal(null)}
         onConfirm={confirmMarkAsSolution}
         currentName={solutionModal?.currentName || null}
+      />
+
+      <Scratchpad
+        problemId={problem.id}
+        isOpen={isScratchpadOpen}
+        onClose={() => setIsScratchpadOpen(false)}
       />
     </div>
   );

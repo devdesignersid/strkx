@@ -200,7 +200,7 @@ export default function NotesEditor({
             Typography,
             Markdown,
             Placeholder.configure({
-                placeholder: 'Write your notes here...',
+                placeholder: 'Start taking notes...',
             }),
         ],
         content: value,
@@ -213,7 +213,29 @@ export default function NotesEditor({
         },
         editorProps: {
             attributes: {
-                class: 'prose prose-invert prose-sm max-w-none focus:outline-none min-h-[200px] px-6 py-4',
+                class: cn(
+                    'prose prose-invert max-w-none focus:outline-none min-h-[200px] px-6 py-5',
+                    // Enhanced typography
+                    'prose-headings:font-semibold prose-headings:tracking-tight',
+                    'prose-h1:text-xl prose-h1:mb-4 prose-h1:mt-6',
+                    'prose-h2:text-lg prose-h2:mb-3 prose-h2:mt-5 prose-h2:text-primary/90',
+                    'prose-h3:text-base prose-h3:mb-2 prose-h3:mt-4',
+                    // Paragraph and text styling
+                    'prose-p:text-sm prose-p:leading-relaxed prose-p:text-foreground/90',
+                    'prose-p:my-3',
+                    // List styling
+                    'prose-li:text-sm prose-li:text-foreground/90 prose-li:my-1',
+                    'prose-ul:my-2 prose-ol:my-2',
+                    // Code styling
+                    'prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs prose-code:font-medium',
+                    'prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50',
+                    // Quote styling
+                    'prose-blockquote:border-l-primary/50 prose-blockquote:text-muted-foreground prose-blockquote:italic',
+                    // Link styling
+                    'prose-a:text-primary prose-a:no-underline hover:prose-a:underline',
+                    // Strong and emphasis
+                    'prose-strong:font-semibold prose-strong:text-foreground',
+                ),
             },
         },
     });

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus } from 'lucide-react';
+import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components';
 
@@ -31,6 +31,8 @@ interface CodeEditorProps {
   hideAI?: boolean;
   hideAutocomplete?: boolean;
   hideDividers?: boolean;
+  isScratchpadOpen?: boolean;
+  onToggleScratchpad?: () => void;
 }
 
 // Inner component to isolate Editor from timer re-renders
@@ -90,7 +92,9 @@ export function CodeEditor({
   timerReadOnly = false,
   hideAI = false,
   hideAutocomplete = false,
-  hideDividers = false
+  hideDividers = false,
+  isScratchpadOpen = false,
+  onToggleScratchpad
 }: CodeEditorProps) {
 
   const editorOptions = useMemo(() => ({
@@ -239,6 +243,21 @@ export function CodeEditor({
               title={autocompleteEnabled ? "Disable Autocomplete" : "Enable Autocomplete"}
             >
               <Keyboard className="w-4 h-4" />
+            </Button>
+          )}
+
+          {onToggleScratchpad && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleScratchpad}
+              className={cn(
+                "h-8 w-8 p-0",
+                isScratchpadOpen && "text-amber-400 bg-amber-400/10 hover:bg-amber-400/20"
+              )}
+              title="Scratchpad"
+            >
+              <StickyNote className="w-4 h-4" />
             </Button>
           )}
 

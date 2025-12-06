@@ -52,28 +52,5 @@ export interface SystemDesignWorkspaceState {
   timeSpentSeconds: number;
 }
 
-// Mock data template for notes
-export const NOTES_TEMPLATE = `## Functional Requirements
--
-
-## Non-Functional Requirements
--
-
-## Clarifying Questions
--
-
-## Trade-offs
--
-
-## Components
--
-
-## Data Flow
--
-
-## Bottlenecks
--
-
-## Optimizations
--
-`;
+// Empty template so notes editor opens blank
+export const NOTES_TEMPLATE = ``;

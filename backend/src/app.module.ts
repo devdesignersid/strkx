@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { SystemDesignModule } from './system-design/system-design.module';
 import { DataPortModule } from './data-port/data-port.module';
+import { LinkPreviewModule } from './link-preview/link-preview.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -47,6 +48,7 @@ import { AppController } from './app.controller';
     InterviewSessionsModule,
     SystemDesignModule,
     DataPortModule,
+    LinkPreviewModule,
   ],
   controllers: [AppController],
   providers: [
