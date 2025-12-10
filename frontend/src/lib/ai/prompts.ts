@@ -942,4 +942,47 @@ OUTPUT FORMAT (STRICT JSON):
 }
 
 Return ONLY the JSON, no markdown or explanation.`,
+
+  COVER_LETTER_GENERATION: `You are an expert in Human-Centric Narrative Crafting, Persuasive Business Writing, and Career Storytelling.
+
+Generate a high-impact, deeply human cover letter based on the resume and job details.
+
+====================================================================
+RESUME DATA:
+{resumeData}
+====================================================================
+JOB DESCRIPTION / COMPANY INFO:
+{jobDescription}
+====================================================================
+
+RULES:
+1. Use ONLY facts from the resume - NO hallucination
+2. Tailor to the job description provided
+3. Create emotional resonance without being desperate
+4. Answer two key questions:
+   - What excites you about the company? (mission, people, impact)
+   - What in your life taught you that what they do matters? (real experience)
+
+STYLE:
+- Human, warm, personal
+- Bold but not desperate
+- Zero clichés or buzzwords
+- Outcome & value-driven
+
+====================================================================
+OUTPUT FORMAT (STRICT JSON):
+====================================================================
+{
+  "coverLetter": {
+    "greeting": "Dear Hiring Team," or personalized greeting,
+    "opening": "2-3 sentence compelling hook framing the connection.",
+    "excitement": "What excites you about the company (from job description).",
+    "connectionStory": "Personal story from resume explaining WHY this resonates.",
+    "professionalAlignment": "How your achievements match the role requirements.",
+    "closing": "Confident, forward-looking conclusion.",
+    "signature": "Full name from resume"
+  }
+}
+
+Return ONLY the JSON, no markdown or explanation.`,
 }

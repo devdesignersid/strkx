@@ -111,3 +111,16 @@ export interface LinkedInProfileResult {
     };
     workHistory: LinkedInWorkHistory[];
 }
+
+// AI Cover Letter Generator types
+export interface CoverLetterResult {
+    coverLetter: {
+        greeting: string;
+        opening: string;
+        excitement: string;
+        connectionStory: string;
+        professionalAlignment: string;
+        closing: string;
+        signature: string;
+    };
+}

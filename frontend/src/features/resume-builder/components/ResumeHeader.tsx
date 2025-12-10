@@ -1,13 +1,15 @@
-import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin } from 'lucide-react';
+import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin, Heart } from 'lucide-react';
 import { Button } from '@/design-system/components';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/design-system/components/Tooltip';
 import { Link } from 'react-router-dom';
 import { useResumeStore } from '../hooks/useResumeStore';
 import { useResumeAnalysis } from '../hooks/useResumeAnalysis';
 import { useLinkedInOptimization } from '../hooks/useLinkedInOptimization';
+import { useCoverLetter } from '../hooks/useCoverLetter';
 import { useEffect, useState } from 'react';
 import { ResumeAnalyzer } from './analyzer/ResumeAnalyzer';
 import { LinkedInOptimizer } from './analyzer/LinkedInOptimizer';
+import { CoverLetterGenerator } from './analyzer/CoverLetterGenerator';
 import { aiService } from '@/lib/ai/aiService';
 
 interface ResumeHeaderProps {
@@ -25,6 +27,7 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
     // AI Analysis state
     const [showAnalyzer, setShowAnalyzer] = useState(false);
     const [showLinkedIn, setShowLinkedIn] = useState(false);
+    const [showCoverLetter, setShowCoverLetter] = useState(false);
     const [isAIEnabled, setIsAIEnabled] = useState(false);
     const { analyzeResume, isLoading, error, result, clearResult } = useResumeAnalysis();
     const {
@@ -34,6 +37,13 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
         result: linkedInResult,
         clearResult: clearLinkedInResult
     } = useLinkedInOptimization();
+    const {
+        generateCoverLetter,
+        isLoading: coverLetterLoading,
+        error: coverLetterError,
+        result: coverLetterResult,
+        clearResult: clearCoverLetterResult
+    } = useCoverLetter();
 
     useEffect(() => {
         aiService.loadFromStorage();
@@ -73,6 +83,15 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
     const handleCloseLinkedIn = () => {
         setShowLinkedIn(false);
         clearLinkedInResult();
+    };
+
+    const handleOpenCoverLetter = () => {
+        setShowCoverLetter(true);
+    };
+
+    const handleCloseCoverLetter = () => {
+        setShowCoverLetter(false);
+        clearCoverLetterResult();
     };
 
     return (
@@ -134,6 +153,28 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p>Generate optimized LinkedIn profile</p>
+                                </TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleOpenCoverLetter}
+                                        disabled={coverLetterLoading}
+                                        className="gap-2 bg-rose-500/5 border-rose-500/20 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                                    >
+                                        {coverLetterLoading ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Heart className="w-3.5 h-3.5" />
+                                        )}
+                                        <span className="hidden sm:inline">Cover Letter</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Generate personalized cover letter</p>
                                 </TooltipContent>
                             </Tooltip>
 
@@ -219,6 +260,17 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                     error={linkedInError}
                     onClose={handleCloseLinkedIn}
                     onOptimize={optimizeLinkedIn}
+                />
+            )}
+
+            {/* Cover Letter Generator Modal */}
+            {showCoverLetter && (
+                <CoverLetterGenerator
+                    result={coverLetterResult}
+                    isLoading={coverLetterLoading}
+                    error={coverLetterError}
+                    onClose={handleCloseCoverLetter}
+                    onGenerate={generateCoverLetter}
                 />
             )}
         </TooltipProvider>
