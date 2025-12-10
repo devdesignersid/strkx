@@ -743,4 +743,150 @@ JSON FORMATTING RULES:
         - Suggestions array should have 3 - 5 specific, actionable items
 
 Generate the evaluation now: `,
+
+  SKILL_EXTRACTION: `You are an expert Resume Engineer specializing in ATS optimization and skill extraction.
+
+TASK: Extract HARD SKILLS from the provided Work Experience content.
+
+WORK EXPERIENCE DATA:
+{workExperience}
+
+STRICT EXTRACTION RULES:
+
+1. EXTRACT ONLY HARD SKILLS:
+   - Programming languages (JavaScript, Python, Go, etc.)
+   - Frameworks & libraries (React, Django, Spring Boot, etc.)
+   - Tools & platforms (Git, Docker, Jira, etc.)
+   - Cloud services (AWS, GCP, Azure, etc.)
+   - Databases (PostgreSQL, MongoDB, Redis, etc.)
+   - DevOps & infrastructure (Kubernetes, Terraform, CI/CD, etc.)
+   - Protocols & standards (REST, GraphQL, OAuth, etc.)
+
+2. DO NOT EXTRACT:
+   - Soft skills (leadership, communication, teamwork, problem-solving)
+   - Generic terms (development, programming, coding, software)
+   - Job titles or roles
+   - Company names
+   - Vague concepts (best practices, agile, scrum unless specifically technical)
+
+3. VALIDATION:
+   - Each skill MUST explicitly appear in the Work Experience text
+   - Do NOT infer or assume skills not mentioned
+   - Do NOT hallucinate or add common skills not present
+   - If a skill appears in multiple forms, normalize to standard naming
+
+4. NORMALIZATION:
+   - "js", "Javascript", "javascript" → "JavaScript"
+   - "TS", "Typescript" → "TypeScript"
+   - "react.js", "ReactJS" → "React"
+   - "node", "nodejs", "Node.JS" → "Node.js"
+   - "postgres", "PostgresQL" → "PostgreSQL"
+   - "mongo", "mongodb" → "MongoDB"
+   - "k8s" → "Kubernetes"
+   - "tf" → "Terraform"
+   - "aws lambda" → "AWS Lambda"
+
+5. GROUPING:
+   Place each skill in the most appropriate category:
+   - Languages: Programming/scripting languages
+   - Frameworks: Web frameworks, libraries, UI frameworks
+   - Tools: Development tools, IDEs, project management
+   - Cloud: Cloud platforms and services
+   - Databases: SQL, NoSQL, caching, data stores
+   - DevOps: CI/CD, containers, orchestration, IaC
+   - Other: Anything that doesn't fit above categories
+
+OUTPUT FORMAT - Return ONLY valid JSON (no markdown, no backticks):
+{
+  "skills": {
+    "Languages": [],
+    "Frameworks": [],
+    "Tools": [],
+    "Cloud": [],
+    "Databases": [],
+    "DevOps": [],
+    "Other": []
+  }
+}
+
+CRITICAL:
+- Return EMPTY arrays for categories with no skills found
+- Do NOT add skills not explicitly mentioned in the source text
+- Keep skill names concise (1-3 words max)
+- Remove duplicates across categories
+- Order skills by frequency/prominence in the experience
+
+Generate the extracted skills now:`,
+
+  RESUME_ANALYSIS: `You are an expert in Resume Engineering, Hiring Systems Optimization, ATS evaluation, and Professional Document Design.
+
+Analyze the provided resume data and return a comprehensive, actionable analysis.
+
+====================================================================
+RESUME DATA (JSON):
+{resumeData}
+====================================================================
+
+EVALUATION CRITERIA:
+
+1. STRUCTURE & ORDERING
+   - Is the most relevant information at the top?
+   - Are contact details complete (name, phone, email, location, LinkedIn)?
+   - Is Work Experience ordered correctly (most recent first)?
+   - Do experiences contain dates (month + year)?
+
+2. WORK EXPERIENCE QUALITY
+   - Does each role include Company, Job Title, Location, Dates?
+   - Are bullet points outcome-driven, not responsibility-driven?
+   - Do they use strong action verbs (Achieved, Improved, Reduced, Built)?
+   - Are achievements quantified with numbers/percentages?
+   - Are personal pronouns and buzzwords avoided?
+   - Are there 3-4 high-impact bullets per role?
+
+3. SKILLS SECTION
+   - Contains ONLY hard skills (no soft skills)?
+   - Skills grouped logically (Languages, Tools, Cloud, Databases)?
+   - No unearned or unverifiable skills?
+
+4. EDUCATION
+   - Placed correctly (below work experience for senior roles)?
+   - Follows minimal format (degree, institution, year)?
+
+5. DESIGN & LAYOUT
+   - Clean, readable fonts (≥10pt)?
+   - Proper margin usage?
+   - Sections visually distinct?
+   - Good hierarchy and alignment?
+
+6. ATS COMPATIBILITY
+   - No decorative elements that break parsing?
+   - Simple section headers (Skills, Experience, Education)?
+   - Plain text extractable?
+   - Comma-separated skills (not bullets)?
+
+====================================================================
+OUTPUT FORMAT (STRICT JSON):
+====================================================================
+Return ONLY valid JSON with this exact structure:
+
+{
+  "analysis": {
+    "contentFindings": ["Finding 1", "Finding 2"],
+    "designFindings": ["Finding 1", "Finding 2"],
+    "atsFindings": ["Finding 1", "Finding 2"],
+    "priorityIssues": ["Top issue 1", "Top issue 2"],
+    "recommendedImprovements": {
+      "content": ["Improvement 1", "Improvement 2"],
+      "design": ["Improvement 1", "Improvement 2"],
+      "ats": ["Improvement 1", "Improvement 2"]
+    }
+  }
+}
+
+RULES:
+- Be specific and actionable
+- Do NOT invent information not in the resume
+- Focus on high-impact improvements
+- Keep recommendations concise
+- Return ONLY the JSON, no markdown or explanation`,
 };

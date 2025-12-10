@@ -29,6 +29,7 @@ const SystemDesignListPage = lazy(() => import('../pages/system-design/SystemDes
 const SystemDesignProblemView = lazy(() => import('../pages/system-design/SystemDesignProblemView'));
 const CreateSystemDesignPage = lazy(() => import('../pages/system-design/CreateSystemDesignPage'));
 const ExcalidrawCanvasPage = lazy(() => import('../pages/system-design/ExcalidrawCanvasPage'));
+const ResumeBuilderPage = lazy(() => import('../pages/resume-builder/ResumeBuilderPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,7 @@ function App() {
                       <ExcalidrawCanvasPage />
                     </Suspense>
                   } />
+
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Layout />
@@ -101,6 +103,7 @@ function App() {
                     <Route path="system-design/new" element={<CreateSystemDesignPage />} />
                     <Route path="system-design/edit/:id" element={<CreateSystemDesignPage />} />
                     <Route path="system-design/:id" element={<SystemDesignProblemView />} />
+                    <Route path="resume" element={<ResumeBuilderPage />} />
                   </Route>
                 </Routes>
               </Suspense>

@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List, Brain, Boxes } from 'lucide-react';
+import { LayoutDashboard, Code2, Settings, Zap, PanelLeftClose, PanelLeftOpen, List, Brain, Boxes, FileText } from 'lucide-react';
 import { useState } from 'react';
 import FloatingTimer from '../features/study-timer/components/FloatingTimer';
 import ReminderSystem from '../features/study-timer/components/ReminderSystem';
@@ -14,6 +14,7 @@ export default function Layout() {
     { path: '/problems', icon: Code2, label: 'Coding Problems' },
     { path: '/system-design', icon: Boxes, label: 'System Design' },
     { path: '/lists', icon: List, label: 'Problem Lists' },
+    { path: '/resume', icon: FileText, label: 'Resume Builder' },
   ];
 
   return (
