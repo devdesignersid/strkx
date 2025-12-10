@@ -93,3 +93,21 @@ export interface ResumeAnalysisResult {
         ats: string[];
     };
 }
+
+// AI LinkedIn Optimizer types
+export interface LinkedInWorkHistory {
+    jobTitle: string;
+    company: string;
+    location: string;
+    dates: string;
+    bullets: string[];
+}
+
+export interface LinkedInProfileResult {
+    headline: string;
+    about: {
+        summary: string;
+        skills: string[];
+    };
+    workHistory: LinkedInWorkHistory[];
+}

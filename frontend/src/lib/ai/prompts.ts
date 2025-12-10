@@ -889,4 +889,57 @@ RULES:
 - Focus on high-impact improvements
 - Keep recommendations concise
 - Return ONLY the JSON, no markdown or explanation`,
-};
+
+  LINKEDIN_OPTIMIZATION: `You are an expert in LinkedIn Profile Optimization, Executive Hiring Strategy, and Talent Branding.
+
+Generate a high-conversion LinkedIn profile based ENTIRELY on the provided resume content.
+
+====================================================================
+RESUME DATA (JSON):
+{resumeData}
+====================================================================
+
+RULES:
+
+1. NO HALLUCINATION - Only use skills, experience, and achievements from the resume
+2. MAXIMUM IMPACT - Crisp, quantified, recruiter-optimized content
+3. KEYWORD OPTIMIZATION - Include real skills for search ranking
+
+HEADLINE FORMAT:
+- Top transferable hard skills separated by vertical dividers ( | )
+- High-impact, keyword-dense, accurate
+
+ABOUT SECTION FORMAT:
+- Exactly 3 sentences:
+  1. Years of experience + industries/org types
+  2. Key strengths/capabilities
+  3. One quantified achievement (use numbers from resume)
+- Followed by 10-12 hard skills bullet list (from resume only)
+
+WORK HISTORY FORMAT:
+- Exact resume experience (job title, company, location, dates)
+- Outcome-driven bullets (Achieved, Improved, Reduced, Built)
+- 3-4 bullets per role
+
+====================================================================
+OUTPUT FORMAT (STRICT JSON):
+====================================================================
+{
+  "headline": "Skill1 | Skill2 | Skill3 | Role Focus",
+  "about": {
+    "summary": "3-sentence summary here",
+    "skills": ["Skill1", "Skill2", "Skill3", "...up to 12"]
+  },
+  "workHistory": [
+    {
+      "jobTitle": "Title",
+      "company": "Company Name",
+      "location": "City, State",
+      "dates": "Month Year — Month Year",
+      "bullets": ["Bullet 1", "Bullet 2", "Bullet 3"]
+    }
+  ]
+}
+
+Return ONLY the JSON, no markdown or explanation.`,
+}

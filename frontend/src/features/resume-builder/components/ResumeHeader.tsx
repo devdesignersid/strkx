@@ -1,11 +1,13 @@
-import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin } from 'lucide-react';
 import { Button } from '@/design-system/components';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/design-system/components/Tooltip';
 import { Link } from 'react-router-dom';
 import { useResumeStore } from '../hooks/useResumeStore';
 import { useResumeAnalysis } from '../hooks/useResumeAnalysis';
+import { useLinkedInOptimization } from '../hooks/useLinkedInOptimization';
 import { useEffect, useState } from 'react';
 import { ResumeAnalyzer } from './analyzer/ResumeAnalyzer';
+import { LinkedInOptimizer } from './analyzer/LinkedInOptimizer';
 import { aiService } from '@/lib/ai/aiService';
 
 interface ResumeHeaderProps {
@@ -22,8 +24,16 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
 
     // AI Analysis state
     const [showAnalyzer, setShowAnalyzer] = useState(false);
+    const [showLinkedIn, setShowLinkedIn] = useState(false);
     const [isAIEnabled, setIsAIEnabled] = useState(false);
     const { analyzeResume, isLoading, error, result, clearResult } = useResumeAnalysis();
+    const {
+        optimizeLinkedIn,
+        isLoading: linkedInLoading,
+        error: linkedInError,
+        result: linkedInResult,
+        clearResult: clearLinkedInResult
+    } = useLinkedInOptimization();
 
     useEffect(() => {
         aiService.loadFromStorage();
@@ -56,6 +66,15 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
         clearResult();
     };
 
+    const handleOpenLinkedIn = () => {
+        setShowLinkedIn(true);
+    };
+
+    const handleCloseLinkedIn = () => {
+        setShowLinkedIn(false);
+        clearLinkedInResult();
+    };
+
     return (
         <TooltipProvider>
             <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 z-10 sticky top-0">
@@ -71,7 +90,7 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-1">
-                    {/* AI Analyze button */}
+                    {/* AI Buttons */}
                     {isAIEnabled && (
                         <>
                             <Tooltip>
@@ -95,6 +114,29 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                                     <p>Get AI-powered resume feedback</p>
                                 </TooltipContent>
                             </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleOpenLinkedIn}
+                                        disabled={linkedInLoading}
+                                        className="gap-2 bg-[#0A66C2]/5 border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/10 hover:text-[#0A66C2]"
+                                    >
+                                        {linkedInLoading ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Linkedin className="w-3.5 h-3.5" />
+                                        )}
+                                        <span className="hidden sm:inline">LinkedIn</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Generate optimized LinkedIn profile</p>
+                                </TooltipContent>
+                            </Tooltip>
+
                             <div className="h-4 w-px bg-border mx-2" />
                         </>
                     )}
@@ -166,6 +208,17 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                     error={error}
                     onClose={handleCloseAnalyzer}
                     onAnalyze={analyzeResume}
+                />
+            )}
+
+            {/* LinkedIn Optimizer Modal */}
+            {showLinkedIn && (
+                <LinkedInOptimizer
+                    result={linkedInResult}
+                    isLoading={linkedInLoading}
+                    error={linkedInError}
+                    onClose={handleCloseLinkedIn}
+                    onOptimize={optimizeLinkedIn}
                 />
             )}
         </TooltipProvider>
