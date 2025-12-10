@@ -34,7 +34,6 @@ export function useSkillExtraction(): UseSkillExtractionResult {
         // Check cache
         const currentHash = hashExperiences(experience);
         if (cachedResult && cachedResult.experienceHash === currentHash) {
-            console.log('[useSkillExtraction] Using cached result');
             setLastExtracted(cachedResult.skills);
             return skillsToCategories(cachedResult.skills);
         }

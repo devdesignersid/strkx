@@ -17,19 +17,15 @@ export const FontLoaderService = {
         try {
             const cached = await get<ArrayBuffer>(cacheKey);
             if (cached) {
-                console.log(`[FontLoader] Loaded ${slug}-${weight}-${style} from cache`);
                 return cached;
             }
-        } catch (e) { console.warn('Cache read failed', e); }
+        } catch { /* Cache read failed */ }
 
         let buffer: ArrayBuffer | null = null;
 
         try {
             // 1. Try JSDelivr CDN (Faster, Predicted URL)
-            // URL Pattern: https://cdn.jsdelivr.net/fontsource/fonts/{family}@latest/latin-{weight}-{style}.woff
             const url = `https://cdn.jsdelivr.net/fontsource/fonts/${slug}@latest/latin-${weight}-${style}.woff`;
-            console.log(`[FontLoader] Fetching CDN: ${url}`);
-
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -38,8 +34,7 @@ export const FontLoaderService = {
 
             buffer = await response.arrayBuffer();
 
-        } catch (error) {
-            console.warn(`[FontLoader] CDN missed for ${family} ${weight} ${style}, trying API fallback...`);
+        } catch {
             // 2. Fallback to API if CDN prediction failed
             buffer = await this.fetchViaApiFallback(slug, weight, style);
         }
@@ -48,7 +43,7 @@ export const FontLoaderService = {
             // Cache success
             try {
                 await set(cacheKey, buffer);
-            } catch (e) { console.warn('Cache write failed', e); }
+            } catch { /* Cache write failed */ }
             return buffer;
         }
 
@@ -63,7 +58,6 @@ export const FontLoaderService = {
         const data = await apiRes.json();
 
         // 2. Traverse the complex JSON object to find the URL
-        // Schema: variants[weight][style]['latin']['url']['woff']
         const variant = data.variants[String(weight)];
 
         if (!variant || !variant[style] || !variant[style].latin) {
@@ -71,10 +65,10 @@ export const FontLoaderService = {
         }
 
         const url = variant[style].latin.url.woff;
-        console.log(`[FontLoader] Fetching API provided URL: ${url}`);
 
         // 3. Download
         const fontRes = await fetch(url);
         return await fontRes.arrayBuffer();
     }
 };
+

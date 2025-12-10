@@ -59,6 +59,29 @@ interface ResumeStore {
     commit: () => void;
 }
 
+// Design bounds for validation
+const DESIGN_BOUNDS = {
+    lineHeight: { min: 1.0, max: 2.0 },
+    margin: { min: 14, max: 72 }, // 0.2 to 1 inch in pt
+};
+
+// Clamp a value within bounds
+const clamp = (value: number, min: number, max: number): number =>
+    Math.max(min, Math.min(max, value));
+
+// Validate and sanitize design values
+const validateDesign = (design: ResumeDesign): ResumeDesign => ({
+    ...design,
+    lineHeight: clamp(design.lineHeight, DESIGN_BOUNDS.lineHeight.min, DESIGN_BOUNDS.lineHeight.max),
+    margin: clamp(design.margin, DESIGN_BOUNDS.margin.min, DESIGN_BOUNDS.margin.max),
+    fontBody: design.fontBody || 'Source Sans Pro',
+    fontHeading: design.fontHeading || 'Source Sans Pro',
+    bodyColor: design.bodyColor || '#2d2d2d',
+    headingColor: design.headingColor || '#1a1a1a',
+    accentColor: design.accentColor || '#1a1a1a',
+    layout: design.layout || 'single',
+});
+
 export const useResumeStore = create<ResumeStore>()(
     temporal(
         persist(
@@ -67,7 +90,16 @@ export const useResumeStore = create<ResumeStore>()(
                 committed: initialData,
 
                 setDraft: (updater) => {
-                    set((state) => ({ draft: updater(state.draft) }));
+                    set((state) => {
+                        const newDraft = updater(state.draft);
+                        // Validate design bounds
+                        return {
+                            draft: {
+                                ...newDraft,
+                                design: validateDesign(newDraft.design),
+                            }
+                        };
+                    });
                 },
 
                 commit: () => {

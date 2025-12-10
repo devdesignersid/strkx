@@ -53,11 +53,10 @@ export const LocalFontLoaderService = {
         try {
             const cached = await get<ArrayBuffer>(cacheKey);
             if (cached) {
-                console.log(`[LocalFontLoader] Cache hit: ${config.family} ${weight} ${style}`);
                 return cached;
             }
-        } catch (e) {
-            console.warn('[LocalFontLoader] Cache read failed', e);
+        } catch {
+            // Cache read failed, continue to load
         }
 
         // Find exact weight config
@@ -71,7 +70,6 @@ export const LocalFontLoaderService = {
                 weightConfig = sameStyleWeights.reduce((prev, curr) =>
                     Math.abs(curr.weight - weight) < Math.abs(prev.weight - weight) ? curr : prev
                 );
-                console.log(`[LocalFontLoader] Fallback: ${config.family} ${weight} → ${weightConfig.weight}`);
             }
         }
 
@@ -91,8 +89,6 @@ export const LocalFontLoaderService = {
             throw new Error(`Font file not mapped: ${importPath}`);
         }
 
-        console.log(`[LocalFontLoader] Loading: ${importPath}`);
-
         // Dynamic import the font file (Vite will handle this)
         const fontModule = await importer();
         const fontUrl = fontModule.default;
@@ -108,11 +104,11 @@ export const LocalFontLoaderService = {
         // Cache for future use
         try {
             await set(cacheKey, buffer);
-            console.log(`[LocalFontLoader] Cached: ${config.family} ${weight} ${style}`);
-        } catch (e) {
-            console.warn('[LocalFontLoader] Cache write failed', e);
+        } catch {
+            // Cache write failed, continue without caching
         }
 
         return buffer;
     }
 };
+

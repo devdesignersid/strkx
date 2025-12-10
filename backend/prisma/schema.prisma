@@ -143,6 +143,7 @@ model User {
   lists           List[]
   dailyStudyLogs  DailyStudyLog[]
   interviewSessions InterviewSession[]
+  resume          Resume?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -331,4 +332,32 @@ model InterviewQuestion {
   @@index([interviewSessionId])
   @@index([problemId])
   @@index([status])
+}
+
+// Resume Builder Models
+model Resume {
+  id                  String          @id @default(uuid())
+  userId              String          @unique
+  user                User            @relation(fields: [userId], references: [id])
+  latestVersionNumber Int             @default(0)
+  versions            ResumeVersion[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model ResumeVersion {
+  id            String   @id @default(uuid())
+  resumeId      String
+  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  contentJSON   Json     // Full ResumeContent state
+  designJSON    Json     // Full ResumeDesign state
+  templateId    String   @default("single")
+  createdAt     DateTime @default(now())
+
+  @@index([resumeId])
+  @@index([resumeId, versionNumber])
+  @@unique([resumeId, versionNumber])
 }

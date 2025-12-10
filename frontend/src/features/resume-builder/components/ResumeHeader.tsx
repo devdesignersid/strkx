@@ -1,4 +1,4 @@
-import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin, Heart } from 'lucide-react';
+import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin, Heart, Save, History } from 'lucide-react';
 import { Button } from '@/design-system/components';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/design-system/components/Tooltip';
 import { Link } from 'react-router-dom';
@@ -6,10 +6,12 @@ import { useResumeStore } from '../hooks/useResumeStore';
 import { useResumeAnalysis } from '../hooks/useResumeAnalysis';
 import { useLinkedInOptimization } from '../hooks/useLinkedInOptimization';
 import { useCoverLetter } from '../hooks/useCoverLetter';
+import { useResumeVersions } from '../hooks/useResumeVersions';
 import { useEffect, useState } from 'react';
 import { ResumeAnalyzer } from './analyzer/ResumeAnalyzer';
 import { LinkedInOptimizer } from './analyzer/LinkedInOptimizer';
 import { CoverLetterGenerator } from './analyzer/CoverLetterGenerator';
+import { VersionHistoryPanel } from './versions/VersionHistoryPanel';
 import { aiService } from '@/lib/ai/aiService';
 
 interface ResumeHeaderProps {
@@ -44,6 +46,21 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
         result: coverLetterResult,
         clearResult: clearCoverLetterResult
     } = useCoverLetter();
+
+    // Version management
+    const [showVersionHistory, setShowVersionHistory] = useState(false);
+    const {
+        versions,
+        isLoadingVersions,
+        saveVersion,
+        isSaving,
+        restoreVersion,
+        isRestoring,
+        deleteLatestVersion,
+        isDeleting,
+        latestVersionNumber,
+        activeVersionNumber,
+    } = useResumeVersions();
 
     useEffect(() => {
         aiService.loadFromStorage();
@@ -238,6 +255,48 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                             <p>Reset all content</p>
                         </TooltipContent>
                     </Tooltip>
+
+                    <div className="h-4 w-px bg-border" />
+
+                    {/* Save and History buttons */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowVersionHistory(true)}
+                                className="gap-2 text-muted-foreground hover:text-foreground"
+                            >
+                                <History className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">History</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>View version history</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={saveVersion}
+                                disabled={isSaving}
+                                className="gap-2"
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <Save className="w-3.5 h-3.5" />
+                                )}
+                                <span className="hidden sm:inline">Save</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Save version {latestVersionNumber + 1}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </header>
 
@@ -271,6 +330,20 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                     error={coverLetterError}
                     onClose={handleCloseCoverLetter}
                     onGenerate={generateCoverLetter}
+                />
+            )}
+
+            {/* Version History Modal */}
+            {showVersionHistory && (
+                <VersionHistoryPanel
+                    versions={versions}
+                    isLoading={isLoadingVersions}
+                    isRestoring={isRestoring}
+                    isDeleting={isDeleting}
+                    currentVersionNumber={activeVersionNumber}
+                    onClose={() => setShowVersionHistory(false)}
+                    onRestore={restoreVersion}
+                    onDelete={deleteLatestVersion}
                 />
             )}
         </TooltipProvider>

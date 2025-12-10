@@ -39,11 +39,8 @@ export const usePDFFonts = (family: string) => {
                 throw new Error(`Local font config not found for ${family}`);
             }
 
-            console.log(`[usePDFFonts] Loading local font: ${family}`);
-
             // Check if already registered
             if (registeredFonts.has(family)) {
-                console.log(`[usePDFFonts] ${family} already registered, skipping`);
                 if (mounted) {
                     setLoadedFamily(family);
                     setError(null);
@@ -67,8 +64,6 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[0].value);
                 const dataUrl = `data:font/ttf;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'normal' });
-            } else {
-                console.warn(`[usePDFFonts] Failed to load Regular for ${family}`, results[0].reason);
             }
 
             // Bold (700)
@@ -81,7 +76,6 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[0].value);
                 const dataUrl = `data:font/ttf;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'normal' });
-                console.log(`[usePDFFonts] Using Regular as Bold fallback for ${family}`);
             }
 
             // Italic (400 italic)
@@ -94,7 +88,6 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[0].value);
                 const dataUrl = `data:font/ttf;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
-                console.log(`[usePDFFonts] Using Regular as Italic fallback for ${family}`);
             }
 
             if (fontsToRegister.length > 0) {
@@ -103,7 +96,6 @@ export const usePDFFonts = (family: string) => {
                     fonts: fontsToRegister
                 });
                 registeredFonts.add(family);
-                console.log(`[usePDFFonts] Registered local font ${family} with ${fontsToRegister.length} variants`);
                 if (mounted) {
                     setLoadedFamily(family);
                     setError(null);
@@ -114,11 +106,8 @@ export const usePDFFonts = (family: string) => {
         };
 
         const loadRemoteFont = async () => {
-            console.log(`[usePDFFonts] Loading remote font: ${family}`);
-
             // Check if already registered
             if (registeredFonts.has(family)) {
-                console.log(`[usePDFFonts] ${family} already registered, skipping`);
                 if (mounted) {
                     setLoadedFamily(family);
                     setError(null);
@@ -142,8 +131,6 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[0].value);
                 const dataUrl = `data:font/woff;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'normal' });
-            } else {
-                console.warn(`[usePDFFonts] Failed to load Regular 400 for ${family}`, results[0].reason);
             }
 
             // Check Bold (Index 1)
@@ -151,14 +138,11 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[1].value);
                 const dataUrl = `data:font/woff;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'normal' });
-            } else {
-                console.warn(`[usePDFFonts] Failed to load Bold 700 for ${family}, falling back to Regular`, results[1].reason);
-                if (results[0].status === 'fulfilled') {
-                    const base64 = arrayBufferToBase64(results[0].value);
-                    const dataUrl = `data:font/woff;base64,${base64}`;
-                    fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'normal' });
-                    console.log(`[usePDFFonts] Registered Regular as Bold fallback for ${family}`);
-                }
+            } else if (results[0].status === 'fulfilled') {
+                // Fallback: use regular as bold
+                const base64 = arrayBufferToBase64(results[0].value);
+                const dataUrl = `data:font/woff;base64,${base64}`;
+                fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'normal' });
             }
 
             // Check Italic (Index 2)
@@ -166,15 +150,11 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[2].value);
                 const dataUrl = `data:font/woff;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
-                console.log(`[usePDFFonts] Loaded Italic for ${family}`);
-            } else {
-                console.warn(`[usePDFFonts] Failed to load Italic for ${family}`, results[2].reason);
-                if (results[0].status === 'fulfilled') {
-                    const base64 = arrayBufferToBase64(results[0].value);
-                    const dataUrl = `data:font/woff;base64,${base64}`;
-                    fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
-                    console.log(`[usePDFFonts] Registered Regular as Italic fallback for ${family}`);
-                }
+            } else if (results[0].status === 'fulfilled') {
+                // Fallback: use regular as italic
+                const base64 = arrayBufferToBase64(results[0].value);
+                const dataUrl = `data:font/woff;base64,${base64}`;
+                fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
             }
 
             if (fontsToRegister.length > 0) {
@@ -183,13 +163,11 @@ export const usePDFFonts = (family: string) => {
                     fonts: fontsToRegister
                 });
                 registeredFonts.add(family);
-                console.log(`[usePDFFonts] Registered ${family} with ${fontsToRegister.length} variants`);
                 if (mounted) {
                     setLoadedFamily(family);
                     setError(null);
                 }
             } else {
-                console.warn(`[usePDFFonts] No fonts loaded for ${family}. Font may not exist.`);
                 if (mounted) {
                     setError(`Font "${family}" not found. Please select a different font.`);
                 }
@@ -203,8 +181,7 @@ export const usePDFFonts = (family: string) => {
                 } else {
                     await loadRemoteFont();
                 }
-            } catch (err) {
-                console.warn(`Font load failure for ${family}`, err);
+            } catch {
                 if (mounted) {
                     setError(`Failed to load font "${family}".`);
                 }
@@ -226,3 +203,4 @@ export const usePDFFonts = (family: string) => {
     const isLoaded = loadedFamily === family && !error;
     return { isLoaded, error, retry };
 };
+
