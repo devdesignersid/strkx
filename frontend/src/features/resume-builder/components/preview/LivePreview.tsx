@@ -121,6 +121,7 @@ export const LivePreview = () => {
             {/* Custom Download Button - uses proper filename */}
             <div className="absolute top-4 left-4 z-10">
                 <PDFDownloadLink
+                    key={dataKey} // Force remount on data change to prevent reconciler crash
                     document={<MemoizedResumeDocument data={debouncedData} />}
                     fileName={fileName}
                 >
