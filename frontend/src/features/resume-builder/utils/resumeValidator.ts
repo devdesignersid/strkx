@@ -1,23 +1,6 @@
 import type { ResumeData, ResumeContent, ResumeDesign } from '../types/schema';
 
-// Initial defaults to fall back on
-const DEFAULT_CONTENT: ResumeContent = {
-    profile: {
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        website: '',
-        linkedin: '',
-        github: '',
-    },
-    summary: '',
-    experience: [],
-    education: [],
-    skills: [], // Legacy
-    skillCategories: [],
-    awards: [],
-};
+
 
 const DEFAULT_DESIGN: ResumeDesign = {
     fontBody: 'Source Sans Pro',
