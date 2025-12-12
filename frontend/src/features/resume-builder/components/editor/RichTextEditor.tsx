@@ -141,14 +141,7 @@ export const RichTextEditor = memo(({
     });
 
     // Update content if value changes externally (and differs from current editor content)
-    useEffect(() => {
-        if (editor && value && value !== editor.storage.markdown.getMarkdown()) {
-            // Only update if the content is truly different to avoid cursor jumps
-            // Note: A more robust check might compare parsed HTML, but for markdown this is a decent proxy
-            // However, syncing external value to editor is tricky with debounce.
-            // We'll trust the parent to only send stable updates or initial values.
-        }
-    }, [value, editor]);
+
 
 
     return (
