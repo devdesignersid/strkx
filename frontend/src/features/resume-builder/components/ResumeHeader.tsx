@@ -64,7 +64,7 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
 
     useEffect(() => {
         aiService.loadFromStorage();
-        setIsAIEnabled(aiService.isConfigured());
+        setIsAIEnabled(aiService.isConfigured() && aiService.isEnabled());
     }, []);
 
     // Keyboard shortcuts for undo/redo

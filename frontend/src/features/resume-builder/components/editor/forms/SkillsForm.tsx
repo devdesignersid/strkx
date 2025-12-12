@@ -20,7 +20,7 @@ export const SkillsForm = memo(() => {
     const [isAIEnabled, setIsAIEnabled] = useState(false);
     useEffect(() => {
         aiService.loadFromStorage();
-        setIsAIEnabled(aiService.isConfigured());
+        setIsAIEnabled(aiService.isConfigured() && aiService.isEnabled());
     }, []);
 
     // AI extraction
