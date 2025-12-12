@@ -141,6 +141,16 @@ export const RichTextEditor = memo(({
     });
 
     // Update content if value changes externally (and differs from current editor content)
+    useEffect(() => {
+        if (editor && value !== undefined) {
+            const storage = editor.storage as any;
+            const currentContent = storage.markdown?.getMarkdown() ?? '';
+
+            if (value !== currentContent) {
+                editor.commands.setContent(value);
+            }
+        }
+    }, [value, editor]);
 
 
 

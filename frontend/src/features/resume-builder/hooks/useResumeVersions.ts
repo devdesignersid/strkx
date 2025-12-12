@@ -8,7 +8,8 @@ import { resumeService } from '@/services/api/resume.service';
 import type { ResumeVersionSummary } from '@/services/api/resume.service';
 import { useResumeStore } from './useResumeStore';
 import { toast } from 'sonner';
-import type { ResumeContent, ResumeDesign } from '../types/schema';
+
+import { validateAndSanitize } from '../utils/resumeValidator';
 
 interface UseResumeVersionsResult {
     // Version list
@@ -40,12 +41,32 @@ export function useResumeVersions(): UseResumeVersionsResult {
     const [isRestoring, setIsRestoring] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [latestVersionNumber, setLatestVersionNumber] = useState(0);
-    const [activeVersionNumber, setActiveVersionNumber] = useState(0);
 
-    // Get store methods
+    // Get store methods and state
     const setDraft = useResumeStore(state => state.setDraft);
     const commit = useResumeStore(state => state.commit);
     const draft = useResumeStore(state => state.draft);
+    const activeVersionNumber = useResumeStore(state => state.activeVersionNumber);
+    const setActiveVersionNumber = useResumeStore(state => state.setActiveVersionNumber);
+
+    // Track hydration status
+    const [hasHydrated, setHasHydrated] = useState(false);
+
+    useEffect(() => {
+        // Check if already hydrated
+        if (useResumeStore.persist.hasHydrated()) {
+            setHasHydrated(true);
+        } else {
+            // Listen for hydration
+            const unsub = useResumeStore.persist.onFinishHydration(() => {
+                setHasHydrated(true);
+            });
+            return () => {
+                // Determine if unsub is a function (Zustand version compat)
+                if (typeof unsub === 'function') unsub();
+            };
+        }
+    }, []);
 
     // Fetch versions
     const refreshVersions = useCallback(async () => {
@@ -57,6 +78,13 @@ export function useResumeVersions(): UseResumeVersionsResult {
             setVersions(versionsArray);
             if (versionsArray.length > 0) {
                 setLatestVersionNumber(versionsArray[0].versionNumber);
+
+                // Only set active version if:
+                // 1. Storage has finished rehydrating (so we know if we have a persisted value)
+                // 2. The current active version is 0 (meaning no persisted value found)
+                if (hasHydrated && activeVersionNumber === 0) {
+                    setActiveVersionNumber(versionsArray[0].versionNumber);
+                }
             }
         } catch (error) {
             console.error('[useResumeVersions] Failed to fetch versions:', error);
@@ -64,7 +92,7 @@ export function useResumeVersions(): UseResumeVersionsResult {
         } finally {
             setIsLoadingVersions(false);
         }
-    }, []);
+    }, [activeVersionNumber, setActiveVersionNumber, hasHydrated]);
 
     // Save current state as new version
     const saveVersion = useCallback(async (): Promise<boolean> => {
@@ -100,23 +128,41 @@ export function useResumeVersions(): UseResumeVersionsResult {
         try {
             const version = await resumeService.getVersion(versionNumber);
 
-            // Apply to store - this restores the exact state
+            // 1. Validate and Sanitize
+            const { content, design } = validateAndSanitize(version.contentJSON, version.designJSON);
+
+            // 2. Atomic Update (Zundo will capture this as one step)
             setDraft(() => ({
-                content: version.contentJSON as ResumeContent,
-                design: version.designJSON as ResumeDesign,
+                content,
+                design,
             }));
 
-            // Commit to sync with committed state
+            // 3. Sync Committed State
             commit();
 
-            // Update active version to the restored one
+            // 4. Update UI State
             setActiveVersionNumber(versionNumber);
 
+            // 5. Success Feedback & Telemetry
             toast.success(`Restored to version ${versionNumber}`);
+            console.info('[Telemetry] RESTORE_VERSION_SUCCESS', {
+                versionNumber,
+                timestamp: new Date().toISOString(),
+                hasContent: Boolean(content),
+                hasDesign: Boolean(design)
+            });
+
             return true;
         } catch (error) {
             console.error('[useResumeVersions] Failed to restore version:', error);
-            toast.error('Failed to restore version');
+
+            console.info('[Telemetry] RESTORE_VERSION_ERROR', {
+                versionNumber,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                timestamp: new Date().toISOString()
+            });
+
+            toast.error('Failed to restore version. Data might be corrupted.');
             return false;
         } finally {
             setIsRestoring(false);
@@ -157,12 +203,12 @@ export function useResumeVersions(): UseResumeVersionsResult {
         } finally {
             setIsDeleting(false);
         }
-    }, [versions.length, latestVersionNumber, activeVersionNumber, refreshVersions]);
+    }, [versions.length, latestVersionNumber, activeVersionNumber, setActiveVersionNumber, refreshVersions]);
 
-    // Load versions on mount
+    // Load versions on mount or when hydration finishes
     useEffect(() => {
         refreshVersions();
-    }, [refreshVersions]);
+    }, [refreshVersions, hasHydrated]);
 
     return {
         versions,

@@ -53,9 +53,11 @@ const idbStorage = {
 interface ResumeStore {
     draft: ResumeData;
     committed: ResumeData;
+    activeVersionNumber: number;
 
     // Actions
     setDraft: (updater: (draft: ResumeData) => ResumeData) => void;
+    setActiveVersionNumber: (version: number) => void;
     commit: () => void;
 }
 
@@ -89,6 +91,8 @@ export const useResumeStore = create<ResumeStore>()(
                 draft: initialData,
                 committed: initialData,
 
+                activeVersionNumber: 0,
+
                 setDraft: (updater) => {
                     set((state) => {
                         const newDraft = updater(state.draft);
@@ -102,6 +106,10 @@ export const useResumeStore = create<ResumeStore>()(
                     });
                 },
 
+                setActiveVersionNumber: (version: number) => {
+                    set({ activeVersionNumber: version });
+                },
+
                 commit: () => {
                     set((state) => ({ committed: state.draft }));
                 },
@@ -109,7 +117,11 @@ export const useResumeStore = create<ResumeStore>()(
             {
                 name: 'strkx-resume-storage',
                 storage: createJSONStorage(() => idbStorage),
-                partialize: (state) => ({ draft: state.draft, committed: state.committed }),
+                partialize: (state) => ({
+                    draft: state.draft,
+                    committed: state.committed,
+                    activeVersionNumber: state.activeVersionNumber // Persist active version
+                }),
                 onRehydrateStorage: () => (state) => {
                     if (state) {
                         // Migrate Design
