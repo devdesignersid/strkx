@@ -194,9 +194,14 @@ export function useProblemPage(slug: string | undefined) {
 
     setIsAnalyzing(true);
     try {
+      const testCasesStr = problem?.testCases?.map((tc: any, i: number) =>
+        `Test Case ${i + 1}:\nInput: ${tc.input}\nExpected Output: ${tc.expectedOutput}`
+      ).join('\n\n') || 'No test cases available.';
+
       const prompt = PROMPTS.SOLUTION_EVALUATION
         .replace('{problemTitle}', problem?.title || '')
         .replace('{problemDescription}', problem?.description || '')
+        .replace('{testCases}', testCasesStr)
         .replace('{userCode}', code);
 
       const response = await aiService.generateCompletion(prompt);

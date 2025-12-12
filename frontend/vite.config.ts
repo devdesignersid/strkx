@@ -13,6 +13,16 @@ export default defineConfig({
   define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
   },
+  // Fix for @react-pdf/renderer AMD module loading conflict
+  optimizeDeps: {
+    include: ['@react-pdf/renderer'],
+    esbuildOptions: {
+      // Disable AMD detection for hyphen library used by react-pdf
+      define: {
+        'define.amd': 'false',
+      },
+    },
+  },
   build: {
     sourcemap: false,
     rollupOptions: {

@@ -191,3 +191,9 @@ export const useCommit = () => useResumeStore(state => state.commit);
 // Full draft for PDF preview (still needed for complete render)
 export const useDraft = (): ResumeData => useResumeStore(state => state.draft);
 
+// Check if there are unsaved changes (deep comparison of draft vs committed)
+export const useHasChanges = (): boolean => useResumeStore(state => {
+    const draftStr = JSON.stringify(state.draft);
+    const committedStr = JSON.stringify(state.committed);
+    return draftStr !== committedStr;
+});

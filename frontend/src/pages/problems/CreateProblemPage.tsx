@@ -292,8 +292,10 @@ function solution(${args}) {
 
       if (isEditMode && id) {
         await problemsService.update(id, payload);
+        toast.success(TOAST_MESSAGES.PROBLEM.UPDATED);
       } else {
         await problemsService.create(payload);
+        toast.success(TOAST_MESSAGES.PROBLEM.SAVED);
       }
       // Pass refresh state to trigger refetch
       navigate('/problems', { state: { refresh: true } });

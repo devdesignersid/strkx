@@ -2,7 +2,7 @@ import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linked
 import { Button } from '@/design-system/components';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/design-system/components/Tooltip';
 import { Link } from 'react-router-dom';
-import { useResumeStore } from '../hooks/useResumeStore';
+import { useResumeStore, useHasChanges } from '../hooks/useResumeStore';
 import { useResumeAnalysis } from '../hooks/useResumeAnalysis';
 import { useLinkedInOptimization } from '../hooks/useLinkedInOptimization';
 import { useCoverLetter } from '../hooks/useCoverLetter';
@@ -61,6 +61,9 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
         latestVersionNumber,
         activeVersionNumber,
     } = useResumeVersions();
+
+    // Check if there are unsaved changes
+    const hasChanges = useHasChanges();
 
     useEffect(() => {
         aiService.loadFromStorage();
@@ -282,7 +285,7 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
                                 variant="default"
                                 size="sm"
                                 onClick={saveVersion}
-                                disabled={isSaving}
+                                disabled={isSaving || (!hasChanges && latestVersionNumber > 0)}
                                 className="gap-2"
                             >
                                 {isSaving ? (

@@ -53,12 +53,17 @@ export class DashboardService {
     }
 
     // Execute all queries in parallel for maximum performance
+    // Get today's date at midnight for study time query
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const [
       distinctSolved,
       systemDesignSolved,
       attemptedGroup,
       { acceptedCount, totalCount },
       studyStats,
+      todayStudyLog,
     ] = await Promise.all([
       // Query 1: Distinct solved problems with difficulty and date
       buildSolvedSubmissionsQuery(user.id, this.prisma),
@@ -87,6 +92,16 @@ export class DashboardService {
         },
         where: {
           userId: user.id,
+        },
+      }),
+
+      // Query 6: Today's study time
+      this.prisma.dailyStudyLog.findUnique({
+        where: {
+          userId_date: {
+            userId: user.id,
+            date: today,
+          },
         },
       }),
     ]);
@@ -121,6 +136,15 @@ export class DashboardService {
     const totalSeconds = studyStats._sum.totalStudySeconds || 0;
     const totalHours = Math.round((totalSeconds / 3600) * 10) / 10;
 
+    // Calculate today's study time formatted as string
+    const todaySeconds = todayStudyLog?.totalStudySeconds || 0;
+    const todayMinutes = Math.floor(todaySeconds / 60);
+    const todayHours = Math.floor(todayMinutes / 60);
+    const remainingMinutes = todayMinutes % 60;
+    const studyTime = todayHours > 0
+      ? `${todayHours}h ${remainingMinutes}m`
+      : `${todayMinutes}m`;
+
     // Calculate weekly change
     let weeklyChange = 0;
     if (solvedLastWeek > 0) {
@@ -142,6 +166,7 @@ export class DashboardService {
       weeklyChange,
       systemDesignSolved,
       totalHours,
+      studyTime,
     };
 
     // Cache the result

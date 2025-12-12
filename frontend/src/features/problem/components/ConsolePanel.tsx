@@ -35,6 +35,48 @@ const formatValue = (value: any) => {
   return String(value);
 };
 
+// Safe deep stringification with depth limit for console logs
+const safeStringify = (value: unknown, depth = 3): string => {
+  if (depth <= 0) return '[...]';
+
+  if (value === undefined) return 'undefined';
+  if (value === null) return 'null';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    if (depth === 1) return `[Array(${value.length})]`;
+    const items = value.slice(0, 20).map(v => safeStringify(v, depth - 1));
+    if (value.length > 20) items.push(`... ${value.length - 20} more`);
+    return `[${items.join(', ')}]`;
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const keys = Object.keys(value as Record<string, unknown>);
+      if (keys.length === 0) return '{}';
+      if (depth === 1) return `{Object(${keys.length} keys)}`;
+      const entries = keys.slice(0, 10).map(k =>
+        `${k}: ${safeStringify((value as Record<string, unknown>)[k], depth - 1)}`
+      );
+      if (keys.length > 10) entries.push(`... ${keys.length - 10} more`);
+      return `{ ${entries.join(', ')} }`;
+    } catch {
+      return '[Object]';
+    }
+  }
+
+  return String(value);
+};
+
+// Format log entry and detect if it's an error
+const formatLogEntry = (log: string): { text: string; isError: boolean } => {
+  const isError = log.startsWith('[ERROR]') || log.toLowerCase().includes('error:');
+  const text = log.replace(/^\[ERROR\]\s*/, '');
+  return { text, isError };
+};
+
 export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProps) {
   return (
     <div className="flex flex-col h-full bg-card border-t border-border">
@@ -132,9 +174,20 @@ export function ConsolePanel({ output, isRunning, onCollapse }: ConsolePanelProp
                         <span>Console Output</span>
                       </div>
                       <div className="bg-black/50 border border-white/5 px-3 py-2 rounded-md block text-xs font-mono text-white/90 space-y-1 overflow-x-auto">
-                        {result.logs.map((log, j) => (
-                          <div key={j} className="whitespace-pre-wrap break-all">{log}</div>
-                        ))}
+                        {result.logs.map((log, j) => {
+                          const { text, isError } = formatLogEntry(log);
+                          return (
+                            <div
+                              key={j}
+                              className={cn(
+                                "whitespace-pre-wrap break-all",
+                                isError && "text-red-400 bg-red-500/10 px-2 py-1 rounded border-l-2 border-red-500"
+                              )}
+                            >
+                              {safeStringify(text)}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

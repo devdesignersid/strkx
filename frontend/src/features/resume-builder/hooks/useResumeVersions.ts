@@ -104,6 +104,9 @@ export function useResumeVersions(): UseResumeVersionsResult {
                 templateId: draft.design.layout || 'single',
             });
 
+            // Sync committed state to match draft (for hasChanges tracking)
+            commit();
+
             const versionNum = version?.versionNumber ?? latestVersionNumber + 1;
             setLatestVersionNumber(versionNum);
             setActiveVersionNumber(versionNum); // New save becomes active version
@@ -120,7 +123,7 @@ export function useResumeVersions(): UseResumeVersionsResult {
         } finally {
             setIsSaving(false);
         }
-    }, [draft, refreshVersions, latestVersionNumber]);
+    }, [draft, refreshVersions, latestVersionNumber, commit]);
 
     // Restore a specific version
     const restoreVersion = useCallback(async (versionNumber: number): Promise<boolean> => {

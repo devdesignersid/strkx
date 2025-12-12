@@ -63,12 +63,25 @@ async function run() {
 
     // Redirect console methods to our log function
     // We compile a setup script to do this inside the isolate
+    // IMPORTANT: We must stringify values INSIDE the VM before passing to host
+    // because isolated-vm cannot transfer non-primitive values
     const setupScript = isolate.compileScriptSync(`
+    const __safeStringify = (val) => {
+        if (val === undefined) return 'undefined';
+        if (val === null) return 'null';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+        try {
+            return JSON.stringify(val, null, 2);
+        } catch (e) {
+            return '[Circular or Non-Serializable Object]';
+        }
+    };
     const console = {
-        log: (...args) => log.apply(undefined, args),
-        error: (...args) => log.apply(undefined, ['[ERROR]', ...args]),
-        warn: (...args) => log.apply(undefined, ['[WARN]', ...args]),
-        info: (...args) => log.apply(undefined, ['[INFO]', ...args]),
+        log: (...args) => log.apply(undefined, args.map(__safeStringify)),
+        error: (...args) => log.apply(undefined, ['[ERROR]', ...args.map(__safeStringify)]),
+        warn: (...args) => log.apply(undefined, ['[WARN]', ...args.map(__safeStringify)]),
+        info: (...args) => log.apply(undefined, ['[INFO]', ...args.map(__safeStringify)]),
     };
   `);
     setupScript.runSync(ivmContext);
@@ -105,7 +118,14 @@ async function run() {
 
         parentPort?.postMessage({ success: true, result: finalResult, logs });
     } catch (error: any) {
-        parentPort?.postMessage({ success: false, error: error.message, logs });
+        // Format error with sanitized stack trace
+        const errorMessage = error.message || 'Unknown error';
+        const stack = error.stack
+            ? error.stack.split('\n').slice(0, 5).join('\n').replace(/at\s+.*?(\(|$)/g, 'at [sandbox] ')
+            : '';
+        logs.push(`[ERROR] ${errorMessage}`);
+        if (stack && stack.trim()) logs.push(stack);
+        parentPort?.postMessage({ success: false, error: errorMessage, logs });
     } finally {
         isolate.dispose();
     }

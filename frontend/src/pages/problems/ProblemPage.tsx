@@ -101,16 +101,26 @@ export default function ProblemPage() {
   const toggleDescription = () => {
     const panel = descriptionPanelRef.current;
     if (panel) {
-      if (isDescriptionCollapsed) panel.expand();
-      else panel.collapse();
+      if (isDescriptionCollapsed) {
+        panel.expand();
+        // Disable focus mode when expanding any panel
+        if (isFocusMode) setIsFocusMode(false);
+      } else {
+        panel.collapse();
+      }
     }
   };
 
   const toggleConsole = () => {
     const panel = consolePanelRef.current;
     if (panel) {
-      if (isConsoleCollapsed) panel.expand();
-      else panel.collapse();
+      if (isConsoleCollapsed) {
+        panel.expand();
+        // Disable focus mode when expanding any panel
+        if (isFocusMode) setIsFocusMode(false);
+      } else {
+        panel.collapse();
+      }
     }
   };
 

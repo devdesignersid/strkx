@@ -576,104 +576,84 @@ Generate the complete solution now: `,
 
   SOLUTION_EVALUATION: `You are an expert technical interviewer evaluating a candidate's solution.
 
-PROBLEM: { problemTitle }
+PROBLEM: {problemTitle}
 
 PROBLEM DESCRIPTION:
-{ problemDescription }
+{problemDescription}
+
+TEST CASES:
+{testCases}
 
 CANDIDATE'S SUBMITTED CODE:
-{ userCode }
+{userCode}
 
-YOUR TASK: Provide a comprehensive, fair, and educational evaluation.
+CRITICAL INSTRUCTIONS:
+1. ONLY analyze the code provided above - do NOT reference code that doesn't exist
+2. ONLY critique patterns, structures, and logic actually present in the submitted code
+3. If the code is empty or trivial, score accordingly (low score)
+4. Do NOT hallucinate features or patterns not in the code
 
-EVALUATION RUBRIC(100 points total):
+TIME COMPLEXITY ANALYSIS:
+- Identify ALL loops, recursive calls, and data structure operations in the code
+- For each loop: note its bounds and what it iterates over
+- For nested loops: multiply their complexities
+- For recursive functions: identify the recurrence relation
+- Consider hash map/set operations as O(1) average
+- Consider sorting as O(n log n)
+- Provide the FINAL Big-O in terms of input size n
 
-1. CORRECTNESS(40 points):
--[30 pts] Core functionality works and produces correct outputs
-  - [10 pts] Handles edge cases properly(empty input, single element, boundaries, special values)
+SPACE COMPLEXITY ANALYSIS:
+- Identify ALL data structures created (arrays, objects, maps, sets)
+- Note their sizes relative to input
+- Include recursion stack depth for recursive solutions
+- Provide the FINAL Big-O space usage
 
-Deductions:
-- Wrong output format: -15 to - 30 pts
-  - Logic errors: -10 to - 30 pts
-    - Missing edge cases: -5 to - 10 pts
-      - Crashes on valid input: -30 to - 40 pts
+EVALUATION RUBRIC (100 points total):
 
-2. TIME COMPLEXITY(20 points):
--[20 pts] Optimal algorithm for the problem
-  - [12 - 18 pts] Suboptimal but reasonable(e.g., O(n²) when O(n log n) exists)
-    - [5 - 10 pts] Inefficient approach that works
-      - [0 - 3 pts] Extremely inefficient(e.g., O(n³) or worse)
+1. CORRECTNESS (40 points):
+  - [30 pts] Core algorithm logic matches problem requirements
+  - [10 pts] Handles edge cases (empty input, single element, boundaries)
 
-3. SPACE COMPLEXITY(20 points):
--[20 pts] Optimal space usage for the chosen algorithm
-  - [12 - 18 pts] Acceptable overhead(e.g., using extra O(n) when O(1) possible but much harder)
-    - [5 - 10 pts] Excessive memory use
-      - [0 - 3 pts] Wasteful memory usage(unnecessary copies, huge data structures)
+2. TIME COMPLEXITY (20 points):
+  - [20 pts] Optimal for the problem
+  - [12-18 pts] Reasonable but suboptimal
+  - [5-10 pts] Inefficient but works
+  - [0-3 pts] Extremely inefficient
 
-4. CODE QUALITY(20 points):
--[5 pts] Clear, descriptive variable names(not x, y, temp, etc.)
-  - [5 pts] Readable structure(proper formatting, logical flow)
-    - [5 pts] Best practices(no magic numbers, proper edge case handling, no unnecessary complexity)
-      - [5 pts] Comments where needed(complex logic explained, not obvious statements)
+3. SPACE COMPLEXITY (20 points):
+  - [20 pts] Optimal space usage
+  - [12-18 pts] Acceptable overhead
+  - [5-10 pts] Excessive memory
+  - [0-3 pts] Wasteful
 
-ANALYSIS STEPS:
+4. CODE QUALITY (20 points):
+  - [5 pts] Clear variable names
+  - [5 pts] Readable structure
+  - [5 pts] Best practices
+  - [5 pts] Appropriate comments
 
-STEP 1 - CORRECTNESS:
-- Does it solve the problem as described?
-  - Does it return the correct format(indices vs values, array vs number, etc.) ?
-    - Test with the example inputs mentally - does it work ?
-      - What edge cases might break it?
-
-STEP 2 - COMPLEXITY ANALYSIS:
-- Identify all loops and nested operations
-  - Determine actual Big - O time complexity
-    - Determine actual Big - O space complexity
-      - Compare to optimal known solutions for this problem type
-
-STEP 3 - CODE QUALITY:
-- Are variable names meaningful ?
-  - Is the code easy to follow ?
-    - Any code smells(magic numbers, deeply nested logic, repetition) ?
-      - Are comments helpful or redundant ?
-
-        STEP 4 - CONSTRUCTIVE FEEDBACK:
-- Start with what they did well
-  - Explain any issues clearly with examples
-  - Provide specific, actionable suggestions
-    - Be educational, not just critical
-
-OUTPUT FORMAT - Return VALID JSON(all strings must use \\n for newlines, no actual newlines):
-
-  {
-    "timeComplexity": "O(n)",
-      "spaceComplexity": "O(n)",
-        "score": 85,
-          "feedback": "## Score Breakdown\\\\n\\\\n**Correctness (35/40)**\\\\n- Core algorithm works correctly\\\\n- Missing edge case: doesn't handle empty array (crashes)\\\\n\\\\n**Time Complexity (18/20)**\\\\n- Uses efficient hash map approach - O(n) time\\\\n- Single pass through array is optimal\\\\n\\\\n**Space Complexity (18/20)**\\\\n- Hash map storage is O(n) which is acceptable\\\\n- Could technically solve in O(1) space with sorting + two pointers, but that would make time O(n log n)\\\\n\\\\n**Code Quality (14/20)**\\\\n- Good variable names (complement, seen)\\\\n- Magic number: 0 used without explanation\\\\n- No validation of input\\\\n- Could benefit from a comment explaining the hash map strategy",
-            "suggestions": [
-              "Add input validation: check if nums is null or empty before processing to avoid runtime errors",
-              "Extract the constant 0 into a named variable if it has special meaning, or add a comment",
-              "Consider adding a brief comment explaining the hash map approach for future code reviewers",
-              "The return statement could be more explicit about which index comes first"
-            ]
-  }
+OUTPUT FORMAT - Return ONLY valid JSON:
+{
+  "timeComplexity": "O(n)",
+  "spaceComplexity": "O(n)",
+  "timeComplexityBreakdown": "Line-by-line: the for loop on line X iterates n times, the inner operation is O(1), total O(n)",
+  "spaceComplexityBreakdown": "Hash map stores up to n elements: O(n), no additional structures",
+  "score": 85,
+  "feedback": "## Score Breakdown\\\\n\\\\n**Correctness (35/40)**\\\\n- Core algorithm works correctly\\\\n- Missing edge case handling for empty array\\\\n\\\\n**Time Complexity (18/20)**\\\\n- Uses efficient hash map approach O(n)\\\\n- Single pass is optimal\\\\n\\\\n**Space Complexity (18/20)**\\\\n- O(n) hash map is acceptable\\\\n\\\\n**Code Quality (14/20)**\\\\n- Good variable names\\\\n- Could use more comments",
+  "suggestions": [
+    "Add input validation for edge cases",
+    "Consider extracting helper functions",
+    "Add comments explaining the algorithm strategy"
+  ]
+}
 
 JSON FORMATTING RULES:
-- Use \\\\n for line breaks in feedback(NOT actual newlines)
-  - Escape all quotes inside strings with \\\\"
-    - No control characters(tabs, actual newlines, etc.)
-      - Score must be integer from 0 - 100
-        - Suggestions array should have 3 - 5 specific, actionable items
-          - Feedback should use markdown headers(##) and lists for readability
+- Use \\\\n for line breaks in feedback (NOT actual newlines)
+- Escape all quotes inside strings with \\\\"
+- Score must be integer from 0-100
+- Suggestions array should have 3-5 specific, actionable items
 
-FEEDBACK STRUCTURE:
-Use this markdown format(with \\\\n for newlines):
-  - "## Score Breakdown\\\\n\\\\n" as header
-    - "**Category (points/total)**\\\\n" for each category
-      - Use bullet points for strengths / issues / notes
-        - Keep explanations clear and concise
-          - End with overall assessment
-
-TONE: Professional, educational, and constructive.Praise good choices, explain issues clearly, and provide actionable improvements.
+REMEMBER: Only analyze what is ACTUALLY in the submitted code. Do not invent or assume code that doesn't exist.
 
 Generate the evaluation now: `,
   SYSTEM_DESIGN_ANALYSIS: `You are an expert System Design Interviewer evaluating a candidate's design.

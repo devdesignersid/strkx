@@ -9,6 +9,7 @@ export interface DashboardStatsDto {
   weeklyChange: number;
   systemDesignSolved: number;
   totalHours: number;
+  studyTime?: string; // Today's study time formatted as "Xh Ym" or "Xm"
 }
 
 export interface DashboardActivityDto {
