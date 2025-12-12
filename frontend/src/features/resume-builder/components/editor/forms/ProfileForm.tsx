@@ -93,7 +93,7 @@ export const ProfileForm = memo(() => {
             <div className="space-y-2">
                 <Label>Professional Summary</Label>
                 <RichTextEditor
-                    value={summary}
+                    value={summary || ''}
                     onChange={updateSummary}
                     placeholder="Briefly describe your professional background and key achievements..."
                 />

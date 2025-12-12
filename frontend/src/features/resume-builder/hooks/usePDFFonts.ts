@@ -48,11 +48,12 @@ export const usePDFFonts = (family: string) => {
                 return;
             }
 
-            // Load Regular, Bold, and Italic variants in parallel
+            // Load Regular, Bold, Italic, and Bold Italic variants in parallel
             const results = await Promise.allSettled([
                 LocalFontLoaderService.getLocalFontBlob(config, 400, 'normal'),
                 LocalFontLoaderService.getLocalFontBlob(config, 700, 'normal'),
-                LocalFontLoaderService.getLocalFontBlob(config, 400, 'italic')
+                LocalFontLoaderService.getLocalFontBlob(config, 400, 'italic'),
+                LocalFontLoaderService.getLocalFontBlob(config, 700, 'italic')
             ]);
 
             if (!mounted) return;
@@ -90,6 +91,26 @@ export const usePDFFonts = (family: string) => {
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
             }
 
+            // Bold Italic (700 italic)
+            if (results[3].status === 'fulfilled') {
+                const base64 = arrayBufferToBase64(results[3].value);
+                const dataUrl = `data:font/ttf;base64,${base64}`;
+                fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+            } else {
+                // Fallbacks for Bold Italic
+                if (results[1].status === 'fulfilled') {
+                    // Fallback to Bold
+                    const base64 = arrayBufferToBase64(results[1].value);
+                    const dataUrl = `data:font/ttf;base64,${base64}`;
+                    fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+                } else if (results[2].status === 'fulfilled') {
+                    // Fallback to Italic
+                    const base64 = arrayBufferToBase64(results[2].value);
+                    const dataUrl = `data:font/ttf;base64,${base64}`;
+                    fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+                }
+            }
+
             if (fontsToRegister.length > 0) {
                 Font.register({
                     family: family,
@@ -115,11 +136,12 @@ export const usePDFFonts = (family: string) => {
                 return;
             }
 
-            // Parallel fetch for Regular (400), Bold (700), and Italic (400 italic)
+            // Parallel fetch for Regular, Bold, Italic, Bold Italic
             const results = await Promise.allSettled([
                 FontLoaderService.getFontBlob(family, 400, 'normal'),
                 FontLoaderService.getFontBlob(family, 700, 'normal'),
-                FontLoaderService.getFontBlob(family, 400, 'italic')
+                FontLoaderService.getFontBlob(family, 400, 'italic'),
+                FontLoaderService.getFontBlob(family, 700, 'italic')
             ]);
 
             if (!mounted) return;
@@ -155,6 +177,26 @@ export const usePDFFonts = (family: string) => {
                 const base64 = arrayBufferToBase64(results[0].value);
                 const dataUrl = `data:font/woff;base64,${base64}`;
                 fontsToRegister.push({ src: dataUrl, fontWeight: 400, fontStyle: 'italic' });
+            }
+
+            // Check Bold Italic (Index 3)
+            if (results[3].status === 'fulfilled') {
+                const base64 = arrayBufferToBase64(results[3].value);
+                const dataUrl = `data:font/woff;base64,${base64}`;
+                fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+            } else {
+                // Fallbacks for Bold Italic
+                if (results[1].status === 'fulfilled') {
+                    // Fallback to Bold
+                    const base64 = arrayBufferToBase64(results[1].value);
+                    const dataUrl = `data:font/woff;base64,${base64}`;
+                    fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+                } else if (results[2].status === 'fulfilled') {
+                    // Fallback to Italic
+                    const base64 = arrayBufferToBase64(results[2].value);
+                    const dataUrl = `data:font/woff;base64,${base64}`;
+                    fontsToRegister.push({ src: dataUrl, fontWeight: 700, fontStyle: 'italic' });
+                }
             }
 
             if (fontsToRegister.length > 0) {

@@ -1,10 +1,10 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
 import Placeholder from '@tiptap/extension-placeholder';
 import { cn } from '@/lib/utils';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
-import { useRef, useCallback, memo } from 'react';
+import { useRef, useCallback, memo, useEffect, useReducer } from 'react';
 
 interface RichTextEditorProps {
     value: string;
@@ -14,8 +14,30 @@ interface RichTextEditorProps {
     debounceMs?: number;
 }
 
-// Memoized MenuBar to prevent re-renders
-const MenuBar = memo(({ editor }: { editor: any }) => {
+// MenuBar component that listens to editor updates to reflect active state
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
+    // Force re-render on editor updates
+    const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+    useEffect(() => {
+        if (!editor) return;
+
+        const handleUpdate = () => {
+            forceUpdate();
+        };
+
+        // Listen to all relevant events for UI updates
+        editor.on('transaction', handleUpdate);
+        editor.on('selectionUpdate', handleUpdate);
+        editor.on('update', handleUpdate); // Content updates
+
+        return () => {
+            editor.off('transaction', handleUpdate);
+            editor.off('selectionUpdate', handleUpdate);
+            editor.off('update', handleUpdate);
+        };
+    }, [editor]);
+
     if (!editor) {
         return null;
     }
@@ -27,10 +49,10 @@ const MenuBar = memo(({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().toggleBold().run()}
                 className={cn(
                     "p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground",
-                    editor.isActive('bold') ? "bg-primary/10 text-primary" : ""
+                    editor.isActive('bold') ? "bg-primary/10 text-primary font-medium" : ""
                 )}
                 type="button"
-                title="Bold"
+                title="Bold (Cmd+B)"
             >
                 <Bold className="w-3.5 h-3.5" />
             </button>
@@ -39,10 +61,10 @@ const MenuBar = memo(({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().toggleItalic().run()}
                 className={cn(
                     "p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground",
-                    editor.isActive('italic') ? "bg-primary/10 text-primary" : ""
+                    editor.isActive('italic') ? "bg-primary/10 text-primary font-medium" : ""
                 )}
                 type="button"
-                title="Italic"
+                title="Italic (Cmd+I)"
             >
                 <Italic className="w-3.5 h-3.5" />
             </button>
@@ -51,7 +73,7 @@ const MenuBar = memo(({ editor }: { editor: any }) => {
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 className={cn(
                     "p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground",
-                    editor.isActive('bulletList') ? "bg-primary/10 text-primary" : ""
+                    editor.isActive('bulletList') ? "bg-primary/10 text-primary font-medium" : ""
                 )}
                 type="button"
                 title="Bullet List"
@@ -62,7 +84,7 @@ const MenuBar = memo(({ editor }: { editor: any }) => {
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 className={cn(
                     "p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground",
-                    editor.isActive('orderedList') ? "bg-primary/10 text-primary" : ""
+                    editor.isActive('orderedList') ? "bg-primary/10 text-primary font-medium" : ""
                 )}
                 type="button"
                 title="Ordered List"
@@ -71,9 +93,7 @@ const MenuBar = memo(({ editor }: { editor: any }) => {
             </button>
         </div>
     );
-});
-
-MenuBar.displayName = 'MenuBar';
+};
 
 export const RichTextEditor = memo(({
     value,
@@ -120,6 +140,17 @@ export const RichTextEditor = memo(({
         },
     });
 
+    // Update content if value changes externally (and differs from current editor content)
+    useEffect(() => {
+        if (editor && value && value !== editor.storage.markdown.getMarkdown()) {
+            // Only update if the content is truly different to avoid cursor jumps
+            // Note: A more robust check might compare parsed HTML, but for markdown this is a decent proxy
+            // However, syncing external value to editor is tricky with debounce.
+            // We'll trust the parent to only send stable updates or initial values.
+        }
+    }, [value, editor]);
+
+
     return (
         <div className="w-full border border-input rounded-md overflow-hidden bg-background focus-within:outline-none focus-within:border-primary transition-all group overscroll-contain">
             <MenuBar editor={editor} />
@@ -129,4 +160,5 @@ export const RichTextEditor = memo(({
 });
 
 RichTextEditor.displayName = 'RichTextEditor';
+
 

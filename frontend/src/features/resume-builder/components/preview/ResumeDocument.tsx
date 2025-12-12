@@ -42,53 +42,54 @@ const formatDateRange = (start: string = '', end: string = '', isCurrent: boolea
 };
 
 // Parse markdown inline formatting (bold and italic) into React-PDF Text elements
+// Uses a clean stack-based tokenizing approach to support nested formatting (e.g. **bold *italic***)
 const parseMarkdownInline = (text: string): React.ReactNode[] => {
-    const result: React.ReactNode[] = [];
-    // Regex to match **bold** and *italic* patterns
-    // Order matters: check bold (**) before italic (*) to avoid false matches
-    const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
+    if (!text) return [];
 
-    let lastIndex = 0;
-    let match;
-    let keyIndex = 0;
+    const parts: React.ReactNode[] = [];
+    let buffer = '';
+    let i = 0;
+    let bold = false;
+    let italic = false;
 
-    while ((match = regex.exec(text)) !== null) {
-        // Add text before the match
-        if (match.index > lastIndex) {
-            result.push(text.slice(lastIndex, match.index));
-        }
-
-        if (match[2]) {
-            // Bold text (**text**)
-            result.push(
-                <Text key={`bold-${keyIndex++}`} style={{ fontWeight: 700 }}>
-                    {match[2]}
+    const flush = () => {
+        if (buffer) {
+            parts.push(
+                <Text key={parts.length} style={{
+                    fontWeight: bold ? 'bold' : 'normal',
+                    fontStyle: italic ? 'italic' : 'normal'
+                }}>
+                    {buffer}
                 </Text>
             );
-        } else if (match[3]) {
-            // Italic text (*text*)
-            result.push(
-                <Text key={`italic-${keyIndex++}`} style={{ fontStyle: 'italic' }}>
-                    {match[3]}
-                </Text>
-            );
+            buffer = '';
         }
+    };
 
-        lastIndex = regex.lastIndex;
+    while (i < text.length) {
+        // Check for Bold (**)
+        if (text.startsWith('**', i)) {
+            flush();
+            bold = !bold;
+            i += 2;
+        }
+        // Check for Italic (*)
+        // We prioritize ** over * by checking it first
+        else if (text.startsWith('*', i)) {
+            flush();
+            italic = !italic;
+            i += 1;
+        }
+        else {
+            buffer += text[i];
+            i++;
+        }
     }
+    flush();
 
-    // Add remaining text after last match
-    if (lastIndex < text.length) {
-        result.push(text.slice(lastIndex));
-    }
-
-    // If no matches found, return original text
-    if (result.length === 0) {
-        return [text];
-    }
-
-    return result;
+    return parts;
 };
+
 
 // ============================================================================
 // ATOMIC COMPONENTS
@@ -96,7 +97,7 @@ const parseMarkdownInline = (text: string): React.ReactNode[] => {
 
 // Description Renderer - handles each line according to its own type (bullet, number, or plain)
 // Returns fragments directly without a wrapper View to allow page breaks between items
-const DescriptionBlock = ({ description, styles }: { description: string; styles: ResumeStyles }) => {
+const DescriptionBlock = ({ description, styles, textStyle }: { description: string; styles: ResumeStyles, textStyle?: any }) => {
     const parsedLines = parseDescription(description);
 
     if (parsedLines.length === 0) return null;
@@ -125,7 +126,7 @@ const DescriptionBlock = ({ description, styles }: { description: string; styles
 
                 // Plain text
                 return (
-                    <Text key={idx} style={styles.body}>{parseMarkdownInline(line.text)}</Text>
+                    <Text key={idx} style={textStyle || styles.body}>{parseMarkdownInline(line.text)}</Text>
                 );
             })}
         </>
@@ -312,7 +313,9 @@ const EducationItem = ({ item, styles }: { item: ResumeEducation, styles: Resume
                     {item.graduationYear || (item.startDate ? formatDateRange(item.startDate, item.endDate, !!item.isCurrent) : '')}
                 </Text>
             </View>
-            <Text style={styles.itemSubtitle}>{item.degree} in {item.field}</Text>
+            <Text style={styles.itemSubtitle}>
+                {[item.degree, item.field].filter(Boolean).join(' in ')}
+            </Text>
         </View>
         {item.description ? <DescriptionBlock description={item.description} styles={styles} /> : null}
         <View style={styles.itemSpacer} />
@@ -385,7 +388,7 @@ const VerticalLayout = ({ data, styles }: { data: ResumeData, styles: ResumeStyl
         {/* Summary - ATS-friendly title */}
         {has(data.content.summary) && (
             <Section title="Summary" styles={styles}>
-                <Text style={styles.summary}>{data.content.summary}</Text>
+                <DescriptionBlock description={data.content.summary} styles={styles} textStyle={styles.summary} />
             </Section>
         )}
 
@@ -454,7 +457,7 @@ const SidebarLayout = ({ data, styles }: { data: ResumeData, styles: ResumeStyle
         <View style={styles.sidebarRight}>
             {has(data.content.summary) && (
                 <View style={{ marginBottom: (data.design.lineHeight || 1.5) * 12 }}>
-                    <Text style={styles.summary}>{data.content.summary}</Text>
+                    <DescriptionBlock description={data.content.summary} styles={styles} textStyle={styles.summary} />
                 </View>
             )}
 
