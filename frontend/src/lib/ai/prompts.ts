@@ -56,11 +56,11 @@ Return ONLY valid JSON (no markdown, no backticks):
       "description": "Special case for {topic} (negatives, zeros, duplicates, etc.)"
     }
   ],
-  "inputTypes": ["<<MUST BE ONE OF: number, string, boolean, number[], string[], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode>>"],
-  "returnType": "<<MUST BE ONE OF: number, string, boolean, number[], string[], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode, void>>",
+  "inputTypes": ["<<MUST BE ONE OF: number, string, boolean, number[], string[], number[][], string[][], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode, NaryNode, DoublyListNode, NestedInteger>>"],
+  "returnType": "<<MUST BE ONE OF: number, string, boolean, number[], string[], number[][], string[][], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode, NaryNode, DoublyListNode, NestedInteger, void>>",
   "timeoutMs": "<<INTEGER: Suggested time limit in ms (e.g. 2000 for O(N), 5000 for O(N^2))>>",
   "memoryLimitMb": "<<INTEGER: Suggested memory limit in MB (e.g. 128 for standard, 256 for heavy DP)>>",
-  "comparisonType": "<<STRICT | ORDER_INSENSITIVE | FLOAT_TOLERANCE: Use STRICT (default) when order matters (e.g. Two Sum returns [0,1] not [1,0]). Use ORDER_INSENSITIVE when output order doesn't matter (e.g. Group Anagrams, finding all combinations). Use FLOAT_TOLERANCE for problems involving decimals/geometry where small precision differences are acceptable.>>",
+  "comparisonType": "<<STRICT | ORDER_INSENSITIVE | FLOAT_TOLERANCE | SUBSET_MATCH: Use STRICT (default) when order matters. Use ORDER_INSENSITIVE when output order doesn't matter (Group Anagrams, permutations). Use FLOAT_TOLERANCE for decimals/geometry. Use SUBSET_MATCH when multiple valid answers exist.>>",
   "constraints": ["<<CONSTRAINT 1 SPECIFIC TO {topic}>>", "<<CONSTRAINT 2 SPECIFIC TO {topic}>>", "<<CONSTRAINT 3 SPECIFIC TO {topic}>>"],
   "tags": ["<<RELEVANT TAG 1 FOR {topic}>>", "<<RELEVANT TAG 2 FOR {topic}>>"]
 }
@@ -257,7 +257,10 @@ Return ONLY valid JSON (no markdown, no backticks):
     }
   ],
   "constraints": ["1 <= param <= 1000", "At most 3000 calls will be made to methods"],
-  "tags": ["Design", "<<RELEVANT TAG>>"]
+  "tags": ["Design", "<<RELEVANT TAG>>"],
+  "timeoutMs": "<<INTEGER: Suggested time limit in ms (default 3000 for design problems)>>",
+  "memoryLimitMb": "<<INTEGER: Suggested memory limit in MB (default 128)>>",
+  "comparisonType": "<<STRICT | ORDER_INSENSITIVE | FLOAT_TOLERANCE | SUBSET_MATCH: Use STRICT for most design problems. Use ORDER_INSENSITIVE if method returns array where order doesn't matter.>>"
 }
 
 **REMINDER: The problem topic is "{topic}". Generate a CLASS-BASED design problem with MINIMUM 3 TEST CASES.**

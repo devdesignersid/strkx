@@ -48,8 +48,14 @@ export class HydrationService {
         }).join('\n');
 
         // 4. Generate Result Dehydration Logic
+        // For void return types (in-place modification), capture the modified first argument
         let dehydrationLogic = '';
-        if (returnType) {
+        if (returnType === 'void' && inputTypes.length > 0) {
+            // In-place modification - return the dehydrated first argument
+            dehydrationLogic = `
+            global.result = __dehydrate(args[0], '${inputTypes[0]}');
+      `;
+        } else if (returnType && returnType !== 'void') {
             dehydrationLogic = `
             global.result = __dehydrate(global.result, '${returnType}');
       `;

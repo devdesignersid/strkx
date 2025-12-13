@@ -51,7 +51,8 @@ enum ProblemType {
 enum ComparisonType {
   STRICT            // Default: exact match required
   ORDER_INSENSITIVE // Sort arrays before comparison (any dimension)
-  FLOAT_TOLERANCE   // Numbers match within 10^-5 tolerance
+  FLOAT_TOLERANCE   // Numbers match within 10^-5 tolerance  
+  SUBSET_MATCH      // Any valid answer from multiple options
 }
 
 model Problem {

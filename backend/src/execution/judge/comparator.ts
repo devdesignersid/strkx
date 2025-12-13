@@ -15,6 +15,7 @@ export enum ComparisonType {
     STRICT = 'STRICT',
     ORDER_INSENSITIVE = 'ORDER_INSENSITIVE',
     FLOAT_TOLERANCE = 'FLOAT_TOLERANCE',
+    SUBSET_MATCH = 'SUBSET_MATCH', // Any valid answer from a set of valid answers
 }
 
 // Default tolerance for float comparison (10^-5 like LeetCode)
@@ -34,6 +35,8 @@ export function compare(
             return compareOrderInsensitive(actual, expected);
         case ComparisonType.FLOAT_TOLERANCE:
             return compareWithFloatTolerance(actual, expected, floatTolerance);
+        case ComparisonType.SUBSET_MATCH:
+            return compareSubsetMatch(actual, expected);
         case ComparisonType.STRICT:
         default:
             return compareStrict(actual, expected);
@@ -201,6 +204,42 @@ export function compareWithFloatTolerance(
     // Fallback to strict comparison for other types
     return compareStrict(actual, expected);
 }
+
+/**
+ * SUBSET_MATCH comparison - for problems with multiple valid answers
+ * Expected can be a single value OR an array of valid answers
+ * Actual passes if it matches any of the valid answers
+ * 
+ * Examples:
+ * - Expected: [[0,1], [1,0]] (Two Sum can return either)
+ * - Actual: [1,0] -> passes
+ * - Expected: ["abc", "bac", "cab"] (Permutation problems)
+ * - Actual: "bac" -> passes
+ */
+export function compareSubsetMatch(actual: unknown, expected: unknown): boolean {
+    // If expected is an array of arrays (multiple valid answers)
+    if (Array.isArray(expected) && expected.length > 0) {
+        // Check if this looks like multiple valid answers vs single array answer
+        // If first element and actual have same structure, treat as multiple options
+        const firstExpected = expected[0];
+
+        // Check if actual matches any of the expected options
+        for (const option of expected) {
+            if (compareOrderInsensitive(actual, option)) {
+                return true;
+            }
+        }
+
+        // Also check if actual matches expected as a whole (single answer case)
+        if (compareOrderInsensitive(actual, expected)) {
+            return true;
+        }
+    }
+
+    // Single expected value
+    return compareOrderInsensitive(actual, expected);
+}
+
 
 /**
  * Utility: Check if comparison type is valid

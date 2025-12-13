@@ -33,7 +33,7 @@ export default function CreateProblemPage() {
     returnType: 'void',
     timeoutMs: 2000,
     memoryLimitMb: 128,
-    comparisonType: 'STRICT' as 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE',
+    comparisonType: 'STRICT' as 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE' | 'SUBSET_MATCH',
   });
 
   const [testCases, setTestCases] = useState([
@@ -557,6 +557,7 @@ function solution(${args}) {
                       {formData.comparisonType === 'STRICT' && 'Strict (Order Matters)'}
                       {formData.comparisonType === 'ORDER_INSENSITIVE' && 'Order Insensitive'}
                       {formData.comparisonType === 'FLOAT_TOLERANCE' && 'Float Tolerance'}
+                      {formData.comparisonType === 'SUBSET_MATCH' && 'Multiple Valid Answers'}
                     </span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </button>
@@ -565,8 +566,9 @@ function solution(${args}) {
                     <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-xl z-50 overflow-hidden">
                       {[
                         { value: 'STRICT', label: 'Strict (Order Matters)', desc: 'Two Sum, etc.', color: 'bg-blue-500' },
-                        { value: 'ORDER_INSENSITIVE', label: 'Order Insensitive', desc: 'Group Anagrams, etc.', color: 'bg-amber-500' },
+                        { value: 'ORDER_INSENSITIVE', label: 'Order Insensitive', desc: 'Group Anagrams, permutations', color: 'bg-amber-500' },
                         { value: 'FLOAT_TOLERANCE', label: 'Float Tolerance', desc: 'Geometry, probability', color: 'bg-purple-500' },
+                        { value: 'SUBSET_MATCH', label: 'Multiple Valid Answers', desc: 'Any valid answer accepted', color: 'bg-green-500' },
                       ].map((type) => (
                         <button
                           key={type.value}
@@ -593,6 +595,7 @@ function solution(${args}) {
                   {formData.comparisonType === 'STRICT' && 'Exact match required. Order of elements matters.'}
                   {formData.comparisonType === 'ORDER_INSENSITIVE' && 'Arrays sorted before comparison. Works for N-dimensional arrays.'}
                   {formData.comparisonType === 'FLOAT_TOLERANCE' && 'Numbers match within 10⁻⁵ tolerance.'}
+                  {formData.comparisonType === 'SUBSET_MATCH' && 'Any valid answer from multiple options is accepted.'}
                 </span>
               </div>
             </div>

@@ -20,6 +20,10 @@ const AVAILABLE_TYPES = [
     { label: 'TreeNode[]', value: 'TreeNode[]' },
     { label: 'GraphNode', value: 'GraphNode' },
     { label: 'RandomListNode', value: 'RandomListNode' },
+    { label: 'N-ary Tree', value: 'NaryNode' },
+    { label: 'Doubly Linked List', value: 'DoublyListNode' },
+    { label: 'Nested Integer', value: 'NestedInteger' },
+    { label: 'void (in-place)', value: 'void' },
 ];
 
 export function InputSignatureEditor({ inputTypes, returnType, onChange }: InputSignatureEditorProps) {

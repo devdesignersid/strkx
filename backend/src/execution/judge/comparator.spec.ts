@@ -176,6 +176,7 @@ describe('Comparator Module', () => {
             expect(isValidComparisonType('STRICT')).toBe(true);
             expect(isValidComparisonType('ORDER_INSENSITIVE')).toBe(true);
             expect(isValidComparisonType('FLOAT_TOLERANCE')).toBe(true);
+            expect(isValidComparisonType('SUBSET_MATCH')).toBe(true);
             expect(isValidComparisonType('INVALID')).toBe(false);
             expect(isValidComparisonType('')).toBe(false);
         });
@@ -217,4 +218,46 @@ describe('Comparator Module', () => {
             expect(compare([0, 1], [0, 1], ComparisonType.STRICT)).toBe(true);
         });
     });
+
+    describe('SUBSET_MATCH comparison', () => {
+        it('should match when actual is one of multiple valid options', () => {
+            const expected = [[0, 1], [1, 0]]; // Two valid answers
+            expect(compare([0, 1], expected, ComparisonType.SUBSET_MATCH)).toBe(true);
+            expect(compare([1, 0], expected, ComparisonType.SUBSET_MATCH)).toBe(true);
+        });
+
+        it('should not match when actual is not in valid options', () => {
+            const expected = [[0, 1], [1, 0]];
+            expect(compare([0, 2], expected, ComparisonType.SUBSET_MATCH)).toBe(false);
+        });
+
+        it('should handle single expected value', () => {
+            expect(compare([1, 2], [1, 2], ComparisonType.SUBSET_MATCH)).toBe(true);
+            expect(compare([1, 2], [2, 1], ComparisonType.SUBSET_MATCH)).toBe(true); // Order insensitive within
+        });
+
+        it('should handle nested arrays as options', () => {
+            const expected = [[['a', 'b'], ['c']], [['c'], ['a', 'b']]];
+            expect(compare([['a', 'b'], ['c']], expected, ComparisonType.SUBSET_MATCH)).toBe(true);
+            expect(compare([['c'], ['b', 'a']], expected, ComparisonType.SUBSET_MATCH)).toBe(true);
+        });
+    });
+
+    describe('null and undefined handling', () => {
+        it('should handle undefined values in STRICT', () => {
+            expect(compareStrict(undefined, undefined)).toBe(true);
+            expect(compareStrict(null, undefined)).toBe(false);
+        });
+
+        it('should handle undefined in ORDER_INSENSITIVE', () => {
+            expect(compareOrderInsensitive(undefined, undefined)).toBe(true);
+            expect(compareOrderInsensitive(undefined, [])).toBe(true);
+        });
+
+        it('should handle null in FLOAT_TOLERANCE', () => {
+            expect(compareWithFloatTolerance(null, null)).toBe(true);
+            expect(compareWithFloatTolerance(0, null)).toBe(false);
+        });
+    });
 });
+

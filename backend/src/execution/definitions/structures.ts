@@ -30,8 +30,11 @@ function __createListNode(arr) {
         dehydrationHelper: `
 function __listNodeToArray(head) {
     const result = [];
+    const visited = new Set();
     let current = head;
-    while (current) {
+    // Detect cycles to prevent infinite loop
+    while (current && !visited.has(current)) {
+        visited.add(current);
         result.push(current.val);
         current = current.next;
     }
@@ -215,13 +218,165 @@ function __randomListNodeToArray(head) {
     return result;
 }
 `
+    },
+    // N-ary Tree Node (used in N-ary Tree problems)
+    NaryNode: {
+        definition: `
+function NaryNode(val, children) {
+    this.val = val === undefined ? 0 : val;
+    this.children = children === undefined ? [] : children;
+}
+`,
+        hydrationHelper: `
+function __createNaryNode(arr) {
+    if (!arr || arr.length === 0 || arr[0] === null) return null;
+    
+    const root = new NaryNode(arr[0]);
+    const queue = [root];
+    let i = 2; // Skip first value and first null separator
+    
+    while (i < arr.length && queue.length > 0) {
+        const parent = queue.shift();
+        while (i < arr.length && arr[i] !== null) {
+            const child = new NaryNode(arr[i]);
+            parent.children.push(child);
+            queue.push(child);
+            i++;
+        }
+        i++; // Skip the null separator
+    }
+    
+    return root;
+}
+`,
+        dehydrationHelper: `
+function __naryNodeToArray(root) {
+    if (!root) return [];
+    
+    const result = [root.val, null];
+    const queue = [root];
+    
+    while (queue.length > 0) {
+        const node = queue.shift();
+        for (const child of node.children) {
+            result.push(child.val);
+            queue.push(child);
+        }
+        result.push(null);
+    }
+    
+    // Remove trailing nulls
+    while (result.length > 0 && result[result.length - 1] === null) {
+        result.pop();
+    }
+    
+    return result;
+}
+`
+    },
+    // Doubly Linked List Node (for LRU Cache internal, Flatten Multilevel DLL)
+    DoublyListNode: {
+        definition: `
+function DoublyListNode(val, prev, next, child) {
+    this.val = val === undefined ? 0 : val;
+    this.prev = prev === undefined ? null : prev;
+    this.next = next === undefined ? null : next;
+    this.child = child === undefined ? null : child;
+}
+`,
+        hydrationHelper: `
+function __createDoublyListNode(arr) {
+    if (!arr || arr.length === 0) return null;
+    let head = new DoublyListNode(arr[0]);
+    let current = head;
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] !== null) {
+            const newNode = new DoublyListNode(arr[i]);
+            current.next = newNode;
+            newNode.prev = current;
+            current = newNode;
+        }
+    }
+    return head;
+}
+`,
+        dehydrationHelper: `
+function __doublyListNodeToArray(head) {
+    const result = [];
+    const visited = new Set();
+    let current = head;
+    while (current && !visited.has(current)) {
+        visited.add(current);
+        result.push(current.val);
+        current = current.next;
+    }
+    return result;
+}
+`
+    },
+    // NestedInteger (for Flatten Nested List Iterator, Nested List Weight Sum)
+    NestedInteger: {
+        definition: `
+function NestedInteger(value) {
+    this._integer = null;
+    this._list = [];
+    if (value !== undefined) {
+        if (typeof value === 'number') {
+            this._integer = value;
+        } else if (Array.isArray(value)) {
+            this._list = value.map(v => new NestedInteger(v));
+        }
+    }
+}
+NestedInteger.prototype.isInteger = function() {
+    return this._integer !== null;
+};
+NestedInteger.prototype.getInteger = function() {
+    return this._integer;
+};
+NestedInteger.prototype.setInteger = function(value) {
+    this._integer = value;
+    this._list = [];
+};
+NestedInteger.prototype.add = function(elem) {
+    this._integer = null;
+    this._list.push(elem);
+};
+NestedInteger.prototype.getList = function() {
+    return this._list;
+};
+`,
+        hydrationHelper: `
+function __createNestedInteger(arr) {
+    if (typeof arr === 'number') {
+        return new NestedInteger(arr);
+    }
+    if (Array.isArray(arr)) {
+        const ni = new NestedInteger();
+        for (const item of arr) {
+            ni.add(__createNestedInteger(item));
+        }
+        return ni;
+    }
+    return new NestedInteger();
+}
+`,
+        dehydrationHelper: `
+function __nestedIntegerToArray(ni) {
+    if (!ni) return null;
+    if (ni.isInteger()) {
+        return ni.getInteger();
+    }
+    return ni.getList().map(item => __nestedIntegerToArray(item));
+}
+`
     }
 };
 
 export const GENERIC_HELPERS = {
     hydrate: `
 function __hydrate(value, type) {
-    if (!value) return value;
+    if (value === null || value === undefined) return value;
     if (type.endsWith('[]')) {
         const baseType = type.slice(0, -2);
         if (!Array.isArray(value)) return [];
@@ -232,13 +387,16 @@ function __hydrate(value, type) {
         case 'TreeNode': return __createTreeNode(value);
         case 'GraphNode': return __createGraphNode(value);
         case 'RandomListNode': return __createRandomListNode(value);
+        case 'NaryNode': return __createNaryNode(value);
+        case 'DoublyListNode': return __createDoublyListNode(value);
+        case 'NestedInteger': return __createNestedInteger(value);
         default: return value;
     }
 }
 `,
     dehydrate: `
 function __dehydrate(value, type) {
-    if (!value) return value;
+    if (value === null || value === undefined) return value;
     if (type.endsWith('[]')) {
         const baseType = type.slice(0, -2);
         if (!Array.isArray(value)) return [];
@@ -249,6 +407,9 @@ function __dehydrate(value, type) {
         case 'TreeNode': return __treeNodeToArray(value);
         case 'GraphNode': return __graphNodeToArray(value);
         case 'RandomListNode': return __randomListNodeToArray(value);
+        case 'NaryNode': return __naryNodeToArray(value);
+        case 'DoublyListNode': return __doublyListNodeToArray(value);
+        case 'NestedInteger': return __nestedIntegerToArray(value);
         default: return value;
     }
 }

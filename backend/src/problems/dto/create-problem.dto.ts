@@ -85,7 +85,7 @@ export class CreateProblemDto {
   @IsOptional()
   memoryLimitMb?: number;
 
-  @IsEnum(['STRICT', 'ORDER_INSENSITIVE', 'FLOAT_TOLERANCE'])
+  @IsEnum(['STRICT', 'ORDER_INSENSITIVE', 'FLOAT_TOLERANCE', 'SUBSET_MATCH'])
   @IsOptional()
-  comparisonType?: 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE';
+  comparisonType?: 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE' | 'SUBSET_MATCH';
 }
