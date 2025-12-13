@@ -59,6 +59,16 @@ export default function ProblemPage() {
     setIsAIEnabled(aiService.isEnabled());
   }, []);
 
+  // Sync focus mode with panel collapse state
+  // Enable focus mode when both panels are collapsed, disable when any panel is open
+  useEffect(() => {
+    if (isDescriptionCollapsed && isConsoleCollapsed) {
+      setIsFocusMode(true);
+    } else if (isFocusMode && (!isDescriptionCollapsed || !isConsoleCollapsed)) {
+      setIsFocusMode(false);
+    }
+  }, [isDescriptionCollapsed, isConsoleCollapsed]);
+
   const handleEditorDidMount = useCallback((editor: any) => {
     editorRef.current = editor;
   }, []);
