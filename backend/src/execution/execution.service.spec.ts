@@ -13,24 +13,20 @@ class MockWorker extends EventEmitter {
     super();
     setTimeout(() => {
       // Simulate successful execution by default
-      // We can inspect options.workerData to decide what to return
+      // The code includes the hydration wrapper, so we check the original code patterns
       const { code } = options.workerData;
       if (code.includes('while(true)')) {
-        // Simulate timeout or manual termination?
-        // The service calls terminate() on message/error.
-        // We can't easily simulate the service timeout here without fake timers.
-        // But the service listens for 'message' or 'error'.
-        // Let's simulate a timeout error if code has infinite loop pattern
+        // Simulate timeout error for infinite loop
         this.emit('error', new Error('Script execution timed out'));
-      } else if (code.includes('console.log')) {
+      } else if (code.includes("console.log('Hello from sandbox')") || code.includes('console.log(')) {
         this.emit('message', { success: true, result: [0, 1], logs: ['Hello from sandbox'] });
-      } else if (code.includes('console.error')) {
+      } else if (code.includes("console.error('Error log')") || code.includes('console.error(')) {
         this.emit('message', { success: true, result: [0, 1], logs: ['[ERROR] Error log'] });
       } else if (code.includes('return [0, 0]')) {
         this.emit('message', { success: true, result: [0, 0] });
       } else if (code.includes('Syntax Error') || code.includes('Missing brace')) {
         this.emit('error', new Error('SyntaxError: Unexpected end of input'));
-      } else if (code.includes('nums.length')) {
+      } else if (code.includes('nums.length') || code.includes('return nums.length')) {
         this.emit('message', { success: true, result: 3 });
       } else {
         this.emit('message', { success: true, result: [0, 1] });
@@ -66,7 +62,8 @@ describe('ExecutionService', () => {
   };
 
   const mockHydrationService = {
-    generateWrapper: jest.fn().mockReturnValue('global.result = solution(...args);'),
+    // Return a wrapper that preserves the original code for pattern matching
+    generateWrapper: jest.fn().mockImplementation((userCode) => `${userCode}\nglobal.result = solution(...(global.args || []));`),
   };
 
   const mockDashboardService = {
@@ -96,6 +93,7 @@ describe('ExecutionService', () => {
     const problem = {
       id: '1',
       slug: 'two-sum',
+      comparisonType: 'STRICT', // Add comparisonType for new comparator system
       testCases: [
         { id: 't1', input: '[2,7,11,15]', expectedOutput: '[0,1]' },
       ],

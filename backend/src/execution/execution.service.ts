@@ -9,6 +9,7 @@ import { HydrationService } from './hydration.service';
 
 import { DashboardService } from '../dashboard/dashboard.service';
 import { TestCaseResult, WorkerResult, WorkerContext, DesignProblemInput, ExecutionUser } from './execution.types';
+import { compare, getComparisonType, ComparisonType } from './judge/comparator';
 
 @Injectable()
 export class ExecutionService {
@@ -96,10 +97,13 @@ export class ExecutionService {
               inputData = JSON.parse(`[${fixedInput}]`);
             } catch (e2) {
               // If that fails, try the simple line split as a last resort
-              const lines = testCase.input.split('\n').map(l => l.trim()).filter(l => l);
-              if (lines.length > 1) {
+              // IMPORTANT: Don't use .filter(l => l) as it removes empty strings ""
+              // which are valid JSON values. Only filter truly empty lines.
+              const lines = testCase.input.split('\n').map(l => l.trim());
+              const nonEmptyLines = lines.filter(l => l.length > 0);
+              if (nonEmptyLines.length > 1) {
                 try {
-                  inputData = lines.map(line => JSON.parse(line));
+                  inputData = nonEmptyLines.map(line => JSON.parse(line));
                 } catch (e3) {
                   throw new Error(`Input parsing error: ${e.message}`);
                 }
@@ -114,17 +118,23 @@ export class ExecutionService {
 
           if (problem.inputTypes && problem.inputTypes.length === 1 && parsedDirectlyAsArray) {
             const type = problem.inputTypes[0];
+            const isArrayType = type.endsWith('[]'); // string[], number[], string[][], etc.
             const isStructure = type === 'ListNode' || type === 'TreeNode' || type === 'GraphNode';
 
-            if (args.length > 1) {
+            // If the expected input type is an array type, wrap the entire parsed array as one argument
+            // This fixes issues like [""] becoming "" instead of [""]
+            if (isArrayType) {
+              // The parsed array IS the argument, wrap it
+              args = [inputData];
+            } else if (args.length > 1) {
+              // Multiple primitives parsed, wrap as single array argument
               args = [args];
             } else if (args.length === 1 && isStructure && !Array.isArray(args[0]) && args[0] !== null) {
               args = [args];
             } else if (type === 'GraphNode' && Array.isArray(args) && args.length > 0 && Array.isArray(args[0])) {
               // Special case for GraphNode: input is [[], []] (Adjacency List)
-              // We parsed it as args = [[], []].
-              // But we want args = [[[], []]] (One argument which is the Adjacency List).
-              // So we must wrap it.
+              // We parsed it as args = [[], []]
+              // But we want args = [[[], []]] (One argument which is the Adjacency List)
               args = [args];
             }
           }
@@ -217,7 +227,9 @@ export class ExecutionService {
           expected = testCase.expectedOutput;
         }
 
-        const isCorrect = this.compareResults(actual, expected);
+        // Use the problem's comparison type for result validation
+        const comparisonType = getComparisonType(problem.comparisonType);
+        const isCorrect = compare(actual, expected, comparisonType);
         if (!isCorrect) allPassed = false;
 
         results.push({
@@ -273,24 +285,6 @@ export class ExecutionService {
       passed: allPassed,
       results,
     };
-  }
-
-  private compareResults(actual: any, expected: any): boolean {
-    const actualStr = JSON.stringify(actual);
-    const expectedStr = JSON.stringify(expected);
-
-    if (actualStr === expectedStr) return true;
-
-    // Special handling for empty structures (null vs [])
-    // Many problems treat null and [] as equivalent for empty Lists/Trees/Graphs
-    if (
-      (actual === null && Array.isArray(expected) && expected.length === 0) ||
-      (expected === null && Array.isArray(actual) && actual.length === 0)
-    ) {
-      return true;
-    }
-
-    return false;
   }
 
   private runInWorker(code: string, context: any): Promise<{ result: any, logs: string[] }> {

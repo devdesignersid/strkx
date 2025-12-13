@@ -60,6 +60,7 @@ Return ONLY valid JSON (no markdown, no backticks):
   "returnType": "<<MUST BE ONE OF: number, string, boolean, number[], string[], ListNode, TreeNode, ListNode[], TreeNode[], GraphNode, RandomListNode, void>>",
   "timeoutMs": "<<INTEGER: Suggested time limit in ms (e.g. 2000 for O(N), 5000 for O(N^2))>>",
   "memoryLimitMb": "<<INTEGER: Suggested memory limit in MB (e.g. 128 for standard, 256 for heavy DP)>>",
+  "comparisonType": "<<STRICT | ORDER_INSENSITIVE | FLOAT_TOLERANCE: Use STRICT (default) when order matters (e.g. Two Sum returns [0,1] not [1,0]). Use ORDER_INSENSITIVE when output order doesn't matter (e.g. Group Anagrams, finding all combinations). Use FLOAT_TOLERANCE for problems involving decimals/geometry where small precision differences are acceptable.>>",
   "constraints": ["<<CONSTRAINT 1 SPECIFIC TO {topic}>>", "<<CONSTRAINT 2 SPECIFIC TO {topic}>>", "<<CONSTRAINT 3 SPECIFIC TO {topic}>>"],
   "tags": ["<<RELEVANT TAG 1 FOR {topic}>>", "<<RELEVANT TAG 2 FOR {topic}>>"]
 }

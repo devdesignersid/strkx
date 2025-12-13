@@ -12,6 +12,8 @@ const AVAILABLE_TYPES = [
     { label: 'Boolean', value: 'boolean' },
     { label: 'Number Array', value: 'number[]' },
     { label: 'String Array', value: 'string[]' },
+    { label: 'Number 2D Array', value: 'number[][]' },
+    { label: 'String 2D Array', value: 'string[][]' },
     { label: 'ListNode', value: 'ListNode' },
     { label: 'TreeNode', value: 'TreeNode' },
     { label: 'ListNode[]', value: 'ListNode[]' },

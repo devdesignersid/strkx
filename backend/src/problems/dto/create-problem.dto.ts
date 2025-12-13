@@ -84,4 +84,8 @@ export class CreateProblemDto {
 
   @IsOptional()
   memoryLimitMb?: number;
+
+  @IsEnum(['STRICT', 'ORDER_INSENSITIVE', 'FLOAT_TOLERANCE'])
+  @IsOptional()
+  comparisonType?: 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE';
 }

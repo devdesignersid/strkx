@@ -48,6 +48,12 @@ enum ProblemType {
   DESIGN
 }
 
+enum ComparisonType {
+  STRICT            // Default: exact match required
+  ORDER_INSENSITIVE // Sort arrays before comparison (any dimension)
+  FLOAT_TOLERANCE   // Numbers match within 10^-5 tolerance
+}
+
 model Problem {
   id          String      @id @default(uuid())
   slug        String
@@ -68,6 +74,7 @@ model Problem {
   // Execution Metadata
   inputTypes  String[]    @default([]) // e.g. ["ListNode", "number"]
   returnType  String?     // e.g. "ListNode"
+  comparisonType ComparisonType @default(STRICT) // Output comparison strategy
   
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

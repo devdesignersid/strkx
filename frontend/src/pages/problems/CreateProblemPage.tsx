@@ -33,6 +33,7 @@ export default function CreateProblemPage() {
     returnType: 'void',
     timeoutMs: 2000,
     memoryLimitMb: 128,
+    comparisonType: 'STRICT' as 'STRICT' | 'ORDER_INSENSITIVE' | 'FLOAT_TOLERANCE',
   });
 
   const [testCases, setTestCases] = useState([
@@ -41,6 +42,7 @@ export default function CreateProblemPage() {
 
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
   const [isTypeOpen, setIsTypeOpen] = useState(false);
+  const [isComparisonTypeOpen, setIsComparisonTypeOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -93,6 +95,7 @@ export default function CreateProblemPage() {
             returnType: problem.returnType || 'void',
             timeoutMs: problem.timeoutMs || 2000,
             memoryLimitMb: problem.memoryLimitMb || 128,
+            comparisonType: problem.comparisonType || 'STRICT',
           });
           if (problem.testCases && problem.testCases.length > 0) {
             setTestCases(problem.testCases.map((tc: { input: string, expectedOutput: string }) => ({
@@ -191,6 +194,9 @@ function solution(${args}) {
         returnType: generated.returnType || prev.returnType,
         timeoutMs: generated.timeoutMs || prev.timeoutMs,
         memoryLimitMb: generated.memoryLimitMb || prev.memoryLimitMb,
+        comparisonType: ['STRICT', 'ORDER_INSENSITIVE', 'FLOAT_TOLERANCE'].includes(generated.comparisonType)
+          ? generated.comparisonType
+          : prev.comparisonType,
       }));
 
       if (generated.examples && Array.isArray(generated.examples)) {
@@ -530,6 +536,64 @@ function solution(${args}) {
                   className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
                   placeholder="128"
                 />
+              </div>
+            </div>
+
+            {/* Comparison Type */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Output Comparison</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsComparisonTypeOpen(!isComparisonTypeOpen)}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors"
+                  >
+                    <span className={clsx(
+                      formData.comparisonType === 'STRICT' && "text-blue-400",
+                      formData.comparisonType === 'ORDER_INSENSITIVE' && "text-amber-400",
+                      formData.comparisonType === 'FLOAT_TOLERANCE' && "text-purple-400"
+                    )}>
+                      {formData.comparisonType === 'STRICT' && 'Strict (Order Matters)'}
+                      {formData.comparisonType === 'ORDER_INSENSITIVE' && 'Order Insensitive'}
+                      {formData.comparisonType === 'FLOAT_TOLERANCE' && 'Float Tolerance'}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {isComparisonTypeOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-xl z-50 overflow-hidden">
+                      {[
+                        { value: 'STRICT', label: 'Strict (Order Matters)', desc: 'Two Sum, etc.', color: 'bg-blue-500' },
+                        { value: 'ORDER_INSENSITIVE', label: 'Order Insensitive', desc: 'Group Anagrams, etc.', color: 'bg-amber-500' },
+                        { value: 'FLOAT_TOLERANCE', label: 'Float Tolerance', desc: 'Geometry, probability', color: 'bg-purple-500' },
+                      ].map((type) => (
+                        <button
+                          key={type.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, comparisonType: type.value as typeof formData.comparisonType });
+                            setIsComparisonTypeOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-secondary/50 transition-colors flex items-center gap-2"
+                        >
+                          <div className={clsx("w-2 h-2 rounded-full", type.color)} />
+                          <div className="flex-1">
+                            <div>{type.label}</div>
+                            <div className="text-xs text-muted-foreground">{type.desc}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-end pb-0.5">
+                <span className="text-xs text-muted-foreground">
+                  {formData.comparisonType === 'STRICT' && 'Exact match required. Order of elements matters.'}
+                  {formData.comparisonType === 'ORDER_INSENSITIVE' && 'Arrays sorted before comparison. Works for N-dimensional arrays.'}
+                  {formData.comparisonType === 'FLOAT_TOLERANCE' && 'Numbers match within 10⁻⁵ tolerance.'}
+                </span>
               </div>
             </div>
 
