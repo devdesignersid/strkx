@@ -10,7 +10,7 @@ export class GeminiProvider implements AIProvider {
   configure(config: AIConfig) {
     this.config = config;
     if (config.apiKey) {
-        this.client = new GoogleGenAI({ apiKey: config.apiKey });
+      this.client = new GoogleGenAI({ apiKey: config.apiKey });
     }
   }
 
@@ -22,33 +22,33 @@ export class GeminiProvider implements AIProvider {
     const model = this.config.model || 'gemini-2.0-flash';
 
     const parts: any[] = [
-        { text: systemPrompt ? `System Instruction: ${systemPrompt}\n\nUser Request: ${prompt}` : prompt }
+      { text: systemPrompt ? `System Instruction: ${systemPrompt}\n\nUser Request: ${prompt}` : prompt }
     ];
 
     if (images && images.length > 0) {
-        images.forEach(image => {
-            // Ensure we strip the data URL prefix if present
-            const base64Data = image.includes('base64,') ? image.split('base64,')[1] : image;
-            parts.push({
-                inlineData: {
-                    mimeType: 'image/png',
-                    data: base64Data
-                }
-            });
+      images.forEach(image => {
+        // Ensure we strip the data URL prefix if present
+        const base64Data = image.includes('base64,') ? image.split('base64,')[1] : image;
+        parts.push({
+          inlineData: {
+            mimeType: 'image/png',
+            data: base64Data
+          }
         });
+      });
     }
 
     try {
       const response = await this.client.models.generateContent({
         model: model,
         contents: [
-            {
-                role: 'user',
-                parts: parts
-            }
+          {
+            role: 'user',
+            parts: parts
+          }
         ],
         config: {
-            temperature: 0.7,
+          temperature: 0.7,
         }
       });
 
@@ -62,12 +62,10 @@ export class GeminiProvider implements AIProvider {
   async validateKey(apiKey: string): Promise<boolean> {
     try {
       const client = new GoogleGenAI({ apiKey });
-      // Try a lightweight call to validate
-      await client.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: [{ role: 'user', parts: [{ text: 'Hi' }] }]
-      });
-      return true;
+      // Use models.list() as a lightweight validation - it just fetches available models
+      const models = await client.models.list();
+      // If we got here without error, the key is valid
+      return models !== undefined;
     } catch (error) {
       console.error('Key validation failed:', error);
       return false;
