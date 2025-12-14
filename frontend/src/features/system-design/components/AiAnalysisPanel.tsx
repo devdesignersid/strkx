@@ -1,6 +1,5 @@
 import { BrainCircuit, CheckCircle2, AlertTriangle, TrendingUp, Shield, Eye } from 'lucide-react';
-import { EmptyState, Button, LoadingThunder } from '@/design-system/components';
-import ReactMarkdown from 'react-markdown';
+import { EmptyState, Button, LoadingThunder, MarkdownRenderer } from '@/design-system/components';
 import { useEffect, useState } from 'react';
 import { exportToBlob } from '@excalidraw/excalidraw';
 
@@ -186,8 +185,8 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
             {analysis.feedback && (
                 <div className="p-4 rounded-lg bg-card border border-border">
                     <h4 className="text-sm font-medium text-foreground mb-3">Detailed Feedback</h4>
-                    <div className="prose prose-invert prose-sm max-w-none prose-p:text-muted-foreground prose-headings:text-foreground/90">
-                        <ReactMarkdown>{analysis.feedback.replace(/\\n/g, '\n')}</ReactMarkdown>
+                    <div className="bg-muted/30 p-4 rounded-md">
+                        <MarkdownRenderer content={analysis.feedback} />
                     </div>
                 </div>
             )}

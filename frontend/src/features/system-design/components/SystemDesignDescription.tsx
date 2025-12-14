@@ -1,11 +1,8 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
 import { PanelLeftClose, Star, Clock, PanelBottomOpen } from 'lucide-react';
 import type { SystemDesignProblem } from '@/types/system-design';
 import { fadeIn } from '@/design-system/animations';
-import { Tabs, TabsList, TabsTrigger, TabsContent, Button } from '@/design-system/components';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Button, MarkdownRenderer } from '@/design-system/components';
 
 import { SubmissionsList } from './SubmissionsList';
 import { AiAnalysisPanel } from './AiAnalysisPanel';
@@ -84,15 +81,15 @@ export function SystemDesignDescription({
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 prose prose-invert prose-sm max-w-none prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-headings:text-foreground/90 prose-p:text-muted-foreground prose-a:text-primary prose-code:text-primary/90 prose-code:text-[13px] prose-code:font-medium">
-                    <TabsContent value="description" className="mt-0">
+                <div className="flex-1 overflow-y-auto bg-card">
+                    <TabsContent value="description" className="mt-0 h-full p-6">
                         <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit">
-                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{problem.description || 'No description available.'}</ReactMarkdown>
+                            <MarkdownRenderer content={problem.description || 'No description available.'} />
                         </motion.div>
                     </TabsContent>
 
-                    <TabsContent value="submissions" className="mt-0">
-                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2 -m-6 p-4">
+                    <TabsContent value="submissions" className="mt-0 p-6">
+                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2">
                             <SubmissionsList
                                 submissions={submissions}
                                 onSelectSubmission={(id) => {
@@ -106,8 +103,8 @@ export function SystemDesignDescription({
                         </motion.div>
                     </TabsContent>
 
-                    <TabsContent value="solutions" className="mt-0">
-                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2 -m-6 p-4">
+                    <TabsContent value="solutions" className="mt-0 p-6">
+                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2">
                             {submissions.filter(s => s.isSolution).length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 text-center">
                                     <Star className="w-12 h-12 text-amber-400/20 mb-3" />
@@ -170,8 +167,8 @@ export function SystemDesignDescription({
                         </motion.div>
                     </TabsContent>
 
-                    <TabsContent value="ai_analysis" className="mt-0">
-                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="-m-6 p-4">
+                    <TabsContent value="ai_analysis" className="mt-0 p-6">
+                        <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="">
                             <AiAnalysisPanel
                                 analysis={aiAnalysis}
                                 isAnalyzing={isAnalyzing}

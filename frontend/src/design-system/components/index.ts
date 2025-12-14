@@ -13,6 +13,8 @@ export * from './Label';
 export * from './Tabs';
 export * from './Breadcrumb';
 export { default as EmptyState } from './EmptyState';
+
+export * from './MarkdownRenderer';
 export * from './Textarea';
 export * from './PageHeader';
 export * from './ProgressBar';

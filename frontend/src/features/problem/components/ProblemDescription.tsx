@@ -1,10 +1,7 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks';
 import { motion } from 'framer-motion';
 import { Code2, CheckCircle2, XCircle, Star, Clock, Zap, TrendingUp, BrainCircuit, PanelLeftClose, Trash2 } from 'lucide-react';
-import { LoadingThunder } from '@/design-system/components';
+import { LoadingThunder, MarkdownRenderer } from '@/design-system/components';
 import type { Problem, Submission, Solution } from '@/types/problem';
 import { EmptyState, Button } from '@/design-system/components';
 import { fadeIn } from '@/design-system/animations';
@@ -81,16 +78,16 @@ export function ProblemDescription({
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 prose prose-invert prose-sm max-w-none prose-pre:bg-black/30 prose-pre:border prose-pre:border-border prose-headings:text-foreground/90 prose-p:text-muted-foreground prose-a:text-primary prose-code:text-primary/90 prose-code:text-[13px] prose-code:font-medium">
-          <TabsContent value="description" className="mt-0">
+        <div className="flex-1 overflow-y-auto bg-card">
+          <TabsContent value="description" className="mt-0 h-full p-6">
             <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit">
-              <h1 className="text-2xl font-bold text-foreground mb-4">{problem.title}</h1>
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{problem.description || 'No description available.'}</ReactMarkdown>
+              <h1 className="text-2xl font-bold text-foreground mb-6">{problem.title}</h1>
+              <MarkdownRenderer content={problem.description || 'No description available.'} />
             </motion.div>
           </TabsContent>
 
-          <TabsContent value="submissions" className="mt-0">
-            <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2 -m-6 p-4">
+          <TabsContent value="submissions" className="mt-0 p-6">
+            <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2">
               {submissions.length === 0 ? (
                 <EmptyState
                   icon={Code2}
@@ -183,8 +180,8 @@ export function ProblemDescription({
             </motion.div>
           </TabsContent>
 
-          <TabsContent value="solutions" className="mt-0">
-            <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2 -m-6 p-4">
+          <TabsContent value="solutions" className="mt-0 p-6">
+            <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-2">
               {solutions.length === 0 ? (
                 <EmptyState
                   icon={Star}
@@ -234,7 +231,7 @@ export function ProblemDescription({
             </motion.div>
           </TabsContent>
 
-          <TabsContent value="ai_analysis" className="mt-0">
+          <TabsContent value="ai_analysis" className="mt-0 p-6">
             <motion.div variants={fadeIn} initial="initial" animate="animate" exit="exit" className="space-y-6">
               {!aiAnalysis && !isAnalyzing ? (
                 <EmptyState
