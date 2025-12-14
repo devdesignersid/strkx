@@ -47,7 +47,6 @@ export const systemDesignApi = {
         notesMarkdown?: string;
         timeSpentSeconds?: number;
         status?: string;
-        aiAnalysis?: any;
     }) => {
         const response = await apiClient.post(`${BASE_URL}/submissions/${id}`, data);
         return response.data.data;

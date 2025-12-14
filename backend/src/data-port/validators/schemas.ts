@@ -53,6 +53,8 @@ export const SubmissionSchema = z.object({
     output: z.string(),
     executionTime: z.number().optional(),
     memoryUsed: z.number().optional(),
+    isSolution: z.boolean().optional().default(false),
+    solutionName: z.string().optional(),
     createdAt: z.string().datetime({ message: 'Invalid datetime format' }),
 });
 
@@ -78,6 +80,7 @@ export const CodingProblemSchema = z.object({
     tags: z.array(z.string().max(100)).optional().default([]),
     inputTypes: z.array(z.string()).optional().default([]),
     returnType: z.string().optional(),
+    comparisonType: z.enum(['STRICT', 'ORDER_INSENSITIVE', 'FLOAT_TOLERANCE', 'SUBSET_MATCH']).optional().default('STRICT'),
     timeoutMs: z.number().int().positive().optional().default(2000),
     memoryLimitMb: z.number().int().positive().optional().default(128),
     timeLimit: z.number().int().positive().optional().default(45),
@@ -100,9 +103,9 @@ export const SystemDesignSubmissionSchema = z.object({
     notesMarkdown: z.string().optional(),
     timeSpentSeconds: z.number().int().min(0).default(0),
     status: z.string().default('in_progress'),
+    isSolution: z.boolean().optional().default(false),
+    solutionName: z.string().optional(),
     score: z.number().int().min(0).max(100).optional(),
-    feedback: z.string().optional(),
-    aiAnalysis: z.any().optional(),
     createdAt: z.string().datetime({ message: 'Invalid datetime format' }),
 });
 

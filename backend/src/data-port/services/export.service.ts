@@ -89,6 +89,7 @@ export class ExportService {
                 tags: problem.tags,
                 inputTypes: problem.inputTypes,
                 returnType: problem.returnType || undefined,
+                comparisonType: problem.comparisonType || undefined,
                 timeoutMs: problem.timeoutMs,
                 memoryLimitMb: problem.memoryLimitMb,
                 timeLimit: problem.timeLimit,
@@ -128,6 +129,8 @@ export class ExportService {
                         output: s.output,
                         executionTime: s.executionTime || undefined,
                         memoryUsed: s.memoryUsed || undefined,
+                        isSolution: s.isSolution || undefined,
+                        solutionName: s.solutionName || undefined,
                         createdAt: s.createdAt.toISOString(),
                     }));
                 }
@@ -193,9 +196,9 @@ export class ExportService {
                     notesMarkdown: s.notesMarkdown || undefined,
                     timeSpentSeconds: s.timeSpentSeconds,
                     status: s.status,
+                    isSolution: s.isSolution || undefined,
+                    solutionName: s.solutionName || undefined,
                     score: s.score || undefined,
-                    feedback: s.feedback || undefined,
-                    aiAnalysis: s.aiAnalysis || undefined,
                     createdAt: s.createdAt.toISOString(),
                 }));
             }

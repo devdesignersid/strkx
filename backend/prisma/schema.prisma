@@ -200,8 +200,6 @@ model SystemDesignSubmission {
   solutionName     String?
 
   score            Int?
-  feedback         String?
-  aiAnalysis       Json?    // Store detailed AI analysis
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

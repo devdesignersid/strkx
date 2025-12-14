@@ -84,6 +84,8 @@ export interface ExportedSubmission {
     output: string;
     executionTime?: number;
     memoryUsed?: number;
+    isSolution?: boolean;  // Whether this submission is marked as a solution
+    solutionName?: string; // Name for the solution (if isSolution is true)
     createdAt: string;
 }
 
@@ -101,6 +103,7 @@ export interface ExportedCodingProblem {
     tags: string[];
     inputTypes: string[];
     returnType?: string;
+    comparisonType?: string;  // Output comparison strategy: STRICT, ORDER_INSENSITIVE, FLOAT_TOLERANCE, SUBSET_MATCH
     timeoutMs: number;
     memoryLimitMb: number;
     timeLimit: number;
@@ -117,9 +120,9 @@ export interface ExportedSystemDesignSubmission {
     notesMarkdown?: string;
     timeSpentSeconds: number;
     status: string;
+    isSolution?: boolean;  // Whether this submission is marked as a solution
+    solutionName?: string; // Name for the solution (if isSolution is true)
     score?: number;
-    feedback?: string;
-    aiAnalysis?: any;
     createdAt: string;
 }
 

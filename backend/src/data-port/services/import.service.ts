@@ -18,7 +18,7 @@ import {
 } from '../validators/schemas';
 import { DuplicateHandler } from '../handlers/duplicate.handler';
 import { ErrorAggregator } from '../handlers/error-aggregator';
-import { Difficulty, ProblemType } from '@prisma/client';
+import { Difficulty, ProblemType, ComparisonType } from '@prisma/client';
 import { DashboardService } from '../../dashboard/dashboard.service';
 
 /**
@@ -412,6 +412,7 @@ export class ImportService {
                 tags: problem.tags || [],
                 inputTypes: problem.inputTypes || [],
                 returnType: problem.returnType,
+                comparisonType: (problem.comparisonType as ComparisonType) || 'STRICT',
                 timeoutMs: problem.timeoutMs || 2000,
                 memoryLimitMb: problem.memoryLimitMb || 128,
                 timeLimit: problem.timeLimit || 45,
@@ -461,6 +462,8 @@ export class ImportService {
                         output: submission.output,
                         executionTime: submission.executionTime,
                         memoryUsed: submission.memoryUsed,
+                        isSolution: submission.isSolution || false,
+                        solutionName: submission.solutionName,
                         createdAt: new Date(submission.createdAt),
                         problemId: created.id,
                         userId,
@@ -560,9 +563,9 @@ export class ImportService {
                         notesMarkdown: submission.notesMarkdown,
                         timeSpentSeconds: submission.timeSpentSeconds || 0,
                         status: submission.status || 'in_progress',
+                        isSolution: submission.isSolution || false,
+                        solutionName: submission.solutionName,
                         score: submission.score,
-                        feedback: submission.feedback,
-                        aiAnalysis: submission.aiAnalysis,
                         createdAt: new Date(submission.createdAt),
                         problemId: created.id,
                         userId,

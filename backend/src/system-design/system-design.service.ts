@@ -6,7 +6,7 @@ import { CreateSystemDesignSubmissionDto, UpdateSystemDesignSubmissionDto } from
 
 @Injectable()
 export class SystemDesignService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createProblem(userId: string, data: CreateSystemDesignProblemDto) {
     return this.prisma.systemDesignProblem.create({
@@ -107,14 +107,14 @@ export class SystemDesignService {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
 
     if (!isUuid) {
-        const problem = await this.prisma.systemDesignProblem.findFirst({
-            where: { slug: idOrSlug },
-            select: { id: true }
-        });
-        if (!problem) {
-            throw new NotFoundException(`System Design problem with slug ${idOrSlug} not found`);
-        }
-        problemId = problem.id;
+      const problem = await this.prisma.systemDesignProblem.findFirst({
+        where: { slug: idOrSlug },
+        select: { id: true }
+      });
+      if (!problem) {
+        throw new NotFoundException(`System Design problem with slug ${idOrSlug} not found`);
+      }
+      problemId = problem.id;
     }
 
     return this.prisma.systemDesignSubmission.findMany({
@@ -151,13 +151,11 @@ export class SystemDesignService {
       recommendations: []
     };
 
-    // Update submission with analysis
+    // Update submission with score only
     return this.prisma.systemDesignSubmission.update({
       where: { id },
       data: {
-        aiAnalysis: mockAnalysis,
         score: mockAnalysis.score,
-        feedback: mockAnalysis.summary
       }
     });
   }

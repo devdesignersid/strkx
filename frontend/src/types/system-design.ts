@@ -27,7 +27,6 @@ export interface SystemDesignSubmission {
   startedAt: string;
   finishedAt: string;
   createdAt: string;
-  aiAnalysis?: SystemDesignAnalysis;
 }
 
 export interface SystemDesignAnalysis {

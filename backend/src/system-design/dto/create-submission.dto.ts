@@ -38,10 +38,6 @@ export class UpdateSystemDesignSubmissionDto {
   @IsString()
   @IsOptional()
   status?: string;
-
-  @IsObject()
-  @IsOptional()
-  aiAnalysis?: any;
 }
 
 export class MarkSolutionDto {
