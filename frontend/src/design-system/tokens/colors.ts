@@ -9,6 +9,8 @@ export const darkColors = {
   popoverForeground: "0 0% 93%",
 
   primary: "153 60% 53%", // #3ECF8E
+  primaryLight: "153 60% 57%", // Slightly lighter for gradient top (4% shift)
+  primaryDark: "153 60% 48%", // Slightly darker for gradient bottom (5% shift)
   primaryForeground: "0 0% 9%",
 
   secondary: "0 0% 15%", // #262626
@@ -41,6 +43,8 @@ export const lightColors = {
   popoverForeground: "0 0% 3.9%",
 
   primary: "153 60% 45%", // Slightly darker green for contrast on white
+  primaryLight: "153 60% 52%", // Lighter for gradient top
+  primaryDark: "153 60% 38%", // Darker for gradient bottom
   primaryForeground: "0 0% 98%",
 
   secondary: "0 0% 96.1%",

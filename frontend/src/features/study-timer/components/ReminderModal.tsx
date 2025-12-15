@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Droplets, Activity, ArrowRight } from 'lucide-react';
+import { Button } from '@/design-system/components';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -65,13 +66,13 @@ const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, type, message, on
                 {message}
               </p>
 
-              <button
+              <Button
                 onClick={onDismiss}
-                className="w-full group flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 font-medium text-sm"
+                className="w-full group"
               >
                 <span>I'm back</span>
                 <ArrowRight className="w-4 h-4 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-              </button>
+              </Button>
             </div>
           </motion.div>
         </div>

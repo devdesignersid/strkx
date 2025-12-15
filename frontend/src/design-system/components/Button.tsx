@@ -8,140 +8,184 @@ import { Loader2 } from "lucide-react"
 /**
  * Premium Button Component
  * 
- * Inspired by macOS native buttons with sleek, polished aesthetics.
- * Features subtle gradients, refined shadows, and smooth state transitions.
+ * Calm, confident, cohesive button system with:
+ * - Subtle vertical gradients for primary actions
+ * - Flat backgrounds for secondary/tertiary
+ * - Refined, tactile interaction states
+ * - Consistent sizing and typography
  * 
  * Variants:
- * - default: Primary action button with subtle gradient and shadow
- * - secondary: Muted secondary action
- * - outline: Bordered button for less prominent actions
- * - ghost: Transparent button for toolbars and minimal UI
- * - destructive: Danger actions with red styling
- * - link: Text-only button styled as a link
- * - success: Positive action confirmation
- * - premium: Special gradient button for key CTAs
+ * - default: Primary action with subtle gradient
+ * - secondary: Flat muted background
+ * - outline: Bordered, transparent
+ * - ghost: Minimal, for toolbars
+ * - destructive: Danger actions
+ * - link: Text-only
+ * - success: Positive confirmations
+ * - soft: De-emphasized actions
  */
 const buttonVariants = cva(
-    // Base styles - refined typography, smooth transitions, native-feel
+    // Base styles - matching reference design
     [
         "inline-flex items-center justify-center gap-2 whitespace-nowrap",
-        "text-sm font-medium leading-none select-none",
-        "rounded-lg", // Slightly more rounded for modern feel
-        "transition-all duration-150 ease-out",
-        // Focus states - subtle ring that doesn't overwhelm
+        "text-[14px] font-medium leading-none select-none",
+        "rounded-[6px]", // Matching reference radius
+        "transition-all duration-100 ease-out",
+        // Focus - accessible
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-        // Disabled state
+        // Disabled
         "disabled:pointer-events-none disabled:opacity-50",
-        // Active state - subtle press effect
-        "active:scale-[0.98]",
     ].join(" "),
     {
         variants: {
             variant: {
-                // Primary button - subtle gradient with refined shadow
+                /**
+                 * Primary Button
+                 * - Visible gradient: lighter top to darker bottom
+                 * - Matches reference style
+                 */
                 default: [
-                    "bg-primary text-primary-foreground",
-                    "shadow-sm shadow-primary/20",
-                    "hover:bg-primary/90 hover:shadow-md hover:shadow-primary/25",
-                    "active:bg-primary/85 active:shadow-sm",
-                    // Subtle inner highlight for depth
-                    "border border-primary/20",
+                    // Subtle gradient: slight lightness shift only
+                    "bg-gradient-to-b from-primary-light to-primary",
+                    "text-primary-foreground font-semibold",
+                    // Very subtle border - barely visible
+                    "ring-1 ring-inset ring-black/10",
+                    // Minimal shadow
+                    "shadow-sm",
+                    // Hover: slight brightness shift
+                    "hover:from-primary-light hover:to-primary-dark hover:shadow",
+                    // Active: flat
+                    "active:from-primary active:to-primary active:shadow-none",
                 ].join(" "),
 
-                // Secondary button - muted background with subtle borders
+                /**
+                 * Secondary Button (matching reference "Invite" button)
+                 * - Light/white background, visible border
+                 * - Lower visual weight than primary
+                 */
                 secondary: [
-                    "bg-secondary text-secondary-foreground",
-                    "border border-border/50",
-                    "shadow-sm shadow-black/5",
-                    "hover:bg-secondary/80 hover:border-border/70 hover:shadow",
-                    "active:bg-secondary/70",
+                    "bg-card text-foreground font-medium",
+                    "border border-border",
+                    "shadow-sm",
+                    "hover:bg-secondary hover:border-border/80",
+                    "active:bg-secondary/80 active:shadow-none",
                 ].join(" "),
 
-                // Outline button - transparent with defined border
+                /**
+                 * Outline Button
+                 * - Transparent with clean border
+                 * - Understated
+                 */
                 outline: [
-                    "bg-transparent text-foreground",
-                    "border border-border/60",
-                    "shadow-sm shadow-black/5",
-                    "hover:bg-secondary/50 hover:border-border hover:shadow",
+                    "bg-transparent text-foreground font-medium",
+                    "ring-1 ring-inset ring-border",
+                    "hover:bg-secondary/40",
+                    "active:bg-secondary/60 active:shadow-none",
+                ].join(" "),
+
+                /**
+                 * Ghost Button
+                 * - Minimal, lightweight
+                 * - Clear hover affordance
+                 */
+                ghost: [
+                    "bg-transparent text-muted-foreground font-medium",
+                    "hover:bg-secondary/50 hover:text-foreground",
                     "active:bg-secondary/70",
                 ].join(" "),
 
-                // Ghost button - minimal, for toolbars and compact UIs
-                ghost: [
-                    "bg-transparent text-muted-foreground",
-                    "hover:bg-secondary/60 hover:text-foreground",
-                    "active:bg-secondary/80",
-                ].join(" "),
-
-                // Destructive button - danger actions
+                /**
+                 * Destructive Button
+                 * - Same subtle gradient as primary
+                 * - Red tones
+                 */
                 destructive: [
-                    "bg-destructive text-destructive-foreground",
-                    "shadow-sm shadow-destructive/20",
-                    "border border-destructive/20",
-                    "hover:bg-destructive/90 hover:shadow-md hover:shadow-destructive/25",
-                    "active:bg-destructive/85 active:shadow-sm",
+                    "bg-gradient-to-b from-red-500 to-red-600",
+                    "text-white font-semibold",
+                    "ring-1 ring-inset ring-black/10",
+                    "shadow-sm",
+                    "hover:from-red-500/90 hover:to-red-600 hover:shadow",
+                    "active:from-red-600 active:to-red-600 active:shadow-none",
                 ].join(" "),
 
-                // Link button - text only
+                /**
+                 * Link Button
+                 * - Text only, inline
+                 */
                 link: [
-                    "bg-transparent text-primary",
+                    "bg-transparent text-primary font-medium",
                     "underline-offset-4",
                     "hover:underline hover:text-primary/80",
                     "active:text-primary/70",
-                    "h-auto p-0", // Reset padding for inline use
+                    "h-auto p-0",
                 ].join(" "),
 
-                // Success button - positive confirmations
+                /**
+                 * Success Button
+                 * - Same subtle gradient as primary
+                 * - Green tones
+                 */
                 success: [
-                    "bg-emerald-600 text-white",
-                    "shadow-sm shadow-emerald-600/20",
-                    "border border-emerald-500/20",
-                    "hover:bg-emerald-500 hover:shadow-md hover:shadow-emerald-500/25",
-                    "active:bg-emerald-600/90 active:shadow-sm",
+                    "bg-gradient-to-b from-emerald-500 to-emerald-600",
+                    "text-white font-semibold",
+                    "ring-1 ring-inset ring-black/10",
+                    "shadow-sm",
+                    "hover:from-emerald-500/90 hover:to-emerald-600 hover:shadow",
+                    "active:from-emerald-600 active:to-emerald-600 active:shadow-none",
                 ].join(" "),
 
-                // Premium/Accent button - for key CTAs and special actions
-                premium: [
-                    "bg-gradient-to-r from-primary via-primary to-primary/80",
-                    "text-primary-foreground font-semibold",
-                    "shadow-lg shadow-primary/30",
-                    "border border-white/10",
-                    "hover:shadow-xl hover:shadow-primary/40 hover:from-primary/95 hover:to-primary/75",
-                    "active:shadow-md active:scale-[0.98]",
-                    // Animated shimmer effect on hover could be added via CSS
-                ].join(" "),
-
-                // Soft variant - very subtle, for de-emphasized actions
+                /**
+                 * Soft Button
+                 * - Very subtle, de-emphasized
+                 */
                 soft: [
-                    "bg-primary/10 text-primary",
-                    "border border-primary/10",
-                    "hover:bg-primary/15 hover:border-primary/20",
+                    "bg-primary/10 text-primary font-medium",
+                    "hover:bg-primary/15",
                     "active:bg-primary/20",
                 ].join(" "),
 
-                // Warning variant - for cautionary actions
+                /**
+                 * Warning Button
+                 * - Same subtle gradient
+                 * - Amber tones
+                 */
                 warning: [
-                    "bg-amber-500/90 text-white",
-                    "shadow-sm shadow-amber-500/20",
-                    "border border-amber-400/20",
-                    "hover:bg-amber-500 hover:shadow-md hover:shadow-amber-500/25",
-                    "active:bg-amber-600 active:shadow-sm",
+                    "bg-gradient-to-b from-amber-500 to-amber-600",
+                    "text-white font-semibold",
+                    "ring-1 ring-inset ring-black/10",
+                    "shadow-sm",
+                    "hover:from-amber-500/90 hover:to-amber-600 hover:shadow",
+                    "active:from-amber-600 active:to-amber-600 active:shadow-none",
+                ].join(" "),
+
+                /**
+                 * Premium Button
+                 * - For key CTAs and special actions
+                 * - More prominent than default
+                 */
+                premium: [
+                    "bg-gradient-to-b from-primary-light to-primary-dark",
+                    "text-primary-foreground font-bold",
+                    "shadow-lg shadow-primary/20",
+                    "ring-1 ring-inset ring-white/10",
+                    "hover:from-primary hover:to-primary-dark hover:shadow-xl hover:shadow-primary/30",
+                    "active:from-primary-dark active:to-primary-dark active:shadow-md",
                 ].join(" "),
             },
             size: {
                 // Default - standard button
-                default: "h-9 px-4 py-2 text-sm",
-                // Small - compact UI elements
-                sm: "h-8 px-3 py-1.5 text-xs rounded-md",
+                default: "h-9 px-4 py-2",
+                // Small - compact UI
+                sm: "h-8 px-3 py-1.5 text-[12px]",
                 // Large - prominent actions
-                lg: "h-11 px-6 py-2.5 text-base",
+                lg: "h-10 px-5 py-2.5 text-[14px]",
                 // Extra large - hero CTAs
-                xl: "h-12 px-8 py-3 text-base font-semibold",
-                // Icon buttons - square aspect ratio
+                xl: "h-11 px-6 py-3 text-[14px] font-semibold",
+                // Icon buttons - square
                 icon: "h-9 w-9 p-0",
-                "icon-sm": "h-8 w-8 p-0 rounded-md",
-                "icon-lg": "h-11 w-11 p-0",
-                "icon-xs": "h-6 w-6 p-0 rounded",
+                "icon-sm": "h-8 w-8 p-0",
+                "icon-lg": "h-10 w-10 p-0",
+                "icon-xs": "h-6 w-6 p-0 text-[11px]",
             },
         },
         defaultVariants: {
@@ -156,7 +200,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
     asChild?: boolean
     isLoading?: boolean
-    /** Disables the micro-animations for contexts where they may interfere */
+    /** Disables micro-animations */
     disableMotion?: boolean
 }
 
@@ -174,11 +218,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }, ref) => {
         const Comp = asChild ? Slot : motion.button
 
-        // Subtle micro-interactions for polish
+        // Subtle, restrained micro-interactions
         const motionProps = !asChild && !disableMotion ? {
-            whileTap: { scale: 0.97 },
-            whileHover: { scale: 1.01 },
-            transition: { duration: 0.1 }
+            whileTap: { scale: 0.98 },
+            transition: { duration: 0.1, ease: "easeOut" }
         } : {}
 
         const isDisabled = disabled || isLoading
@@ -192,7 +235,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {...props as any}
             >
                 {isLoading && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
                 )}
                 {children}
             </Comp>
@@ -202,16 +245,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 /**
- * IconButton - Convenience wrapper for icon-only buttons
- * Provides automatic sizing and aria-label requirement
+ * IconButton - Square icon-only buttons
+ * Requires aria-label for accessibility
  */
 interface IconButtonProps extends Omit<ButtonProps, "size"> {
     size?: "xs" | "sm" | "default" | "lg"
-    "aria-label": string // Required for accessibility
+    "aria-label": string
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-    ({ size = "default", className, ...props }, ref) => {
+    ({ size = "default", variant = "ghost", className, ...props }, ref) => {
         const sizeMap = {
             xs: "icon-xs",
             sm: "icon-sm",
@@ -222,8 +265,9 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         return (
             <Button
                 ref={ref}
+                variant={variant}
                 size={sizeMap[size]}
-                className={cn("flex-shrink-0", className)}
+                className={cn("shrink-0", className)}
                 {...props}
             />
         )

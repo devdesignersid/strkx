@@ -117,12 +117,16 @@ export default function DashboardPage() {
                 recentActivity.map((activity: any) => (
                   <div key={activity.id} className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg border border-border/50 hover:border-border transition-colors">
                     <div className="flex items-center gap-4">
-                      <StatusBadge
-                        status={activity.status}
-                        icon={activity.status === 'Solved' ? CheckCircle2 : Activity}
-                        variant={activity.status === 'Solved' ? 'success' : 'warning'}
-                        className="rounded-full p-2 h-auto w-auto border-none"
-                      />
+                      {/* Status indicator - clean icon only */}
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${activity.status === 'Solved'
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-amber-500/10 text-amber-500'
+                        }`}>
+                        {activity.status === 'Solved'
+                          ? <CheckCircle2 className="w-4 h-4" />
+                          : <Activity className="w-4 h-4" />
+                        }
+                      </div>
                       <div>
                         <div className="flex items-center gap-2">
 
