@@ -1,7 +1,6 @@
-import { FileText, RotateCcw, ArrowLeft, Undo2, Redo2, Sparkles, Loader2, Linkedin, Heart, Save, History } from 'lucide-react';
+import { FileText, RotateCcw, Undo2, Redo2, Sparkles, Loader2, Linkedin, Heart, Save, History } from 'lucide-react';
 import { Button } from '@/design-system/components';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/design-system/components/Tooltip';
-import { Link } from 'react-router-dom';
 import { useResumeStore, useHasChanges } from '../hooks/useResumeStore';
 import { useResumeAnalysis } from '../hooks/useResumeAnalysis';
 import { useLinkedInOptimization } from '../hooks/useLinkedInOptimization';
@@ -118,10 +117,6 @@ export function ResumeHeader({ onReset }: ResumeHeaderProps) {
         <TooltipProvider>
             <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 z-10 sticky top-0">
                 <div className="flex items-center gap-4">
-                    <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                    <div className="h-4 w-px bg-border hidden sm:block" />
                     <h2 className="font-semibold text-sm flex items-center gap-2 text-foreground/90 tracking-tight">
                         <FileText className="w-4 h-4 text-primary" />
                         <span className="hidden sm:inline">Resume Builder</span>

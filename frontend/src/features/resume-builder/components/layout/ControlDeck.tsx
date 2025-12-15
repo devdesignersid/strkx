@@ -13,8 +13,14 @@ import { FileText, Palette } from 'lucide-react';
 // Lazy load DesignPanel (includes heavy FontPicker)
 const DesignPanel = lazy(() => import('../editor/DesignPanel').then(m => ({ default: m.DesignPanel })));
 
-// Memoized section divider
-const SectionDivider = memo(() => <div className="h-px bg-border w-full my-6" />);
+// Memoized section divider with subtle gradient
+const SectionDivider = memo(() => (
+    <div className="relative my-8">
+        <div className="absolute inset-0 flex items-center">
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+    </div>
+));
 SectionDivider.displayName = 'SectionDivider';
 
 // Loading fallback for lazy components
@@ -28,20 +34,21 @@ export const ControlDeck = () => {
     const [activeTab, setActiveTab] = useState('content');
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden bg-background">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col h-full">
-                <div className="shrink-0 bg-card z-10 border-b border-border px-4 py-3 sticky top-0">
-                    <TabsList className="w-full grid grid-cols-2 bg-muted/60 p-1.5 h-auto rounded-xl gap-1.5">
+                {/* Tab Header */}
+                <div className="shrink-0 bg-card/80 backdrop-blur-md z-10 border-b border-border/60 px-4 py-3 sticky top-0">
+                    <TabsList className="w-full grid grid-cols-2 bg-secondary/40 p-1 h-auto rounded-lg gap-1 border border-border/40">
                         <TabsTrigger
                             value="content"
-                            className="rounded-lg py-2.5 px-4 text-sm font-medium text-muted-foreground transition-all inline-flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-border/50"
+                            className="rounded-md py-2.5 px-4 text-sm font-medium text-muted-foreground transition-all inline-flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50"
                         >
                             <FileText className="w-4 h-4 shrink-0" />
                             <span>Content</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="design"
-                            className="rounded-lg py-2.5 px-4 text-sm font-medium text-muted-foreground transition-all inline-flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md data-[state=active]:ring-1 data-[state=active]:ring-border/50"
+                            className="rounded-md py-2.5 px-4 text-sm font-medium text-muted-foreground transition-all inline-flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50"
                         >
                             <Palette className="w-4 h-4 shrink-0" />
                             <span>Design</span>
@@ -49,6 +56,7 @@ export const ControlDeck = () => {
                     </TabsList>
                 </div>
 
+                {/* Content Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-20">
                     <AnimatePresence mode="wait">
                         {activeTab === 'content' ? (
@@ -58,7 +66,7 @@ export const ControlDeck = () => {
                                 initial="initial"
                                 animate="animate"
                                 exit="exit"
-                                className="space-y-8 outline-none"
+                                className="space-y-6 outline-none"
                             >
                                 <section id="profile" className="space-y-4">
                                     <ProfileForm />

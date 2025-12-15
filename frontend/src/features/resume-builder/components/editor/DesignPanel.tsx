@@ -3,6 +3,7 @@ import { useDesign, useSetDraft } from '../../hooks/useResumeStore';
 import { FontPicker } from './FontPicker';
 import { Label } from '@/design-system/components/Label';
 import { Input } from '@/design-system/components/Input';
+import { Button } from '@/design-system/components/Button';
 import { cn } from '@/lib/utils';
 import { LayoutTemplate, Sidebar, Type, Palette, Ruler, ChevronDown } from 'lucide-react';
 
@@ -18,10 +19,12 @@ const Section = memo(({ title, icon, defaultOpen = true, children }: SectionProp
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="border border-border rounded-lg overflow-hidden bg-card/50">
-            <button
+        <div className="border border-border/60 rounded-xl overflow-hidden bg-card/30 backdrop-blur-sm">
+            <Button
+                variant="ghost"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 h-auto rounded-none hover:bg-secondary/50"
+                disableMotion
             >
                 <div className="flex items-center gap-3">
                     <span className="text-primary">{icon}</span>
@@ -33,12 +36,12 @@ const Section = memo(({ title, icon, defaultOpen = true, children }: SectionProp
                         isOpen && "rotate-180"
                     )}
                 />
-            </button>
+            </Button>
             <div className={cn(
                 "overflow-hidden transition-all duration-200",
                 isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
             )}>
-                <div className="p-4 pt-2 space-y-4">
+                <div className="p-4 pt-2 space-y-4 border-t border-border/40">
                     {children}
                 </div>
             </div>
@@ -59,8 +62,8 @@ const ColorPicker = memo(({ label, value, onChange }: ColorPickerProps) => (
     <div className="space-y-2">
         <Label className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</Label>
         <div className="flex gap-2 items-center">
-            <label className="relative w-9 h-9 rounded-lg cursor-pointer border-2 border-border shadow-sm hover:border-primary transition-colors">
-                <span className="absolute inset-0.5 rounded-md" style={{ backgroundColor: value }} />
+            <label className="relative w-10 h-10 rounded-lg cursor-pointer border-2 border-border/60 shadow-sm hover:border-primary/50 transition-all hover:shadow-md">
+                <span className="absolute inset-1 rounded-md shadow-inner" style={{ backgroundColor: value }} />
                 <input
                     type="color"
                     value={value}
@@ -71,7 +74,7 @@ const ColorPicker = memo(({ label, value, onChange }: ColorPickerProps) => (
             <Input
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="font-mono text-xs uppercase h-8"
+                className="font-mono text-xs uppercase h-9"
                 maxLength={7}
             />
         </div>
@@ -92,10 +95,10 @@ interface SliderProps {
 }
 
 const Slider = memo(({ label, value, min, max, step, unit, onChange }: SliderProps) => (
-    <div className="space-y-2">
-        <div className="flex justify-between">
+    <div className="space-y-3">
+        <div className="flex justify-between items-center">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</Label>
-            <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+            <span className="text-xs font-mono text-foreground bg-secondary/60 px-2 py-1 rounded-md border border-border/40">
                 {value}{unit}
             </span>
         </div>
@@ -105,13 +108,47 @@ const Slider = memo(({ label, value, min, max, step, unit, onChange }: SliderPro
             max={max}
             step={step}
             value={value}
-            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-full h-2 bg-secondary/80 rounded-lg appearance-none cursor-pointer accent-primary"
             onChange={(e) => onChange(parseFloat(e.target.value))}
         />
     </div>
 ));
 
 Slider.displayName = 'Slider';
+
+// Layout Option Component
+interface LayoutOptionProps {
+    isSelected: boolean;
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+}
+
+const LayoutOption = memo(({ isSelected, icon, label, onClick }: LayoutOptionProps) => (
+    <Button
+        variant={isSelected ? "soft" : "outline"}
+        onClick={onClick}
+        className={cn(
+            "flex flex-col items-center justify-center h-auto py-5 px-4 gap-2",
+            isSelected
+                ? "border-primary/40 bg-primary/10 shadow-sm shadow-primary/10"
+                : "border-border/60 hover:border-primary/30 hover:bg-secondary/50"
+        )}
+        disableMotion
+    >
+        <span className={cn(isSelected ? "text-primary" : "text-muted-foreground")}>
+            {icon}
+        </span>
+        <span className={cn(
+            "text-xs font-medium",
+            isSelected ? "text-primary" : "text-muted-foreground"
+        )}>
+            {label}
+        </span>
+    </Button>
+));
+
+LayoutOption.displayName = 'LayoutOption';
 
 export const DesignPanel = memo(() => {
     // Use granular selectors
@@ -126,35 +163,22 @@ export const DesignPanel = memo(() => {
     }, [setDraft]);
 
     return (
-        <div className="space-y-4 p-1">
+        <div className="space-y-4">
             {/* Layout Section */}
             <Section title="Layout" icon={<LayoutTemplate className="w-4 h-4" />}>
                 <div className="grid grid-cols-2 gap-3">
-                    <button
-                        className={cn(
-                            "flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all hover:bg-muted/50",
-                            design.layout === 'single'
-                                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                                : "border-border bg-card"
-                        )}
+                    <LayoutOption
+                        isSelected={design.layout === 'single'}
+                        icon={<LayoutTemplate className="w-5 h-5" />}
+                        label="Single Column"
                         onClick={() => updateDesign('layout', 'single')}
-                    >
-                        <LayoutTemplate className={cn("w-5 h-5 mb-2", design.layout === 'single' ? "text-primary" : "text-muted-foreground")} />
-                        <span className={cn("text-xs font-medium", design.layout === 'single' ? "text-primary" : "text-muted-foreground")}>Single Column</span>
-                    </button>
-
-                    <button
-                        className={cn(
-                            "flex flex-col items-center justify-center p-4 border-2 rounded-lg transition-all hover:bg-muted/50",
-                            design.layout === 'sidebar'
-                                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                                : "border-border bg-card"
-                        )}
+                    />
+                    <LayoutOption
+                        isSelected={design.layout === 'sidebar'}
+                        icon={<Sidebar className="w-5 h-5" />}
+                        label="Sidebar"
                         onClick={() => updateDesign('layout', 'sidebar')}
-                    >
-                        <Sidebar className={cn("w-5 h-5 mb-2", design.layout === 'sidebar' ? "text-primary" : "text-muted-foreground")} />
-                        <span className={cn("text-xs font-medium", design.layout === 'sidebar' ? "text-primary" : "text-muted-foreground")}>Sidebar</span>
-                    </button>
+                    />
                 </div>
             </Section>
 
@@ -229,4 +253,3 @@ export const DesignPanel = memo(() => {
 });
 
 DesignPanel.displayName = 'DesignPanel';
-

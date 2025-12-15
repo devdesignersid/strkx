@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { EmptyState } from '@/design-system/components';
 import { EmptyListsIllustration } from '@/design-system/illustrations';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { Input, Button } from '@/design-system/components';
+import { Input, Button, IconButton } from '@/design-system/components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Breadcrumb } from '@/design-system/components';
@@ -319,12 +319,14 @@ export default function ListDetailPage() {
                 <thead className="bg-secondary/30 text-muted-foreground font-medium border-b border-border">
                   <tr>
                     <th className="px-4 py-3 w-10">
-                      <button
+                      <IconButton
+                        variant="ghost"
+                        size="xs"
                         onClick={toggleSelectAll}
-                        className="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label={isAllSelected ? 'Deselect all' : 'Select all'}
                       >
                         {isAllSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                      </button>
+                      </IconButton>
                     </th>
                     <th
                       className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
@@ -393,15 +395,15 @@ export default function ListDetailPage() {
                           )}
                         >
                           <td className="px-4 py-3">
-                            <button
+                            <IconButton
+                              variant="ghost"
+                              size="xs"
                               onClick={(e) => toggleSelectOne(problem.id, e)}
-                              className={cn(
-                                "flex items-center justify-center transition-colors",
-                                selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
-                              )}
+                              aria-label={selectedIds.has(problem.id) ? 'Deselect' : 'Select'}
+                              className={selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50"}
                             >
                               {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                            </button>
+                            </IconButton>
                           </td>
                           <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
                             {problem.title}
@@ -460,12 +462,15 @@ export default function ListDetailPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right relative">
-                            <button
+                            <IconButton
+                              variant="ghost"
+                              size="xs"
                               onClick={(e) => handleMenuClick(e, problem.id)}
-                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors row-action-menu-trigger"
+                              aria-label="More options"
+                              className="row-action-menu-trigger"
                             >
                               <MoreHorizontal className="w-4 h-4" />
-                            </button>
+                            </IconButton>
                           </td>
                         </tr>
                       );
@@ -531,20 +536,23 @@ export default function ListDetailPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleRemoveFromList(Array.from(selectedIds))}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                  className="hover:bg-destructive/10 hover:text-destructive"
                 >
                   <FolderMinus className="w-4 h-4" />
                   Remove from List
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setSelectedIds(new Set())}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary rounded-md transition-colors text-sm font-medium text-muted-foreground"
                 >
                   <X className="w-4 h-4" />
                   Clear
-                </button>
+                </Button>
               </div>
             </motion.div>
           )}
@@ -568,8 +576,10 @@ export default function ListDetailPage() {
               className="w-32 bg-card border border-border rounded-lg shadow-xl overflow-hidden row-action-menu-content"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors text-left"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-destructive hover:bg-destructive/10 rounded-none"
                 onClick={() => {
                   handleRemoveFromList([activeMenu.id]);
                   setActiveMenu(null);
@@ -577,7 +587,7 @@ export default function ListDetailPage() {
               >
                 <FolderMinus className="w-3.5 h-3.5" />
                 Remove
-              </button>
+              </Button>
             </motion.div>
           </div>,
           document.body

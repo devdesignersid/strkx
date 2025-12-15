@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyState, Button } from '@/design-system/components';
+import { EmptyState, Button, StatusBadge, getDifficultyVariant } from '@/design-system/components';
 import type { SystemDesignProblem } from '@/types/system-design';
 import type { SortKey, SortDirection } from '../hooks/useSystemDesignProblems';
 
@@ -74,14 +74,13 @@ export function SystemDesignTable({
         <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+                    <thead className="bg-secondary/30 text-muted-foreground font-medium border-b border-border">
                         <tr>
                             <th className="px-4 py-3 w-10">
                                 <Button
                                     variant="ghost"
-                                    size="sm"
                                     onClick={onToggleSelectAll}
-                                    className="h-8 w-8 p-0 hover:bg-transparent hover:text-foreground"
+                                    className="flex items-center justify-center h-auto w-auto p-0 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     {isAllSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                                 </Button>
@@ -147,39 +146,36 @@ export function SystemDesignTable({
                                     key={problem.id}
                                     onClick={() => navigate(`/system-design/${problem.id}`)}
                                     className={cn(
-                                        "group hover:bg-muted/30 transition-colors cursor-pointer",
+                                        "group hover:bg-secondary/30 transition-colors cursor-pointer",
                                         selectedIds.has(problem.id) && "bg-primary/5 hover:bg-primary/10"
                                     )}
                                 >
                                     <td className="px-4 py-3">
                                         <Button
                                             variant="ghost"
-                                            size="sm"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onToggleSelectOne(problem.id, e.shiftKey, lastSelectedId.current);
                                                 lastSelectedId.current = problem.id;
                                             }}
                                             className={cn(
-                                                "h-8 w-8 p-0 hover:bg-transparent",
+                                                "flex items-center justify-center h-auto w-auto p-0 hover:bg-transparent transition-colors",
                                                 selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
                                             )}
                                         >
                                             {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                                         </Button>
                                     </td>
-                                    <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors">
-                                        {problem.title}
+                                    <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors max-w-[300px]">
+                                        <div className="truncate" title={problem.title}>
+                                            {problem.title}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                                            problem.difficulty === 'Easy' && "bg-green-500/10 text-green-500 border-green-500/20",
-                                            problem.difficulty === 'Medium' && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-                                            problem.difficulty === 'Hard' && "bg-red-500/10 text-red-500 border-red-500/20",
-                                        )}>
-                                            {problem.difficulty}
-                                        </span>
+                                        <StatusBadge
+                                            status={problem.difficulty}
+                                            variant={getDifficultyVariant(problem.difficulty)}
+                                        />
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center flex-wrap gap-1.5">
@@ -214,9 +210,12 @@ export function SystemDesignTable({
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            {/* TODO: Integrate real status */}
-                                            <Circle className="w-4 h-4 text-muted-foreground/30" />
-                                            <span className="text-xs text-muted-foreground">Todo</span>
+                                            <StatusBadge
+                                                status="Todo"
+                                                icon={Circle}
+                                                variant="neutral"
+                                                className="border-none bg-transparent p-0"
+                                            />
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-right relative">

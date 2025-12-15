@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { Save, ArrowLeft, Loader2, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2, Wand2 } from 'lucide-react';
+import { Save, ArrowLeft, ChevronDown, Bold, Italic, List, Code, Link as LinkIcon, Heading1, Heading2, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { systemDesignApi } from '@/services/api/system-design.service';
 import { aiService } from '@/lib/ai/aiService';
 import { PROMPTS } from '@/lib/ai/prompts';
-import { Modal } from '@/design-system/components';
+import { Button, IconButton, Modal } from '@/design-system/components';
 
 export default function CreateSystemDesignPage() {
     const navigate = useNavigate();
@@ -169,26 +169,19 @@ export default function CreateSystemDesignPage() {
         <div className="h-screen bg-background text-foreground font-sans flex flex-col overflow-hidden h-full">
             <header className="h-14 border-b border-white/5 bg-card/50 backdrop-blur-md flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/system-design')} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                        <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-                    </button>
+                    <IconButton variant="ghost" size="sm" onClick={() => navigate('/system-design')} aria-label="Go back">
+                        <ArrowLeft className="w-5 h-5" />
+                    </IconButton>
                     <h1 className="font-semibold text-lg">{isEditMode ? 'Edit System Design Problem' : 'Create System Design Problem'}</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => navigate('/system-design')}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-transparent text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
-                    >
+                    <Button variant="outline" onClick={() => navigate('/system-design')}>
                         Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isLoading || !formData.title}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50"
-                    >
-                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    </Button>
+                    <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.title}>
+                        <Save className="w-4 h-4" />
                         {isEditMode ? 'Update Problem' : 'Save Problem'}
-                    </button>
+                    </Button>
                 </div>
             </header>
 
@@ -209,14 +202,16 @@ export default function CreateSystemDesignPage() {
                             </div>
                             {isAIEnabled && (
                                 <div className="flex items-end pb-0.5">
-                                    <button
+                                    <Button
+                                        variant="soft"
                                         onClick={handleAIGenerate}
                                         disabled={isGenerating || !formData.title}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border border-purple-500/30 transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        isLoading={isGenerating}
+                                        className="bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border-purple-500/30"
                                     >
-                                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                                        <Wand2 className="w-4 h-4" />
                                         Auto-Complete with AI
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
                             <div className="space-y-2">
@@ -348,12 +343,9 @@ export default function CreateSystemDesignPage() {
                 title="Error"
                 description={errorMessage}
                 footer={
-                    <button
-                        onClick={() => setErrorModalOpen(false)}
-                        className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
-                    >
+                    <Button onClick={() => setErrorModalOpen(false)}>
                         Close
-                    </button>
+                    </Button>
                 }
             />
         </div>

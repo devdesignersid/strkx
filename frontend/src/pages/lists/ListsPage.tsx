@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, Search, Folder, Trash2, Clock, Loader2 } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { Modal, Input, Button, Card, PageHeader, ProgressBar, Textarea, EmptyState } from '@/design-system/components';
+import { Modal, Input, Button, IconButton, Card, PageHeader, ProgressBar, Textarea, EmptyState } from '@/design-system/components';
 import { EmptyListsIllustration } from '@/design-system/illustrations';
 import { useLists, useCreateList, useDeleteList } from '@/hooks/useLists';
 
@@ -145,13 +145,15 @@ export default function ListsPage() {
                       <Clock className="w-3 h-3" />
                       {new Date(list.updatedAt).toLocaleDateString()}
                     </div>
-                    <button
+                    <IconButton
+                      variant="ghost"
+                      size="xs"
                       onClick={(e) => handleDeleteList(e, list.id, list.name)}
-                      className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete List"
+                      aria-label="Delete list"
+                      className="opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </IconButton>
                   </div>
                 </div>
 

@@ -40,8 +40,8 @@ export const useProblems = () => {
         difficulty: filterDifficulties.join(','),
         status: filterStatus.join(','),
         tags: filterTags.join(','),
-        sort: sortConfig.key,
-        order: sortConfig.direction
+        sortBy: sortConfig.key,
+        sortOrder: sortConfig.direction
       };
       const response = await problemsService.findAll(params);
       return response;

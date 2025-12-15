@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useId, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { IconButton } from './Button';
 
 interface ModalProps {
     isOpen: boolean;
@@ -122,13 +123,16 @@ export function Modal({ isOpen, onClose, title, description, children, footer, c
                         tabIndex={-1}
                         onKeyDown={handleTabKey}
                     >
-                        <button
+                        <IconButton
                             onClick={onClose}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                            variant="ghost"
+                            size="sm"
                             aria-label="Close dialog"
+                            className="absolute top-4 right-4"
+                            disableMotion
                         >
                             <X className="w-4 h-4" />
-                        </button>
+                        </IconButton>
 
                         <div className="mb-6">
                             <h2

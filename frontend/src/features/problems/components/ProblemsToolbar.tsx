@@ -135,9 +135,14 @@ export function ProblemsToolbar({
                       {filterTags.map(tag => (
                         <span key={tag} className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                           {tag}
-                          <button onClick={() => setFilterTags(filterTags.filter(t => t !== tag))} className="hover:text-primary/70">
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => setFilterTags(filterTags.filter(t => t !== tag))}
+                            className="h-3 w-3 hover:text-primary/70 p-0 hover:bg-transparent"
+                          >
                             <X className="w-3 h-3" />
-                          </button>
+                          </Button>
                         </span>
                       ))}
                     </div>
@@ -174,27 +179,33 @@ export function ProblemsToolbar({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onAddToList}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary rounded-md transition-colors text-sm font-medium"
+                className="h-8 hover:bg-secondary"
               >
-                <FolderPlus className="w-4 h-4" />
+                <FolderPlus className="w-4 h-4 mr-2" />
                 Add to List
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onBulkDelete}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                className="h-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4 mr-2" />
                 Delete
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onClearSelection}
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary rounded-md transition-colors text-sm font-medium text-muted-foreground"
+                className="h-8 text-muted-foreground hover:bg-secondary"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 mr-2" />
                 Clear
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}

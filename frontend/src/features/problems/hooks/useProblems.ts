@@ -37,8 +37,8 @@ export function useProblems() {
     difficulty: filterDifficulties.length ? filterDifficulties.join(',') : undefined,
     status: filterStatus.length ? filterStatus.join(',') : undefined,
     tags: filterTags.length ? filterTags.join(',') : undefined,
-    sort: sortConfig.key,
-    order: sortConfig.direction
+    sortBy: sortConfig.key,
+    sortOrder: sortConfig.direction
   }), [searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
 
   // Infinite query for problems

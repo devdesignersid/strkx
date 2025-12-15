@@ -24,10 +24,18 @@ export function useSystemDesignProblems() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // Fetch Problems with React Query
-    const { data: problems = [], isLoading, error } = useQuery({
+    const { data: rawProblems = [], isLoading, error } = useQuery({
         queryKey: ['system-design-problems'],
         queryFn: () => systemDesignApi.getAllProblems(),
     });
+
+    const problems = useMemo(() => {
+        return rawProblems.map((problem: SystemDesignProblem & { _count?: { submissions: number } }) => ({
+            ...problem,
+            status: problem.status || (problem._count?.submissions && problem._count.submissions > 0 ? 'Attempted' : 'Todo')
+        }));
+    }, [rawProblems]);
+
 
     // Delete Mutation
     const deleteMutation = useMutation({

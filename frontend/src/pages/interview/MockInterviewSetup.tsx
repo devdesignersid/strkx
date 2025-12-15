@@ -5,7 +5,7 @@ import { Play, Clock, Brain, Filter, List as ListIcon, Hash, Search, ChevronDown
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { DIFFICULTY_LEVELS, PROBLEM_STATUSES, MOCK_INTERVIEW_CONSTANTS } from '@/config/constants';
 import { cn } from '@/lib/utils';
-import { Button, Input, Label } from '@/design-system/components';
+import { Button, IconButton, Input, Label } from '@/design-system/components';
 import { listsService } from '@/services/api/lists.service';
 import { interviewService } from '@/services/api/interview.service';
 
@@ -261,12 +261,15 @@ const MockInterviewSetup: React.FC = () => {
                           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
                         >
                           <span>{list.name}</span>
-                          <button
+                          <IconButton
+                            variant="ghost"
+                            size="xs"
                             onClick={(e) => { e.stopPropagation(); removeList(list.id); }}
-                            className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                            aria-label={`Remove ${list.name}`}
+                            className="hover:bg-primary/20 p-0.5 h-auto w-auto"
                           >
                             <X className="w-3 h-3" />
-                          </button>
+                          </IconButton>
                         </motion.div>
                       );
                     })}
@@ -396,22 +399,15 @@ const MockInterviewSetup: React.FC = () => {
         <div className="flex justify-center pt-8">
           <Button
             onClick={handleStart}
-            disabled={loading}
-            size="lg"
-            className={cn(
-              "group relative px-8 py-6 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all overflow-hidden"
-            )}
+            isLoading={loading}
+            variant="premium"
+            size="xl"
+            className="group relative px-10 py-6 text-lg font-bold hover:-translate-y-0.5 transition-all overflow-hidden"
           >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             <span className="relative flex items-center gap-3">
-              {loading ? (
-                <>Starting Interview...</>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 fill-current" />
-                  Start Interview Session
-                </>
-              )}
+              <Play className="w-5 h-5 fill-current" />
+              Start Interview Session
             </span>
           </Button>
         </div>

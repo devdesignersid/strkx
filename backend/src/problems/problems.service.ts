@@ -106,42 +106,87 @@ export class ProblemsService {
     }
 
     // Execute Transaction for count and data
-    const [problems, total] = await this.prisma.$transaction([
-      this.prisma.problem.findMany({
+    let problems;
+    let total;
+
+    // Special handling for Status sorting (In-Memory Sort)
+    if (sortBy === 'status' && user) {
+      // 1. Fetch minimal data identifying status for ALL matching problems (filtered by search/tags/difficulty)
+      const allMatchingProblems = await this.prisma.problem.findMany({
         where,
-        skip,
-        take: limit,
-        orderBy,
+        select: {
+          id: true,
+          submissions: {
+            where: { userId: user.id },
+            select: { status: true }
+          }
+        }
+      });
+
+      total = allMatchingProblems.length;
+
+      // 2. Calculate rank for each problem
+      // Rank: 3=Solved, 2=Attempted, 1=Todo
+      const rankedProblems = allMatchingProblems.map(p => {
+        const hasAccepted = p.submissions.some(s => s.status === 'ACCEPTED');
+        const hasAny = p.submissions.length > 0;
+        let rank = 1; // Todo
+        if (hasAccepted) rank = 3; // Solved
+        else if (hasAny) rank = 2; // Attempted
+
+        return { id: p.id, rank };
+      });
+
+      // 3. Sort in memory
+      const multiplier = sortOrder === 'asc' ? 1 : -1;
+      rankedProblems.sort((a, b) => (a.rank - b.rank) * multiplier);
+
+      // 4. Slice for pagination
+      const slicedIds = rankedProblems.slice(skip, skip + limit).map(p => p.id);
+
+      // 5. Fetch full data for the sliced IDs
+      // We must fetch them in a way that preserves our sorted order?
+      // Prisma `in` implementation doesn't guarantee order.
+      // So we fetch them, then re-sort the result array to match `slicedIds` order.
+      const pageProblems = await this.prisma.problem.findMany({
+        where: { id: { in: slicedIds } },
         include: {
           submissions: {
             where: { userId: user.id },
             select: { status: true },
-            distinct: ['status'] // Get unique statuses to determine if Solved/Attempted without fetching all
+            distinct: ['status']
           }
         }
-      }),
-      this.prisma.problem.count({ where }),
-    ]);
+      });
+
+      // Re-sort pageProblems to match slicedIds order
+      problems = slicedIds.map(id => pageProblems.find(p => p.id === id)).filter(Boolean);
+
+    } else {
+      // Standard DB-level sorting
+      [problems, total] = await this.prisma.$transaction([
+        this.prisma.problem.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          include: {
+            submissions: {
+              where: { userId: user.id },
+              select: { status: true },
+              distinct: ['status']
+            }
+          }
+        }),
+        this.prisma.problem.count({ where }),
+      ]);
+    }
 
     // Map to enrich status for frontend
-    // Note: This mapping is now O(limit) which is O(1) effectively (limit=20)
     const enrichedProblems = problems.map((p) => {
       let problemStatus = 'Todo';
+      // Safe check for submissions existence
       const userSubmissions = p.submissions || [];
-
-      // Since we didn't fetch ALL submissions, we need to be careful.
-      // But wait, we need to know if *any* accepted submission exists to call it 'Solved'.
-      // The previous query fetched all submissions.
-      // Optimization: We can't easily get "Solved" status just by taking 1 latest submission 
-      // if the latest is failed but a previous one was passed.
-      // However, for the list view, usually "Solved" means "Ever Solved".
-
-      // Let's refine the include to be more efficient or just accept we need to check existence.
-      // Actually, we can use the same logic as the filter but for projection? No.
-
-      // Better approach for status projection:
-      // We can fetch the status separately or just fetch all submissions for these 20 problems (lightweight).
-      // Or, since we are already paginating, fetching submissions for 20 problems is fine.
 
       const hasAccepted = userSubmissions.some(s => s.status === 'ACCEPTED');
       const hasAny = userSubmissions.length > 0;
@@ -149,17 +194,10 @@ export class ProblemsService {
       if (hasAccepted) problemStatus = 'Solved';
       else if (hasAny) problemStatus = 'Attempted';
 
-      // To ensure we get the correct status, we should probably fetch all submissions for these problems
-      // OR rely on the fact that if we filtered by status, we know the status.
-      // But if we didn't filter, we need to compute it.
-
-      // Let's change the include to fetch all submissions for the user for these problems.
-      // It's only 20 problems, so it's fine.
-
       return {
         ...p,
         status: problemStatus,
-        submissions: undefined, // Remove from output if not needed
+        submissions: undefined, // Remove from output
       };
     });
 

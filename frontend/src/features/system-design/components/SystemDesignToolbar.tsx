@@ -164,13 +164,13 @@ export function SystemDesignToolbar({
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1e1e1e] border border-white/10 rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-popover border border-border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
                     >
-                        <div className="flex items-center gap-3 border-r border-white/10 pr-6">
+                        <div className="flex items-center gap-3 border-r border-border pr-6">
                             <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                                 {selectedCount}
                             </div>
-                            <span className="text-sm font-medium text-white">Selected</span>
+                            <span className="text-sm font-medium">Selected</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function SystemDesignToolbar({
                                 variant="ghost"
                                 size="sm"
                                 onClick={onAddToList}
-                                className="h-8 text-white hover:bg-white/10 hover:text-white"
+                                className="h-8 hover:bg-secondary"
                             >
                                 <FolderPlus className="w-4 h-4 mr-2" />
                                 Add to List
@@ -196,7 +196,7 @@ export function SystemDesignToolbar({
                                 variant="ghost"
                                 size="sm"
                                 onClick={onClearSelection}
-                                className="h-8 text-muted-foreground hover:bg-white/10 hover:text-white"
+                                className="h-8 text-muted-foreground hover:bg-secondary"
                             >
                                 <X className="w-4 h-4 mr-2" />
                                 Clear
