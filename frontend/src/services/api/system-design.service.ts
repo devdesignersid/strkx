@@ -47,6 +47,8 @@ export const systemDesignApi = {
         notesMarkdown?: string;
         timeSpentSeconds?: number;
         status?: string;
+        aiAnalysis?: any;
+        score?: number;
     }) => {
         const response = await apiClient.post(`${BASE_URL}/submissions/${id}`, data);
         return response.data.data;
@@ -59,6 +61,11 @@ export const systemDesignApi = {
 
     getSubmission: async (id: string) => {
         const response = await apiClient.get(`${BASE_URL}/submissions/${id}`);
+        return response.data.data;
+    },
+
+    deleteSubmission: async (id: string) => {
+        const response = await apiClient.delete(`${BASE_URL}/submissions/${id}`);
         return response.data.data;
     },
 

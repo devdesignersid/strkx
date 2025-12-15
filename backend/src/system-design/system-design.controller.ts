@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Query, Logger, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Query, Logger, ParseUUIDPipe, Delete } from '@nestjs/common';
 import { SystemDesignService } from './system-design.service';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CreateSystemDesignProblemDto, UpdateSystemDesignProblemDto } from './dto/create-problem.dto';
@@ -9,7 +9,7 @@ import { CreateSystemDesignSubmissionDto, UpdateSystemDesignSubmissionDto, MarkS
 export class SystemDesignController {
   private readonly logger = new Logger(SystemDesignController.name);
 
-  constructor(private readonly systemDesignService: SystemDesignService) {}
+  constructor(private readonly systemDesignService: SystemDesignService) { }
 
   @Post('problems')
   async createProblem(@Request() req, @Body() data: CreateSystemDesignProblemDto) {
@@ -104,5 +104,10 @@ export class SystemDesignController {
     @Body() body: MarkSolutionDto
   ) {
     return this.systemDesignService.markSubmissionAsSolution(id, body.solutionName);
+  }
+
+  @Delete('submissions/:id')
+  async deleteSubmission(@Param('id', ParseUUIDPipe) id: string) {
+    return this.systemDesignService.deleteSubmission(id);
   }
 }

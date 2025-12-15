@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 interface ExcalidrawWrapperProps {
     initialData?: any;
+    resetKey?: number;
     onChange?: (elements: readonly any[], appState: any) => void;
     onSave?: () => void;
     readOnly?: boolean;
@@ -11,6 +12,7 @@ interface ExcalidrawWrapperProps {
 
 export default function ExcalidrawWrapper({
     initialData,
+    resetKey,
     onChange,
     onSave,
     readOnly = false,
@@ -18,6 +20,7 @@ export default function ExcalidrawWrapper({
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const loadedDataVersion = useRef<string>('');
     const lastEmittedVersion = useRef<string>('');
+
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -60,34 +63,47 @@ export default function ExcalidrawWrapper({
 
     // Watch for data changes and reload
     useEffect(() => {
-        if (!iframeRef.current || !initialData) return;
-
-        const elementIds = initialData.elements?.map((e: any) => e.id).sort().join(',') || '';
-
-        // If this data matches what we just emitted, ignore it (loopback prevention)
-        if (elementIds === lastEmittedVersion.current) {
-            loadedDataVersion.current = elementIds; // Sync loaded version
+        if (!iframeRef.current) {
             return;
         }
 
-        // Only reload if element IDs actually changed (not just a re-render)
-        if (elementIds && elementIds !== loadedDataVersion.current) {
+        // Propagate null/undefined initialData as a reset (empty elements)
+        const targetData = initialData || { elements: [], appState: {} };
+        const elementIds = targetData.elements?.map((e: any) => e.id).sort().join(',') || '';
+
+        // If this data matches what we just emitted, ignore it (loopback prevention)
+        if (elementIds === lastEmittedVersion.current && elementIds !== '') {
+            loadedDataVersion.current = elementIds;
+            return;
+        }
+
+        // Special handling for Reset:
+        // If targetData is empty (reset) AND the canvas currently has content
+        // Use lastEmittedVersion because user may have drawn content without loading from props
+        const isReset = elementIds === '' && lastEmittedVersion.current !== '';
+
+        const shouldLoad = (elementIds && elementIds !== loadedDataVersion.current) || isReset;
+
+        if (shouldLoad) {
             iframeRef.current.contentWindow?.postMessage(
-                { type: 'LOAD_DATA', payload: { ...initialData, readOnly } },
+                { type: 'LOAD_DATA', payload: { ...targetData, readOnly } },
                 window.location.origin
             );
             loadedDataVersion.current = elementIds;
-            lastEmittedVersion.current = elementIds; // Sync
+            lastEmittedVersion.current = elementIds;
 
-            // Trigger zoom to fit ONLY on external data load (not internal updates)
-            setTimeout(() => {
-                iframeRef.current?.contentWindow?.postMessage(
-                    { type: 'ZOOM_TO_FIT' },
-                    window.location.origin
-                );
-            }, 100);
+            // Trigger zoom to fit ONLY when loading actual data (not on reset)
+            // Skipping zoom on reset prevents interference with first drawing operation
+            if (targetData.elements && targetData.elements.length > 0) {
+                setTimeout(() => {
+                    iframeRef.current?.contentWindow?.postMessage(
+                        { type: 'ZOOM_TO_FIT' },
+                        window.location.origin
+                    );
+                }, 100);
+            }
         }
-    }, [initialData, readOnly]);
+    }, [initialData, resetKey, readOnly]);
 
     // Keyboard shortcuts (forwarded from iframe or handled here if focus is on wrapper)
     useEffect(() => {

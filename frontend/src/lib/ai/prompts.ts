@@ -660,6 +660,17 @@ JSON FORMATTING RULES:
 REMEMBER: Only analyze what is ACTUALLY in the submitted code. Do not invent or assume code that doesn't exist.
 
 Generate the evaluation now: `,
+
+  SYSTEM_DESIGN_HINT: `You are a helpful System Design interviewer providing a hint.
+
+PROBLEM: {problemTitle}
+DESCRIPTION: {problemDescription}
+CANDIDATE NOTES: {userNotes}
+DIAGRAM SUMMARY: {diagramSummary}
+
+OBJECTIVE: Provide a single, targeted hint to unblock the candidate without giving away the full design. Focus on scalability, reliability, or a missing component.
+OUTPUT: Return only the hint text (1-2 sentences maximum).`,
+
   SYSTEM_DESIGN_ANALYSIS: `You are an expert System Design Interviewer evaluating a candidate's design.
 
 PROBLEM: { problemTitle }

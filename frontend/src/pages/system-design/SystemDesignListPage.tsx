@@ -34,6 +34,7 @@ export default function SystemDesignListPage() {
 
     const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; title: string } | null>(null);
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
     const handleCreate = () => {
         navigate('/system-design/new');
@@ -73,7 +74,7 @@ export default function SystemDesignListPage() {
                     filterTags={filterTags}
                     setFilterTags={setFilterTags}
                     selectedCount={selectedIds.size}
-                    onBulkDelete={bulkDelete}
+                    onBulkDelete={() => setIsBulkDeleteModalOpen(true)}
                     onClearSelection={() => setSelectedIds(new Set())}
                     onAddToList={() => setIsAddToListModalOpen(true)}
                 />
@@ -120,6 +121,33 @@ export default function SystemDesignListPage() {
                             onClick={confirmDelete}
                         >
                             Delete
+                        </Button>
+                    </>
+                }
+            />
+
+            {/* Bulk Delete Modal */}
+            <Modal
+                isOpen={isBulkDeleteModalOpen}
+                onClose={() => setIsBulkDeleteModalOpen(false)}
+                title="Delete Multiple Problems"
+                description={`Are you sure you want to delete ${selectedIds.size} problems? This action cannot be undone.`}
+                footer={
+                    <>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsBulkDeleteModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                setIsBulkDeleteModalOpen(false);
+                                bulkDelete();
+                            }}
+                        >
+                            Delete {selectedIds.size} Problems
                         </Button>
                     </>
                 }

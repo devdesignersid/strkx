@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { RotateCcw, Maximize2, Minimize2, Focus, PanelRightClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ExcalidrawWrapper from './ExcalidrawWrapper';
@@ -5,6 +6,7 @@ import { Button } from '@/design-system/components';
 
 interface SystemDesignCanvasProps {
     excalidrawData: any;
+    resetKey?: number;
     onChange: (elements: any, appState: any) => void;
     isTimerRunning: boolean;
     timeLeft: number;
@@ -19,8 +21,9 @@ interface SystemDesignCanvasProps {
     onCollapse: () => void;
 }
 
-export function SystemDesignCanvas({
+export const SystemDesignCanvas = memo(function SystemDesignCanvas({
     excalidrawData,
+    resetKey,
     onChange,
     isTimerRunning,
     timeLeft,
@@ -115,9 +118,10 @@ export function SystemDesignCanvas({
             <div className="flex-1 relative min-h-0">
                 <ExcalidrawWrapper
                     initialData={excalidrawData}
+                    resetKey={resetKey}
                     onChange={onChange}
                 />
             </div>
         </div>
     );
-}
+});

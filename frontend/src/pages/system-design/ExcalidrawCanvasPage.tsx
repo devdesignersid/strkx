@@ -22,16 +22,23 @@ export default function ExcalidrawCanvasPage() {
             const { type, payload } = event.data;
 
             if (type === 'LOAD_DATA') {
-                if (excalidrawAPI && payload.elements) {
-                    // Ensure appState has proper structure
-                    const normalizedAppState = {
-                        ...payload.appState,
-                        collaborators: new Map(),
-                    };
-                    excalidrawAPI.updateScene({
-                        elements: payload.elements,
-                        appState: normalizedAppState
-                    });
+                if (excalidrawAPI) {
+                    const elements = payload.elements || [];
+
+                    // Use resetScene for clearing (empty elements) to properly reset internal state
+                    // This prevents the "dot on first draw" issue that occurs with updateScene([])
+                    if (elements.length === 0) {
+                        excalidrawAPI.resetScene();
+                    } else {
+                        const normalizedAppState = {
+                            ...payload.appState,
+                            collaborators: new Map(),
+                        };
+                        excalidrawAPI.updateScene({
+                            elements: elements,
+                            appState: normalizedAppState
+                        });
+                    }
                 }
                 if (payload.readOnly !== undefined) {
                     setViewModeEnabled(payload.readOnly);

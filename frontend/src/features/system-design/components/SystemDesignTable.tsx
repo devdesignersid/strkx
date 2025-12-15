@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { EmptyCanvasIllustration } from '@/design-system/illustrations';
 import {
     CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
-    Circle, MoreHorizontal, Edit, Trash2, Filter
+    Circle, MoreHorizontal, Edit, Trash2, Filter, Clock, CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/design-system/components/Skeleton';
@@ -211,9 +211,9 @@ export function SystemDesignTable({
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <StatusBadge
-                                                status="Todo"
-                                                icon={Circle}
-                                                variant="neutral"
+                                                status={problem.status || 'Todo'}
+                                                icon={problem.status === 'Solved' ? CheckCircle2 : problem.status === 'Attempted' ? Clock : Circle}
+                                                variant={problem.status === 'Solved' ? 'success' : problem.status === 'Attempted' ? 'warning' : 'neutral'}
                                                 className="border-none bg-transparent p-0"
                                             />
                                         </div>

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle, type ImperativePanelHandle } from 'react-resizable-panels';
 import { toast } from 'sonner';
 import { aiService } from '@/lib/ai/aiService';
+import { Modal, Button } from '@/design-system/components';
 
 import { useSystemDesignProblem } from '@/features/system-design/hooks/useSystemDesignProblem';
 import { SystemDesignHeader } from '@/features/system-design/components/SystemDesignHeader';
@@ -18,7 +19,9 @@ export default function SystemDesignProblemView() {
         notes,
         setNotes,
         excalidrawData,
-        setExcalidrawData,
+        resetKey,
+        updateExcalidrawData,
+        resetCanvas,
         setTimeSpentSeconds,
         handleSubmit,
         submissions,
@@ -28,6 +31,9 @@ export default function SystemDesignProblemView() {
         handleAnalyze,
         loadSubmission,
         handleMarkAsSolution,
+        handleDeleteSubmission,
+        handleGetHint,
+        isRequestingHint
     } = useSystemDesignProblem(id);
 
     const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
@@ -38,6 +44,12 @@ export default function SystemDesignProblemView() {
     const [solutionModal, setSolutionModal] = useState<{ submissionId: string; currentName: string | null } | null>(null);
     const [isAIEnabled, setIsAIEnabled] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+    // Stable callback for canvas changes to prevent re-renders during drawing
+    const handleExcalidrawChange = useCallback((elements: any, appState: any) => {
+        updateExcalidrawData({ elements, appState });
+    }, [updateExcalidrawData]);
 
     // Timer state - matching ProblemPage
     const [timeLeft, setTimeLeft] = useState((problem?.defaultDuration || 45) * 60);
@@ -71,15 +83,15 @@ export default function SystemDesignProblemView() {
         return () => clearInterval(interval);
     }, [isTimerRunning, timeLeft, setTimeSpentSeconds]);
 
-    const toggleTimer = () => {
-        setIsTimerRunning(!isTimerRunning);
-    };
+    const toggleTimer = useCallback(() => {
+        setIsTimerRunning(prev => !prev);
+    }, []);
 
-    const resetTimer = () => {
+    const resetTimer = useCallback(() => {
         setTimeLeft((problem?.defaultDuration || 45) * 60);
         setTimeSpentSeconds(0);
         setIsTimerRunning(false);
-    };
+    }, [problem?.defaultDuration, setTimeSpentSeconds]);
 
     const toggleLeftPanel = () => {
         const panel = leftPanelRef.current;
@@ -94,7 +106,7 @@ export default function SystemDesignProblemView() {
         }
     };
 
-    const toggleRightPanel = () => {
+    const toggleRightPanel = useCallback(() => {
         const panel = rightPanelRef.current;
         if (panel) {
             if (isRightPanelCollapsed) {
@@ -104,7 +116,7 @@ export default function SystemDesignProblemView() {
                 panel.collapse();
             }
         }
-    };
+    }, [isRightPanelCollapsed]);
 
     const toggleNotes = () => {
         const panel = notesPanelRef.current;
@@ -182,7 +194,7 @@ export default function SystemDesignProblemView() {
         }
     };
 
-    const toggleFullscreen = () => {
+    const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
             setIsFullscreen(true);
@@ -192,20 +204,17 @@ export default function SystemDesignProblemView() {
                 setIsFullscreen(false);
             }
         }
-    };
+    }, []);
 
-    const handleResetCanvas = () => {
-        if (confirm('Are you sure you want to reset the canvas? This will clear all your diagrams.')) {
-            setExcalidrawData(null);
-            toast.success('Canvas reset');
-        }
-    };
+    const handleResetCanvas = useCallback(() => {
+        setIsResetModalOpen(true);
+    }, []);
 
-    const formatTime = (seconds: number) => {
+    const formatTime = useCallback((seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
+    }, []);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -253,6 +262,11 @@ export default function SystemDesignProblemView() {
                 isRightPanelCollapsed={isRightPanelCollapsed}
                 onToggleRightPanel={toggleRightPanel}
                 onResetLayout={resetLayout}
+                onGetHint={async () => {
+                    const result = await handleGetHint();
+                    return result || null;
+                }}
+                isRequestingHint={isRequestingHint}
             />
 
             <div className="flex-1 overflow-hidden relative">
@@ -296,6 +310,7 @@ export default function SystemDesignProblemView() {
                                     onCollapse={toggleLeftPanel}
                                     isNotesCollapsed={isNotesCollapsed}
                                     onToggleNotes={toggleNotes}
+                                    onDeleteSubmission={handleDeleteSubmission}
                                 />
                             </Panel>
 
@@ -334,7 +349,8 @@ export default function SystemDesignProblemView() {
                     >
                         <SystemDesignCanvas
                             excalidrawData={excalidrawData}
-                            onChange={(elements, appState) => setExcalidrawData({ elements, appState })}
+                            resetKey={resetKey}
+                            onChange={handleExcalidrawChange}
                             isTimerRunning={isTimerRunning}
                             timeLeft={timeLeft}
                             onToggleTimer={toggleTimer}
@@ -356,6 +372,33 @@ export default function SystemDesignProblemView() {
                 onClose={() => setSolutionModal(null)}
                 onConfirm={confirmMarkAsSolution}
                 currentName={solutionModal?.currentName || null}
+            />
+
+            <Modal
+                isOpen={isResetModalOpen}
+                onClose={() => setIsResetModalOpen(false)}
+                title="Reset Canvas"
+                description="Are you sure you want to reset the canvas? This will clear all your diagrams and cannot be undone."
+                footer={
+                    <>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsResetModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                resetCanvas();
+                                toast.success('Canvas reset');
+                                setIsResetModalOpen(false);
+                            }}
+                        >
+                            Reset Canvas
+                        </Button>
+                    </>
+                }
             />
         </div>
     );

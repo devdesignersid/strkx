@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, FileText, Star } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Star, Trash2 } from 'lucide-react';
 import { EmptyState, Button } from '@/design-system/components';
 
 interface Submission {
@@ -17,12 +17,14 @@ interface SubmissionsListProps {
     submissions: Submission[];
     onSelectSubmission: (id: string) => void;
     onMarkAsSolution?: (id: string, currentStatus: boolean, currentName: string | null) => void;
+    onDeleteSubmission?: (id: string) => void;
 }
 
 export const SubmissionsList: React.FC<SubmissionsListProps> = ({
     submissions,
     onSelectSubmission,
     onMarkAsSolution,
+    onDeleteSubmission,
 }) => {
     if (submissions.length === 0) {
         return (
@@ -83,7 +85,7 @@ export const SubmissionsList: React.FC<SubmissionsListProps> = ({
                                         e.stopPropagation();
                                         onMarkAsSolution(submission.id, submission.isSolution || false, submission.solutionName || null);
                                     }}
-                                    className="h-6 text-[10px] px-2 bg-white/5 hover:bg-white/10"
+                                    className="h-6 text-[10px] px-2 py-0.5 bg-white/5 hover:bg-white/10 shrink-0"
                                 >
                                     {submission.isSolution ? 'Unmark' : 'Save as Solution'}
                                 </Button>
@@ -96,13 +98,29 @@ export const SubmissionsList: React.FC<SubmissionsListProps> = ({
                                 {formattedDateTime}
                             </div>
 
-                            {submission.score != null && (
-                                <div className="flex items-center gap-1">
-                                    <span className={submission.score >= 70 ? 'text-green-500' : 'text-yellow-500'}>
-                                        {submission.score}%
-                                    </span>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-3">
+                                {submission.score != null && (
+                                    <div className="flex items-center gap-1">
+                                        <span className={submission.score >= 70 ? 'text-green-500' : 'text-yellow-500'}>
+                                            {submission.score}%
+                                        </span>
+                                    </div>
+                                )}
+                                {onDeleteSubmission && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDeleteSubmission(submission.id);
+                                        }}
+                                        className="h-6 w-6 p-0 hover:text-destructive hover:bg-destructive/10"
+                                        title="Delete Submission"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 );

@@ -67,10 +67,10 @@ export function Modal({ isOpen, onClose, title, description, children, footer, c
             document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = '';
 
-            // Restore focus on close
-            if (previousActiveElement.current && !isOpen) {
-                previousActiveElement.current.focus();
-            }
+            // Only restore focus if the modal was closed via ESC or clicking backdrop
+            // Don't restore focus if an action was taken (button clicked), as this interferes with user workflow
+            // The action button handlers should manage focus if needed
+            // Removing automatic focus restoration to prevent focus stealing
         };
     }, [isOpen, handleKeyDown]);
 

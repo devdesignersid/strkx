@@ -1,5 +1,6 @@
-import { FileText, Maximize2, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
+import { FileText, Maximize2, PanelLeftOpen, PanelRightOpen, Lightbulb } from 'lucide-react';
 import type { SystemDesignProblem } from '@/types/system-design';
+import { toast } from 'sonner';
 import { Button } from '@/design-system/components';
 
 interface SystemDesignHeaderProps {
@@ -10,6 +11,8 @@ interface SystemDesignHeaderProps {
     isRightPanelCollapsed: boolean;
     onToggleRightPanel: () => void;
     onResetLayout: () => void;
+    onGetHint: () => Promise<string | null>;
+    isRequestingHint: boolean;
 }
 
 export function SystemDesignHeader({
@@ -20,6 +23,8 @@ export function SystemDesignHeader({
     isRightPanelCollapsed,
     onToggleRightPanel,
     onResetLayout,
+    onGetHint,
+    isRequestingHint
 }: SystemDesignHeaderProps) {
     return (
         <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 z-10 relative">
@@ -68,6 +73,30 @@ export function SystemDesignHeader({
                         <Maximize2 className="w-4 h-4 rotate-45" />
                     </Button>
                 )}
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                        const hint = await onGetHint();
+                        if (hint) {
+                            toast.message('AI Hint', {
+                                description: hint,
+                                duration: 10000, // Give user time to read
+                                action: {
+                                    label: 'Dismiss',
+                                    onClick: () => { }
+                                }
+                            });
+                        }
+                    }}
+                    disabled={isRequestingHint}
+                    className="text-amber-400 hover:text-amber-500 hover:bg-amber-400/10 gap-2"
+                    title="Get a hint from AI"
+                >
+                    <Lightbulb className={isRequestingHint ? "w-4 h-4 animate-pulse" : "w-4 h-4"} />
+                    {isRequestingHint ? 'Thinking...' : 'Get Hint'}
+                </Button>
 
                 <Button
                     onClick={onSubmit}

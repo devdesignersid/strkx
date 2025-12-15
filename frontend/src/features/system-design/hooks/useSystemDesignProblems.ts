@@ -30,10 +30,13 @@ export function useSystemDesignProblems() {
     });
 
     const problems = useMemo(() => {
-        return rawProblems.map((problem: SystemDesignProblem & { _count?: { submissions: number } }) => ({
-            ...problem,
-            status: problem.status || (problem._count?.submissions && problem._count.submissions > 0 ? 'Attempted' : 'Todo')
-        }));
+        return rawProblems.map((problem: SystemDesignProblem & { _count?: { submissions: number }, submissions?: { id: string }[] }) => {
+            // Backend now provides the status field, just use it or default to 'Todo'
+            return {
+                ...problem,
+                status: problem.status || 'Todo'
+            };
+        });
     }, [rawProblems]);
 
 
@@ -175,9 +178,7 @@ export function useSystemDesignProblems() {
 
     const bulkDelete = async () => {
         if (selectedIds.size === 0) return;
-
-        if (!confirm(`Are you sure you want to delete ${selectedIds.size} problems?`)) return;
-
+        // Confirmation is handled by UI
         await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
     };
 

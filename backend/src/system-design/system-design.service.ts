@@ -27,14 +27,37 @@ export class SystemDesignService {
   }
 
   async findAll(userId: string) {
-    return this.prisma.systemDesignProblem.findMany({
+    const problems = await this.prisma.systemDesignProblem.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
           select: { submissions: true },
         },
+        // Check if there is any submission marked as solution
+        submissions: {
+          where: { userId },
+          select: { id: true, status: true, isSolution: true },
+        },
       },
+    });
+
+    // Map problems with derived status
+    return problems.map(problem => {
+      const hasSolution = problem.submissions.some(s => s.isSolution);
+      const hasCompleted = problem.submissions.some(s => s.status === 'completed');
+
+      let status = 'Todo';
+      if (hasSolution) {
+        status = 'Solved';
+      } else if (hasCompleted) {
+        status = 'Attempted';
+      }
+
+      return {
+        ...problem,
+        status,
+      };
     });
   }
 
@@ -100,6 +123,12 @@ export class SystemDesignService {
     });
   }
 
+  async deleteSubmission(id: string) {
+    return this.prisma.systemDesignSubmission.delete({
+      where: { id },
+    });
+  }
+
   async findUserSubmissions(userId: string, idOrSlug: string) {
     let problemId = idOrSlug;
 
@@ -156,6 +185,7 @@ export class SystemDesignService {
       where: { id },
       data: {
         score: mockAnalysis.score,
+        status: 'completed', // Mark as completed when analysis is done
       }
     });
   }

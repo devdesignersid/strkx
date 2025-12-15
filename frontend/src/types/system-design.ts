@@ -15,6 +15,7 @@ export interface SystemDesignProblem {
   createdAt: string;
   updatedAt: string;
   status?: 'Todo' | 'Attempted' | 'Solved';
+  solutions?: any[]; // Array of official solutions
 }
 
 export interface SystemDesignSubmission {
