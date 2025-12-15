@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, Loader2, XCircle, ChevronDown, Check, Sparkles, Package } from 'lucide-react';
-import { Button, Input, Modal, Checkbox } from '@/design-system/components';
+import { Button, Input, Modal } from '@/design-system/components';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
