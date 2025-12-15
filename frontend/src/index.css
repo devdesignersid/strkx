@@ -11,13 +11,34 @@
     @apply border-border;
   }
 
+  html {
+    /* Optimized base font size for readability */
+    font-size: 16px;
+    /* Smooth font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply !bg-background text-foreground;
     font-family: "DM Sans", sans-serif !important;
     /* Enforce app font against external overrides */
     font-feature-settings: "rlig" 1, "calt" 1;
-    /* Supabase-style subtle noise/gradient if desired, but keeping it clean for now */
+    /* Base text size - slightly smaller for density */
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.5;
   }
+
+  /* Typography rhythm - consistent spacing between text elements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 { @apply text-3xl leading-tight; }
+  h2 { @apply text-2xl leading-snug; }
+  h3 { @apply text-xl leading-snug; }
+  h4 { @apply text-lg leading-snug; }
 
   /* Custom Scrollbar - Theme Integrated */
   ::-webkit-scrollbar {
@@ -56,5 +77,41 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+  }
+
+  /* Typography utilities for consistent text styling */
+  
+  /* Overline - Category labels, section markers */
+  .text-overline {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+
+  /* Metadata - Timestamps, secondary info */
+  .text-metadata {
+    @apply text-[11px] font-medium uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* Caption - Helper text, footnotes */
+  .text-caption {
+    @apply text-[11px] font-normal tracking-wide text-muted-foreground;
+  }
+
+  /* Label - Form labels, interactive elements */
+  .text-label {
+    @apply text-[13px] font-medium tracking-wide;
+  }
+
+  /* Body variants */
+  .text-body {
+    @apply text-[15px] font-normal leading-relaxed;
+  }
+
+  .text-body-sm {
+    @apply text-[13px] font-normal leading-relaxed;
+  }
+
+  /* Premium heading with tight tracking */
+  .text-heading {
+    @apply font-semibold tracking-tight leading-tight;
   }
 }

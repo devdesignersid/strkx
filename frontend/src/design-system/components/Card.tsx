@@ -49,6 +49,11 @@ const CardHeader = React.forwardRef<
 ))
 CardHeader.displayName = "CardHeader"
 
+/**
+ * CardTitle - Refined typography
+ * - Tighter tracking for confident feel
+ * - Snug line-height for compact headers
+ */
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement> & { truncate?: boolean }
@@ -56,7 +61,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-xl font-semibold tracking-tight leading-snug",
       truncate && "truncate",
       className
     )}
@@ -67,13 +72,18 @@ const CardTitle = React.forwardRef<
 ))
 CardTitle.displayName = "CardTitle"
 
+/**
+ * CardDescription - Improved readability
+ * - Smaller size for hierarchy
+ * - Relaxed line-height for multi-line
+ */
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-[13px] text-muted-foreground leading-relaxed", className)}
     {...props}
   />
 ))

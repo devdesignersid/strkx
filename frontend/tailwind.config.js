@@ -17,6 +17,37 @@ export default {
         sans: ["DM Sans", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
+      // Typography refinements
+      fontSize: {
+        // Refined font sizes with optimized line-heights and letter-spacing
+        'display': ['2.25rem', { lineHeight: '1.1', letterSpacing: '-0.025em' }],
+        'xs': ['0.6875rem', { lineHeight: '1.4', letterSpacing: '0.01em' }],     // 11px
+        'sm': ['0.8125rem', { lineHeight: '1.5', letterSpacing: '0.005em' }],    // 13px
+        'base': ['0.9375rem', { lineHeight: '1.5', letterSpacing: '0' }],        // 15px
+        'lg': ['1.125rem', { lineHeight: '1.4', letterSpacing: '-0.01em' }],     // 18px
+        'xl': ['1.25rem', { lineHeight: '1.3', letterSpacing: '-0.015em' }],     // 20px
+        '2xl': ['1.5rem', { lineHeight: '1.25', letterSpacing: '-0.02em' }],     // 24px
+        '3xl': ['1.875rem', { lineHeight: '1.2', letterSpacing: '-0.02em' }],    // 30px
+        '4xl': ['2.25rem', { lineHeight: '1.1', letterSpacing: '-0.025em' }],    // 36px
+      },
+      // Extended letter-spacing for fine control
+      letterSpacing: {
+        'tighter': '-0.025em',
+        'tight': '-0.02em',
+        'snug': '-0.01em',
+        'normal': '0',
+        'wide': '0.01em',
+        'wider': '0.025em',
+        'widest': '0.05em',
+      },
+      // Extended line-height for typography
+      lineHeight: {
+        'tight': '1.1',
+        'snug': '1.25',
+        'normal': '1.4',
+        'relaxed': '1.5',
+        'loose': '1.75',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -101,4 +132,3 @@ export default {
     require('@tailwindcss/typography'),
   ],
 }
-

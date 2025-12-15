@@ -20,6 +20,14 @@ interface EmptyStateProps {
   className?: string;
 }
 
+/**
+ * EmptyState Component
+ * 
+ * Premium empty state with refined typography:
+ * - Tight tracking on title
+ * - Improved description width and line-height
+ * - Balanced visual hierarchy
+ */
 export default function EmptyState({
   icon: Icon,
   illustration,
@@ -49,8 +57,12 @@ export default function EmptyState({
         </div>
       ) : null}
 
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-[300px] mb-6">{description}</p>
+      <h3 className="text-lg font-semibold tracking-tight leading-snug mb-2">
+        {title}
+      </h3>
+      <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[280px] mb-6">
+        {description}
+      </p>
 
       {action && (
         <Button onClick={action.onClick}>

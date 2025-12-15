@@ -6,6 +6,8 @@ interface StatusBadgeProps {
     icon?: LucideIcon;
     variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'easy' | 'medium' | 'hard' | 'system-design';
     className?: string;
+    /** Use uppercase with letter-spacing for a premium feel */
+    uppercase?: boolean;
 }
 
 const variants = {
@@ -22,15 +24,31 @@ const variants = {
     "system-design": "bg-purple-500/10 text-purple-500 border-purple-500/20",
 };
 
-export function StatusBadge({ status, icon: Icon, variant = 'default', className }: StatusBadgeProps) {
+/**
+ * StatusBadge Component
+ * 
+ * Premium badge with refined typography:
+ * - Small, tight text
+ * - Optional uppercase with letter-spacing
+ * - Consistent icon sizing
+ */
+export function StatusBadge({
+    status,
+    icon: Icon,
+    variant = 'default',
+    className,
+    uppercase = false
+}: StatusBadgeProps) {
     return (
         <div className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border",
+            "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border",
+            uppercase && "uppercase tracking-wider",
+            !uppercase && "capitalize tracking-wide",
             variants[variant],
             className
         )}>
-            {Icon && <Icon className="w-3 h-3" />}
-            <span className="capitalize">{status}</span>
+            {Icon && <Icon className="w-3 h-3 shrink-0" />}
+            <span>{status}</span>
         </div>
     );
 }

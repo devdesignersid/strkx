@@ -14,6 +14,14 @@ interface FormFieldProps {
     children: React.ReactNode;
 }
 
+/**
+ * FormField Component
+ * 
+ * Refined form field with premium typography:
+ * - Consistent label sizing
+ * - Improved description contrast
+ * - Subtle error styling
+ */
 export function FormField({
     label,
     description,
@@ -43,16 +51,16 @@ export function FormField({
     });
 
     return (
-        <div className={cn('space-y-2', className)}>
-            <Label htmlFor={id} className="flex items-center gap-1">
+        <div className={cn('space-y-1.5', className)}>
+            <Label htmlFor={id} className="flex items-center gap-1 text-[13px] font-medium tracking-wide">
                 {label}
-                {required && <span className="text-destructive">*</span>}
+                {required && <span className="text-destructive text-[11px]">*</span>}
             </Label>
 
             {description && (
                 <p
                     id={descriptionId}
-                    className="text-xs text-muted-foreground"
+                    className="text-[11px] text-muted-foreground leading-relaxed"
                 >
                     {description}
                 </p>
@@ -68,7 +76,7 @@ export function FormField({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="text-xs text-destructive"
+                        className="text-[11px] font-medium text-destructive tracking-wide"
                         role="alert"
                     >
                         {error}
