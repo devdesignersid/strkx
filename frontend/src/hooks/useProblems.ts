@@ -13,7 +13,7 @@ export interface Problem {
   acceptance: number;
 }
 
-export type SortKey = 'title' | 'difficulty' | 'status' | 'acceptance';
+export type SortKey = 'title' | 'difficulty' | 'status' | 'acceptance' | 'createdAt';
 export type SortDirection = 'asc' | 'desc';
 
 export const useProblems = () => {
@@ -23,8 +23,8 @@ export const useProblems = () => {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
-    key: 'title',
-    direction: 'asc'
+    key: 'createdAt',
+    direction: 'desc'
   });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
