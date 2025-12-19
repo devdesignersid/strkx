@@ -21,6 +21,11 @@ export function useProblemPage(slug: string | undefined) {
   const [isRequestingHint, setIsRequestingHint] = useState(false);
   const [isCompletingCode, setIsCompletingCode] = useState(false);
 
+  // Progressive Hint State
+  const [hintLevel, setHintLevel] = useState(0);
+  const [lastHintCode, setLastHintCode] = useState('');
+  const [hintHistory, setHintHistory] = useState<string[]>([]);
+
   // Timer State
   const [timeLeft, setTimeLeft] = useState(45 * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -227,15 +232,56 @@ export function useProblemPage(slug: string | undefined) {
 
     setIsRequestingHint(true);
     try {
-      const prompt = PROMPTS.SOLUTION_HINT
-        .replace('{problemDescription}', problem?.description || '')
-        .replace('{userCode}', code);
+      // Logic: If code has changed significantly since last hint, reset level to 1
+      const isCodeChanged = code.trim() !== lastHintCode.trim();
+      let currentLevel = hintLevel;
 
-      const hint = await aiService.generateCompletion(prompt);
+      if (isCodeChanged) {
+        currentLevel = 1; // Reset to level 1 for new code state
+        setHintHistory([]); // Clear history for fresh context
+      } else {
+        currentLevel = Math.min(hintLevel + 1, 3); // Increment level, max 3
+      }
+
+      const prompt = PROMPTS.PROGRESSIVE_HINT_GENERATION
+        .replace('{problemDescription}', problem?.description || '')
+        .replace('{userCode}', code)
+        .replace('{hintHistory}', isCodeChanged ? '[]' : JSON.stringify(hintHistory))
+        .replace('{hintLevel}', String(currentLevel));
+
+      const response = await aiService.generateCompletion(prompt);
+      const jsonStr = response.replace(/```json\n?|```\n?|\n?```/g, '').trim();
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(jsonStr);
+      } catch (e) {
+        // Fallback for non-JSON response (legacy behavior safety)
+        parsedResponse = { hint: response, hintLevel: currentLevel };
+      }
+
+      const { hint, classification } = parsedResponse;
+
+      if (classification === 'COMPLETE') {
+        toast.success("No hint needed! Your solution appears correct.");
+        setHintLevel(0);
+        return;
+      }
+
+      // Update state
+      setHintLevel(currentLevel);
+      setLastHintCode(code);
+      if (isCodeChanged) {
+        setHintHistory([hint]);
+      } else {
+        setHintHistory(prev => [...prev, hint]);
+      }
+
       toast.info({
-        title: TOAST_MESSAGES.AI.HINT_GENERATED.title,
+        title: `Hint (${currentLevel}/3)`,
         description: hint
       }, { duration: 8000 });
+
     } catch (error) {
       console.error('Failed to get hint:', error);
       toast.error(TOAST_MESSAGES.GENERAL.ERROR);

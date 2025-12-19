@@ -802,16 +802,48 @@ OUTPUT FORMAT - Return ONLY valid JSON (no markdown, no backticks):
     "DevOps": [],
     "Other": []
   }
-}
-
-CRITICAL:
-- Return EMPTY arrays for categories with no skills found
-- Do NOT add skills not explicitly mentioned in the source text
-- Keep skill names concise (1-3 words max)
 - Remove duplicates across categories
 - Order skills by frequency/prominence in the experience
 
 Generate the extracted skills now:`,
+
+  PROGRESSIVE_HINT_GENERATION: `You are a technical interview mentor.
+
+CONTEXT:
+Problem: {problemDescription}
+User Code: {userCode}
+Previous Hints Given: {hintHistory}
+Requested Hint Level: {hintLevel} (1=Conceptual, 2=Structural, 3=Tactical)
+
+OBJECTIVE:
+Provide a single, targeted hint strictly based on the user's CURRENT code state.
+
+CRITICAL RULES:
+1. CLASSIFY the code first:
+   - "EMPTY": No meaningful code written.
+   - "APPROACH_WRONG": Fundamental logic error or incorrect algorithm.
+   - "BUG": Correct general approach but contains specific logic errors (off-by-one, type error, etc.).
+   - "OPTIMIZATION": Functionally correct but inefficient (e.g., O(n^2) when O(n) is possible).
+   - "COMPLETE": Functionally correct and sufficient.
+
+2. GENERATE HINT based on Level {hintLevel}:
+   - Level 1 (Conceptual): Guide on the general direction/pattern without revealing implementation details. "Have you considered using a specific data structure to track...?"
+   - Level 2 (Structural): Point to the specific block of code or logic that needs attention. "The nested loop on line 5 might be causing the performance issue..."
+   - Level 3 (Tactical): Specific action to take. "You need to update the pointer 'j' before the break statement..."
+   - IF COMPLETE: Return "No hint needed. Your solution appears correct." and set hintLevel to 0.
+
+3. CONTEXT AWARENESS:
+   - Do NOT repeat hints found in "Previous Hints Given".
+   - If the user has made no progress since the last hint, gently rephrase or bump the level slightly (if appropriate).
+   - If the code is "EMPTY", always start with Level 1 conceptual guidance.
+
+OUTPUT JSON (No markdown, no backticks):
+{
+  "classification": "EMPTY" | "APPROACH_WRONG" | "BUG" | "OPTIMIZATION" | "COMPLETE",
+  "hintLevel": number,
+  "hint": "The hint text...",
+  "reasoning": "Brief explanation of why this hint was chosen based on the code state."
+}`,
 
   RESUME_ANALYSIS: `You are an expert in Resume Engineering, Hiring Systems Optimization, ATS evaluation, and Professional Document Design.
 
