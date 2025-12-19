@@ -152,6 +152,17 @@ export const RichTextEditor = memo(({
         }
     }, [value, editor]);
 
+    /**
+     * PERFORMANCE: Destroy Tiptap editor on unmount to prevent memory leak.
+     * Tiptap editors can retain several MB of memory if not properly disposed.
+     * This cleanup is critical for long-session stability.
+     */
+    useEffect(() => {
+        return () => {
+            editor?.destroy();
+        };
+    }, [editor]);
+
 
 
     return (

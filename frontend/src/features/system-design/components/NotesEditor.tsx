@@ -254,6 +254,17 @@ export default function NotesEditor({
         }
     }, [readOnly, editor]);
 
+    /**
+     * PERFORMANCE: Destroy Tiptap editor on unmount to prevent memory leak.
+     * Tiptap editors can retain several MB of memory if not properly disposed.
+     * This cleanup is critical for long-session stability in system design problems.
+     */
+    useEffect(() => {
+        return () => {
+            editor?.destroy();
+        };
+    }, [editor]);
+
     return (
         <div className="h-full flex flex-col bg-card border-r border-border">
             {!readOnly && <MenuBar editor={editor} onCollapse={onCollapse} isMaximized={isMaximized} onToggleMaximize={onToggleMaximize} />}

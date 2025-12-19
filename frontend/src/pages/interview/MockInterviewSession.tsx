@@ -70,6 +70,12 @@ const MockInterviewSession: React.FC = () => {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      /**
+       * PERFORMANCE: Dispose Monaco editor instance to prevent memory leak.
+       * Monaco editors can retain 10-20MB of memory if not disposed.
+       * Critical for interview sessions where users may abandon mid-session.
+       */
+      editorRef.current?.dispose();
       // If unmounting and not finished/completed, abandon session
       abandonSession();
     };
@@ -350,6 +356,7 @@ const MockInterviewSession: React.FC = () => {
       }
     }, 1000);
 
+    // CRITICAL: cleanup to prevent memory leak
     return () => clearInterval(interval);
   }, [timeLeft, session, handleSubmit]); // Depend on session to ensure we don't submit before load
 
