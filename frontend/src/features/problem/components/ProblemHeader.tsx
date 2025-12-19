@@ -6,6 +6,7 @@ import { Button } from '@/design-system/components';
 interface ProblemHeaderProps {
   problem: Problem;
   isRunning: boolean;
+  executionMode: 'run' | 'submit' | null;
   onRun: (mode: 'run' | 'submit') => void;
   canSubmit: boolean;
   isDescriptionCollapsed?: boolean;
@@ -17,6 +18,7 @@ interface ProblemHeaderProps {
 export function ProblemHeader({
   problem,
   isRunning,
+  executionMode,
   onRun,
   canSubmit,
   isDescriptionCollapsed,
@@ -64,7 +66,7 @@ export function ProblemHeader({
           disabled={isRunning}
           className="gap-2"
         >
-          {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+          {isRunning && executionMode === 'run' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
           Run
         </Button>
         <Button
@@ -77,7 +79,7 @@ export function ProblemHeader({
             "bg-primary/10 text-primary hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(62,207,142,0.3)] border border-primary/20"
           )}
         >
-          <Send className="w-3.5 h-3.5" />
+          {isRunning && executionMode === 'submit' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           Submit
         </Button>
       </div>

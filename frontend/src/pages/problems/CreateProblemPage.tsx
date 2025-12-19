@@ -19,6 +19,7 @@ export default function CreateProblemPage() {
   const isEditMode = !!id;
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const isLocked = isLoading || isGenerating;
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -305,9 +306,14 @@ function solution(${args}) {
       }
       // Pass refresh state to trigger refetch
       navigate('/problems', { state: { refresh: true } });
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} problem:`, error);
-      setErrorMessage(`Failed to ${isEditMode ? 'update' : 'create'} problem. Please check your input and try again.`);
+
+      if (error.response?.status === 409) {
+        setErrorMessage('A problem with this title or slug already exists. Please choose a different title.');
+      } else {
+        setErrorMessage(`Failed to ${isEditMode ? 'update' : 'create'} problem. Please check your input and try again.`);
+      }
       setErrorModalOpen(true);
     } finally {
       setIsLoading(false);
@@ -324,10 +330,10 @@ function solution(${args}) {
           <h1 className="font-semibold text-lg">{isEditMode ? 'Edit Problem' : 'Create New Problem'}</h1>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate('/problems')}>
+          <Button variant="outline" onClick={() => navigate('/problems')} disabled={isLocked}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} isLoading={isLoading}>
+          <Button onClick={handleSubmit} isLoading={isLoading} disabled={isLocked}>
             <Save className="w-4 h-4" />
             {isEditMode ? 'Update Problem' : 'Save Problem'}
           </Button>
@@ -362,7 +368,7 @@ function solution(${args}) {
                   <Button
                     variant="soft"
                     onClick={handleAIGenerate}
-                    disabled={isGenerating || !formData.title}
+                    disabled={isGenerating || !formData.title || isLocked}
                     isLoading={isGenerating}
                     className="bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 border-purple-500/30"
                   >
@@ -377,7 +383,8 @@ function solution(${args}) {
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm font-mono text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm font-mono text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLocked}
                 />
               </div>
             </div>
@@ -397,7 +404,8 @@ function solution(${args}) {
                   <button
                     type="button"
                     onClick={() => setIsTypeOpen(!isTypeOpen)}
-                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors"
+                    disabled={isLocked}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span>{formData.type}</span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -436,7 +444,8 @@ function solution(${args}) {
                   <button
                     type="button"
                     onClick={() => setIsDifficultyOpen(!isDifficultyOpen)}
-                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors"
+                    disabled={isLocked}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className={clsx(
                       formData.difficulty === 'Easy' && "text-green-500",
@@ -482,8 +491,9 @@ function solution(${args}) {
                   type="text"
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="E.g. Array, Hash Table"
+                  disabled={isLocked}
                 />
               </div>
 
@@ -503,8 +513,9 @@ function solution(${args}) {
                           : `class ${newClassName} {\n  constructor() {\n    \n  }\n}`
                       });
                     }}
-                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="E.g. LRUCache"
+                    disabled={isLocked}
                   />
                 </div>
               )}
@@ -518,8 +529,9 @@ function solution(${args}) {
                   type="number"
                   value={formData.timeoutMs}
                   onChange={(e) => setFormData({ ...formData, timeoutMs: parseInt(e.target.value) || 2000 })}
-                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="2000"
+                  disabled={isLocked}
                 />
               </div>
               <div className="space-y-2">
@@ -528,8 +540,9 @@ function solution(${args}) {
                   type="number"
                   value={formData.memoryLimitMb}
                   onChange={(e) => setFormData({ ...formData, memoryLimitMb: parseInt(e.target.value) || 128 })}
-                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="128"
+                  disabled={isLocked}
                 />
               </div>
             </div>
@@ -542,7 +555,8 @@ function solution(${args}) {
                   <button
                     type="button"
                     onClick={() => setIsComparisonTypeOpen(!isComparisonTypeOpen)}
-                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors"
+                    disabled={isLocked}
+                    className="w-full bg-secondary/30 border border-white/5 rounded-md px-3 py-2 text-sm flex items-center justify-between hover:bg-secondary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className={clsx(
                       formData.comparisonType === 'STRICT' && "text-blue-400",
@@ -639,8 +653,9 @@ function solution(${args}) {
                 id="description-editor"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-full bg-secondary/30 border border-white/5 rounded-md p-4 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                className="w-full h-full bg-secondary/30 border border-white/5 rounded-md p-4 text-sm font-mono focus:outline-none focus:border-primary/50 transition-colors resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Type your problem description here..."
+                disabled={isLocked}
               />
               <div className="h-full bg-card/30 border border-white/5 rounded-md p-4 overflow-y-auto prose prose-invert prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{formData.description}</ReactMarkdown>
@@ -663,6 +678,7 @@ function solution(${args}) {
                   fontSize: 13,
                   fontFamily: "'JetBrains Mono', monospace",
                   padding: { top: 16 },
+                  readOnly: isLocked,
                 }}
               />
             </div>
@@ -672,7 +688,7 @@ function solution(${args}) {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">Test Cases</label>
-              <Button variant="link" size="sm" onClick={addTestCase}>
+              <Button variant="link" size="sm" onClick={addTestCase} disabled={isLocked}>
                 <Plus className="w-3 h-3" />
                 Add Test Case
               </Button>
@@ -685,6 +701,7 @@ function solution(${args}) {
                     size="xs"
                     onClick={() => removeTestCase(i)}
                     aria-label="Remove test case"
+                    disabled={isLocked}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4" />

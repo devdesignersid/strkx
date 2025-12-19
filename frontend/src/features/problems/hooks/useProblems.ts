@@ -48,7 +48,8 @@ export function useProblems() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
+    error,
+    refetch
   } = useInfiniteQuery({
     queryKey: ['problems', queryParams],
     queryFn: async ({ pageParam = 1 }) => {
@@ -234,6 +235,9 @@ export function useProblems() {
     toggleSelectOne,
     loadMore,
     deleteProblem,
-    bulkDelete
+    bulkDelete,
+    isDeleting: deleteMutation.isPending,
+    isBulkDeleting: bulkDeleteMutation.isPending,
+    refetch,
   };
 }

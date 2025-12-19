@@ -29,7 +29,9 @@ export default function SystemDesignListPage() {
         toggleSelectAll,
         toggleSelectOne,
         deleteProblem,
-        bulkDelete
+        bulkDelete,
+        isDeleting,
+        isBulkDeleting
     } = useSystemDesignProblems();
 
     const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
@@ -105,7 +107,7 @@ export default function SystemDesignListPage() {
             {/* Delete Confirmation Modal */}
             <Modal
                 isOpen={!!deleteConfirmation}
-                onClose={() => setDeleteConfirmation(null)}
+                onClose={() => !isDeleting && setDeleteConfirmation(null)}
                 title="Delete Problem"
                 description={`Are you sure you want to delete "${deleteConfirmation?.title}"? This action cannot be undone.`}
                 footer={
@@ -113,12 +115,14 @@ export default function SystemDesignListPage() {
                         <Button
                             variant="ghost"
                             onClick={() => setDeleteConfirmation(null)}
+                            disabled={isDeleting}
                         >
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={confirmDelete}
+                            isLoading={isDeleting}
                         >
                             Delete
                         </Button>
@@ -129,7 +133,7 @@ export default function SystemDesignListPage() {
             {/* Bulk Delete Modal */}
             <Modal
                 isOpen={isBulkDeleteModalOpen}
-                onClose={() => setIsBulkDeleteModalOpen(false)}
+                onClose={() => !isBulkDeleting && setIsBulkDeleteModalOpen(false)}
                 title="Delete Multiple Problems"
                 description={`Are you sure you want to delete ${selectedIds.size} problems? This action cannot be undone.`}
                 footer={
@@ -137,15 +141,17 @@ export default function SystemDesignListPage() {
                         <Button
                             variant="ghost"
                             onClick={() => setIsBulkDeleteModalOpen(false)}
+                            disabled={isBulkDeleting}
                         >
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={() => {
-                                setIsBulkDeleteModalOpen(false);
-                                bulkDelete();
+                                // Do not close modal immediately, wait for mutation
+                                bulkDelete().then(() => setIsBulkDeleteModalOpen(false));
                             }}
+                            isLoading={isBulkDeleting}
                         >
                             Delete {selectedIds.size} Problems
                         </Button>

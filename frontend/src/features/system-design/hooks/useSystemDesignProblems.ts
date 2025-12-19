@@ -204,6 +204,8 @@ export function useSystemDesignProblems() {
         toggleSelectOne,
         deleteProblem,
         bulkDelete,
+        isDeleting: deleteMutation.isPending,
+        isBulkDeleting: bulkDeleteMutation.isPending,
         refreshProblems: () => queryClient.invalidateQueries({ queryKey: ['system-design-problems'] })
     };
 }

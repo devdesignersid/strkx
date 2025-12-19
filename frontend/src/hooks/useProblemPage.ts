@@ -15,6 +15,7 @@ export function useProblemPage(slug: string | undefined) {
   const [code, setCode] = useState('');
   const [output, setOutput] = useState<ExecutionResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [executionMode, setExecutionMode] = useState<'run' | 'submit' | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isRequestingHint, setIsRequestingHint] = useState(false);
@@ -137,6 +138,7 @@ export function useProblemPage(slug: string | undefined) {
   const handleRun = async (mode: 'run' | 'submit' = 'run', onSuccess?: () => void, codeToSubmit?: string) => {
     if (!problem || !slug) return;
     setIsRunning(true);
+    setExecutionMode(mode);
     if (mode === 'run') setOutput(null);
 
     const codeToUse = codeToSubmit || code;
@@ -151,6 +153,7 @@ export function useProblemPage(slug: string | undefined) {
       onSuccess?.();
     } finally {
       setIsRunning(false);
+      setExecutionMode(null);
     }
   };
 
@@ -337,6 +340,8 @@ function Node(val, next, random) {
     isAnalyzing,
     isRequestingHint,
     isCompletingCode,
+    subcategory: 'Hooks',
+    executionMode,
     timeLeft,
     isTimerRunning,
     handleRun,

@@ -32,7 +32,9 @@ export default function ProblemsPage() {
     loadMore,
     deleteProblem,
     bulkDelete,
-    refetch
+    refetch,
+    isDeleting,
+    isBulkDeleting
   } = useProblems();
 
   const location = useLocation();
@@ -49,6 +51,7 @@ export default function ProblemsPage() {
 
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; title: string } | null>(null);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   const confirmDelete = async () => {
     if (!deleteConfirmation) return;
@@ -83,7 +86,7 @@ export default function ProblemsPage() {
           filterTags={filterTags}
           setFilterTags={setFilterTags}
           selectedCount={selectedIds.size}
-          onBulkDelete={bulkDelete}
+          onBulkDelete={() => setIsBulkDeleteModalOpen(true)}
           onClearSelection={() => setSelectedIds(new Set())}
           onAddToList={() => setIsAddToListModalOpen(true)}
         />
@@ -113,10 +116,9 @@ export default function ProblemsPage() {
         />
       </div>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!deleteConfirmation}
-        onClose={() => setDeleteConfirmation(null)}
+        onClose={() => !isDeleting && setDeleteConfirmation(null)}
         title="Delete Problem"
         description={`Are you sure you want to delete "${deleteConfirmation?.title}"? This action cannot be undone.`}
         footer={
@@ -124,14 +126,43 @@ export default function ProblemsPage() {
             <Button
               variant="ghost"
               onClick={() => setDeleteConfirmation(null)}
+              disabled={isDeleting}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
+              isLoading={isDeleting}
             >
               Delete
+            </Button>
+          </>
+        }
+      />
+
+      <Modal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => !isBulkDeleting && setIsBulkDeleteModalOpen(false)}
+        title="Delete Multiple Problems"
+        description={`Are you sure you want to delete ${selectedIds.size} problems? This action cannot be undone.`}
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setIsBulkDeleteModalOpen(false)}
+              disabled={isBulkDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                bulkDelete().then(() => setIsBulkDeleteModalOpen(false));
+              }}
+              isLoading={isBulkDeleting}
+            >
+              Delete {selectedIds.size} Problems
             </Button>
           </>
         }

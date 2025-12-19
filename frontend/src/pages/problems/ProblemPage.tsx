@@ -20,6 +20,7 @@ export default function ProblemPage() {
     setCode,
     output,
     isRunning,
+    executionMode,
     submissions,
     solutions,
     aiAnalysis,
@@ -182,6 +183,7 @@ export default function ProblemPage() {
       <ProblemHeader
         problem={problem}
         isRunning={isRunning}
+        executionMode={executionMode}
         onRun={(mode) => {
           // Get the latest code from the editor
           const currentCode = editorRef.current?.getValue() || code;
