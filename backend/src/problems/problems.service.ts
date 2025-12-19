@@ -3,11 +3,15 @@ import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { PaginationDto, SortOrder } from '../common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { Difficulty, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProblemsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private dashboardService: DashboardService,
+  ) { }
 
   async create(createProblemDto: CreateProblemDto, user: any) {
     const { testCases, ...problemData } = createProblemDto;
@@ -280,26 +284,36 @@ export class ProblemsService {
       throw new NotFoundException(`Problem with id ${id} not found`);
     }
 
-    // First, delete related submissions
-    await this.prisma.submission.deleteMany({
-      where: { problemId: id },
+    // Use transaction to ensure data integrity
+    const deletedProblem = await this.prisma.$transaction(async (tx) => {
+      // First, delete related submissions
+      await tx.submission.deleteMany({
+        where: { problemId: id },
+      });
+      // Then, delete related test cases
+      await tx.testCase.deleteMany({
+        where: { problemId: id },
+      });
+      // Delete related list entries
+      await tx.problemsOnLists.deleteMany({
+        where: { problemId: id },
+      });
+      // Delete related interview questions
+      await tx.interviewQuestion.deleteMany({
+        where: { problemId: id },
+      });
+      // Finally, delete the problem
+      return tx.problem.delete({
+        where: { id },
+      });
     });
-    // Then, delete related test cases
-    await this.prisma.testCase.deleteMany({
-      where: { problemId: id },
-    });
-    // Delete related list entries
-    await this.prisma.problemsOnLists.deleteMany({
-      where: { problemId: id },
-    });
-    // Delete related interview questions
-    await this.prisma.interviewQuestion.deleteMany({
-      where: { problemId: id },
-    });
-    // Finally, delete the problem
-    return this.prisma.problem.delete({
-      where: { id },
-    });
+
+    // Invalidate user's dashboard cache
+    if (this.dashboardService) {
+      this.dashboardService.invalidateUserCache(userId);
+    }
+
+    return deletedProblem;
   }
 
   async findSubmissions(slug: string, user: any) {

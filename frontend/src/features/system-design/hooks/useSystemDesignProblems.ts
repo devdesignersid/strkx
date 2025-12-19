@@ -66,6 +66,7 @@ export function useSystemDesignProblems() {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
     });
 
@@ -95,6 +96,7 @@ export function useSystemDesignProblems() {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         }
     });
 

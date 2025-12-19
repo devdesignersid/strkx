@@ -114,6 +114,7 @@ export function useProblems() {
     onSettled: () => {
       // Refetch to sync with server
       queryClient.invalidateQueries({ queryKey: ['problems'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     }
   });
 
@@ -154,6 +155,7 @@ export function useProblems() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['problems'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     }
   });
 

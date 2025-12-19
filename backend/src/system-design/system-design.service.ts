@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { SYSTEM_DESIGN_CONSTANTS, DEMO_USER_EMAIL } from '../common/constants';
 import { CreateSystemDesignProblemDto, UpdateSystemDesignProblemDto } from './dto/create-problem.dto';
 import { CreateSystemDesignSubmissionDto, UpdateSystemDesignSubmissionDto } from './dto/create-submission.dto';
 
 @Injectable()
 export class SystemDesignService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private dashboardService: DashboardService
+  ) { }
 
   async createProblem(userId: string, data: CreateSystemDesignProblemDto) {
     return this.prisma.systemDesignProblem.create({
@@ -99,9 +103,44 @@ export class SystemDesignService {
   }
 
   async deleteProblem(id: string) {
-    return this.prisma.systemDesignProblem.delete({
+    // First check if problem exists
+    const problem = await this.prisma.systemDesignProblem.findUnique({
       where: { id },
     });
+
+    if (!problem) {
+      throw new NotFoundException(`System Design problem with ID ${id} not found`);
+    }
+
+    // Use transaction for atomic deletion
+    const deletedProblem = await this.prisma.$transaction(async (tx) => {
+      // 1. Delete all submissions for this problem
+      await tx.systemDesignSubmission.deleteMany({
+        where: { problemId: id },
+      });
+
+      // 2. Delete all solutions linked to this problem
+      await tx.systemDesignSolution.deleteMany({
+        where: { problemId: id },
+      });
+
+      // 3. Remove from any lists
+      await tx.systemDesignProblemsOnLists.deleteMany({
+        where: { problemId: id },
+      });
+
+      // 4. Finally delete the problem itself
+      return tx.systemDesignProblem.delete({
+        where: { id },
+      });
+    });
+
+    // Invalidate dashboard cache for the user
+    if (this.dashboardService) {
+      this.dashboardService.invalidateUserCache(problem.userId);
+    }
+
+    return deletedProblem;
   }
 
   // Submissions

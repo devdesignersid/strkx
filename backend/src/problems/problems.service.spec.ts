@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProblemsService } from './problems.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { NotFoundException } from '@nestjs/common';
 import { CreateProblemDto, Difficulty } from './dto/create-problem.dto';
 
 describe('ProblemsService', () => {
   let service: ProblemsService;
   let prisma: PrismaService;
+  let dashboardService: DashboardService;
 
   const mockPrismaService = {
     problem: {
@@ -31,7 +33,16 @@ describe('ProblemsService', () => {
     interviewQuestion: {
       deleteMany: jest.fn(),
     },
-    $transaction: jest.fn((promises) => Promise.all(promises)),
+    $transaction: jest.fn((arg) => {
+      if (Array.isArray(arg)) {
+        return Promise.all(arg);
+      }
+      return arg(mockPrismaService);
+    }),
+  };
+
+  const mockDashboardService = {
+    invalidateUserCache: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -39,11 +50,13 @@ describe('ProblemsService', () => {
       providers: [
         ProblemsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: DashboardService, useValue: mockDashboardService },
       ],
     }).compile();
 
     service = module.get<ProblemsService>(ProblemsService);
     prisma = module.get<PrismaService>(PrismaService);
+    dashboardService = module.get<DashboardService>(DashboardService);
   });
 
   afterEach(() => {
@@ -167,6 +180,7 @@ describe('ProblemsService', () => {
       expect(prisma.problemsOnLists.deleteMany).toHaveBeenCalledWith({ where: { problemId: '1' } });
       expect(prisma.interviewQuestion.deleteMany).toHaveBeenCalledWith({ where: { problemId: '1' } });
       expect(prisma.problem.delete).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(dashboardService.invalidateUserCache).toHaveBeenCalledWith(user.id);
     });
   });
 });
