@@ -51,7 +51,7 @@ export default function Layout() {
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="absolute -right-3 top-20 z-10 w-6 h-6 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="absolute -right-3 top-20 z-50 w-6 h-6 rounded-full bg-card border border-border shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             title="Expand sidebar"
           >
             <PanelLeftOpen className="w-3 h-3" />
