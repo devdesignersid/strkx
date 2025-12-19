@@ -27,6 +27,7 @@ export const useProblems = () => {
     direction: 'desc'
   });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [page, setPage] = useState(1);
   const LIMIT = 20;
 
@@ -115,6 +116,7 @@ export const useProblems = () => {
   const bulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
+    setIsBulkDeleting(true);
     try {
       await Promise.all(
         Array.from(selectedIds).map(id => problemsService.delete(id)) // Assuming delete method exists
@@ -128,6 +130,8 @@ export const useProblems = () => {
     } catch (err) {
       console.error('Failed to delete problems:', err);
       toast.error(TOAST_MESSAGES.PROBLEM.BULK_DELETE_FAILED);
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -153,7 +157,9 @@ export const useProblems = () => {
     loadMore,
     deleteProblem,
     bulkDelete,
-    refetch
+    refetch,
+    isDeleting: deleteMutation.isPending,
+    isBulkDeleting
   };
 };
 
