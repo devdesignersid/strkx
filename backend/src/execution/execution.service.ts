@@ -287,6 +287,11 @@ export class ExecutionService {
     };
   }
 
+  /**
+   * PERFORMANCE: Execute code in worker thread with strict resource cleanup.
+   * Ensures worker is always terminated, even on timeout or rejection.
+   * Prevents memory leaks from accumulating zombie workers.
+   */
   private runInWorker(code: string, context: any): Promise<{ result: any, logs: string[] }> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(path.join(__dirname, 'execution.worker.js'), {
@@ -298,22 +303,51 @@ export class ExecutionService {
         },
       });
 
+      let terminated = false;
+
+      /**
+       * CRITICAL: Idempotent cleanup - ensures worker is only terminated once
+       * Prevents "Worker has already terminated" errors
+       */
+      const cleanup = () => {
+        if (!terminated) {
+          terminated = true;
+          worker.terminate();
+        }
+      };
+
+      /**
+       * CRITICAL: Global timeout as failsafe
+       * VM timeout is enforced inside isolated-vm, but worker itself can hang
+       * Add 1s buffer to allow VM timeout to fire first
+       */
+      const globalTimeout = setTimeout(() => {
+        this.logger.warn('Worker execution timed out at Promise level');
+        cleanup();
+        reject({ message: 'Worker execution timed out', logs: [] });
+      }, (context.timeoutMs || 2000) + 1000);
+
       worker.on('message', (message) => {
+        clearTimeout(globalTimeout);
+        cleanup();
         if (message.success) {
           resolve(message);
         } else {
           reject(message);
         }
-        worker.terminate();
       });
 
       worker.on('error', (error) => {
+        clearTimeout(globalTimeout);
+        cleanup();
+        this.logger.error('Worker error:', error);
         reject({ message: error.message, logs: [] });
-        worker.terminate();
       });
 
       worker.on('exit', (code) => {
-        if (code !== 0) {
+        clearTimeout(globalTimeout);
+        if (code !== 0 && !terminated) {
+          this.logger.warn(`Worker stopped with exit code ${code}`);
           reject({ message: `Worker stopped with exit code ${code}`, logs: [] });
         }
       });

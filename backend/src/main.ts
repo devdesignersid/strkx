@@ -19,8 +19,9 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ extended: true, limit: '50mb' }));
+  // PERFORMANCE: Limit request body size to prevent Dos attacks and memory exhaustion
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   // Logging
   app.useLogger(app.get(Logger));

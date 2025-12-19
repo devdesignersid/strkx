@@ -233,7 +233,13 @@ export class ImportService {
         const importedProblemSlugs = new Map<string, string>(); // slug -> id
         const importedSystemDesignSlugs = new Map<string, string>(); // slug -> id
 
-        // Helper for batched execution
+        /**
+         * PERFORMANCE: Batched execution with concurrency limit
+         * Prevents event loop starvation on large imports by limiting parallel operations
+         */
+        const pLimit = (await import('p-limit')).default;
+        const limit = pLimit(10); // Max 10 concurrent operations
+
         const processBatched = async <T>(
             items: T[],
             batchSize: number,
@@ -241,7 +247,10 @@ export class ImportService {
         ) => {
             for (let i = 0; i < items.length; i += batchSize) {
                 const batch = items.slice(i, i + batchSize);
-                await Promise.all(batch.map((item, batchIndex) => processor(item, i + batchIndex)));
+                // CRITICAL: Use p-limit to bound concurrency across all batches
+                await Promise.all(batch.map((item, batchIndex) =>
+                    limit(() => processor(item, i + batchIndex))
+                ));
             }
         };
 

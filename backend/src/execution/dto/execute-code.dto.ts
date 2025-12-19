@@ -1,8 +1,9 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
 export class ExecuteCodeDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50000, { message: 'Code must not exceed 50,000 characters' })
   code: string;
 
   @IsString()
