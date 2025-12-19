@@ -202,12 +202,12 @@ export function ItemSelectionModal({
                 </div>
 
                 {/* Items Container */}
-                <div className="relative border border-border/60 rounded-xl bg-gradient-to-b from-background to-secondary/10 min-h-[320px] max-h-[400px] overflow-hidden">
+                <div className="relative border border-border/60 rounded-xl bg-gradient-to-b from-background to-secondary/10 min-h-[320px] max-h-[400px] flex flex-col overflow-hidden">
                     {/* Decorative top gradient */}
                     <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
 
                     {/* Scrollable content */}
-                    <div className="h-full overflow-y-auto px-2 py-2 scroll-smooth">
+                    <div className="flex-1 overflow-y-auto px-2 py-2 scroll-smooth min-h-0">
                         {isLoading ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                                 <div className="relative">
