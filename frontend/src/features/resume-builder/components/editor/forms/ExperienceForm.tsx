@@ -160,7 +160,7 @@ export const ExperienceForm = memo(() => {
 
     return (
         <div className="space-y-6 p-1">
-            <div className="flex justify-between items-center border-b border-border pb-2">
+            <div className="flex justify-between items-center border-b border-border py-3">
                 <h3 className="font-semibold text-lg text-foreground">Experience</h3>
                 <Button onClick={addItem} size="sm" variant="outline" className="h-8">
                     <Plus className="w-4 h-4" /> Add Position

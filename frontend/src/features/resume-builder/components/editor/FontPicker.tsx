@@ -37,7 +37,7 @@ const REMOTE_FONTS: FontItem[] = [
     { id: 'poppins', family: 'Poppins', category: 'sans-serif' },
     { id: 'nunito', family: 'Nunito', category: 'sans-serif' },
     { id: 'fira-sans', family: 'Fira Sans', category: 'sans-serif' },
-    { id: 'dm-sans', family: 'DM Sans', category: 'sans-serif' },
+    { id: 'inter', family: 'Inter', category: 'sans-serif' },
     { id: 'montserrat', family: 'Montserrat', category: 'sans-serif' },
     { id: 'work-sans', family: 'Work Sans', category: 'sans-serif' },
     { id: 'ibm-plex-sans', family: 'IBM Plex Sans', category: 'sans-serif' },

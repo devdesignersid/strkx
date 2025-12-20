@@ -10,7 +10,7 @@
 
 export const typography = {
   fontFamily: {
-    sans: ['DM Sans', 'sans-serif'],
+    sans: ['Inter', 'sans-serif'],
     mono: ['JetBrains Mono', 'monospace'],
   },
 

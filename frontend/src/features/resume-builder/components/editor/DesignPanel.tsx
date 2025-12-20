@@ -59,11 +59,15 @@ interface ColorPickerProps {
 }
 
 const ColorPicker = memo(({ label, value, onChange }: ColorPickerProps) => (
-    <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</Label>
-        <div className="flex gap-2 items-center">
-            <label className="relative w-10 h-10 rounded-lg cursor-pointer border-2 border-border/60 shadow-sm hover:border-primary/50 transition-all hover:shadow-md">
-                <span className="absolute inset-1 rounded-md shadow-inner" style={{ backgroundColor: value }} />
+    <div className="space-y-2.5">
+        <Label className="text-[11px] font-semibold text-foreground/70 uppercase tracking-widest">{label}</Label>
+        <div className="flex gap-2.5 items-stretch">
+            <label className="relative w-10 h-10 rounded-full cursor-pointer border border-white/5 bg-background overflow-hidden shadow-lg hover:shadow-xl transition-all group flex-shrink-0">
+                <div
+                    className="absolute inset-0 transition-transform group-hover:scale-105"
+                    style={{ backgroundColor: value }}
+                />
+                <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-black/10" />
                 <input
                     type="color"
                     value={value}
@@ -71,12 +75,15 @@ const ColorPicker = memo(({ label, value, onChange }: ColorPickerProps) => (
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                 />
             </label>
-            <Input
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="font-mono text-xs uppercase h-9"
-                maxLength={7}
-            />
+            <div className="flex-1 flex flex-col justify-center">
+                <Input
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="font-mono text-sm tracking-tight h-10 bg-background border-white/5 shadow-sm hover:border-white/10 focus:border-primary/50 transition-colors"
+                    maxLength={7}
+                    placeholder="#000000"
+                />
+            </div>
         </div>
     </div>
 ));
