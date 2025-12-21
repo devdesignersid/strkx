@@ -18,6 +18,35 @@ export class ExecutionService {
   private readonly MAX_CONCURRENT_EXECUTIONS = 10;
   private readonly QUEUE_TIMEOUT_MS = 30000; // 30s queue timeout
 
+  // PERFORMANCE: Pre-compiled regex pattern (avoid recompilation in hot path)
+  private readonly inputParseRegex = /(?<=[\]}"\d]|true|false|null)\s+(?=[\[{"\d-]|true|false|null)/g;
+
+  // PERFORMANCE: In-process LRU cache for problem metadata
+  private problemCache = new Map<string, { problem: any; timestamp: number }>();
+  private readonly CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+  private readonly MAX_CACHE_SIZE = 100; // Cache up to 100 problems
+
+  // PERFORMANCE: Optimized field selection for problem queries
+  private readonly problemSelectFields = {
+    id: true,
+    type: true,
+    slug: true,
+    className: true,
+    inputTypes: true,
+    returnType: true,
+    comparisonType: true,
+    timeoutMs: true,
+    memoryLimitMb: true,
+    testCases: {
+      select: {
+        id: true,
+        input: true,
+        expectedOutput: true,
+        isHidden: true,
+      },
+    },
+  };
+
   constructor(
     private prisma: PrismaService,
     private driverGenerator: DriverGenerator,
@@ -48,13 +77,8 @@ export class ExecutionService {
       throw new NotFoundException('User not authenticated');
     }
 
-    const problem = await this.prisma.problem.findFirst({
-      where: {
-        slug: problemSlug,
-        userId: user.id,
-      },
-      include: { testCases: true },
-    });
+    // PERFORMANCE: Use cached problem with field selection
+    const problem = await this.getCachedProblem(problemSlug, user.id);
 
     if (!problem) {
       throw new NotFoundException('Problem not found');
@@ -85,13 +109,9 @@ export class ExecutionService {
           } catch (e) {
             // Fallback: Try parsing as space/newline-separated JSON values
             // This handles cases like "2 [[1,0]]" or "2\n[[1,0]]"
-            // We use a regex to replace whitespace between valid JSON tokens with commas
-            // Regex explanation:
-            // Lookbehind: End of a value (digit, ], }, ", true, false, null)
-            // Match: One or more whitespace characters
-            // Lookahead: Start of a value ([, {, ", digit, -, true, false, null)
-            const regex = /(?<=[\]}"\d]|true|false|null)\s+(?=[\[{"\d-]|true|false|null)/g;
-            const fixedInput = testCase.input.replace(regex, ',');
+            // We use a pre-compiled regex to replace whitespace between valid JSON tokens with commas
+            // PERFORMANCE: Using pre-compiled regex saved at class level
+            const fixedInput = testCase.input.replace(this.inputParseRegex, ',');
 
             try {
               inputData = JSON.parse(`[${fixedInput}]`);
@@ -319,13 +339,16 @@ export class ExecutionService {
       /**
        * CRITICAL: Global timeout as failsafe
        * VM timeout is enforced inside isolated-vm, but worker itself can hang
-       * Add 1s buffer to allow VM timeout to fire first
+       * Add 2s buffer to allow VM timeout to fire first and return proper error
        */
       const globalTimeout = setTimeout(() => {
         this.logger.warn('Worker execution timed out at Promise level');
         cleanup();
-        reject({ message: 'Worker execution timed out', logs: [] });
-      }, (context.timeoutMs || 2000) + 1000);
+        reject({
+          message: `Execution exceeded time limit (${context.timeoutMs}ms). This may indicate an infinite loop or very slow algorithm.`,
+          logs: []
+        });
+      }, (context.timeoutMs || 5000) + 2000); // +2s buffer (increased from +1s)
 
       worker.on('message', (message) => {
         clearTimeout(globalTimeout);
@@ -352,5 +375,42 @@ export class ExecutionService {
         }
       });
     });
+  }
+
+  /**
+   * PERFORMANCE: Get problem with in-process caching
+   * Implements simple LRU cache with TTL to reduce database queries
+   * Cache key: userId:problemSlug
+   * TTL: 10 minutes
+   * Max size: 100 problems
+   */
+  private async getCachedProblem(slug: string, userId: string) {
+    const cacheKey = `${userId}:${slug}`;
+    const cached = this.problemCache.get(cacheKey);
+
+    // Check if cached and not expired
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.problem;
+    }
+
+    // Fetch from database with optimized field selection
+    const problem = await this.prisma.problem.findFirst({
+      where: { slug, userId },
+      select: this.problemSelectFields,
+    });
+
+    if (!problem) {
+      return null;
+    }
+
+    // Simple LRU: if cache full, delete oldest entry
+    if (this.problemCache.size >= this.MAX_CACHE_SIZE) {
+      const firstKey = this.problemCache.keys().next().value;
+      this.problemCache.delete(firstKey);
+    }
+
+    // Store in cache
+    this.problemCache.set(cacheKey, { problem, timestamp: Date.now() });
+    return problem;
   }
 }

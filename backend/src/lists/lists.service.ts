@@ -163,7 +163,18 @@ export class ListsService {
 
     const codingProblemsOnList = await this.prisma.problemsOnLists.findMany({
       where: { listId: id, problem: problemWhere },
-      include: { problem: true },
+      include: {
+        problem: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            difficulty: true,
+            tags: true,
+            type: true,
+          }
+        }
+      },
       orderBy: { addedAt: 'desc' },
     });
 
@@ -201,7 +212,17 @@ export class ListsService {
 
     const systemDesignProblemsOnList = await this.prisma.systemDesignProblemsOnLists.findMany({
       where: { listId: id, problem: systemDesignWhere },
-      include: { problem: true },
+      include: {
+        problem: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            difficulty: true,
+            tags: true,
+          }
+        }
+      },
       orderBy: { addedAt: 'desc' },
     });
 

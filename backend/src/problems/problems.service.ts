@@ -154,7 +154,14 @@ export class ProblemsService {
       // So we fetch them, then re-sort the result array to match `slicedIds` order.
       const pageProblems = await this.prisma.problem.findMany({
         where: { id: { in: slicedIds } },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          difficulty: true,
+          tags: true,
+          createdAt: true,
+          type: true,
           submissions: {
             where: { userId: user.id },
             select: { status: true },
@@ -174,7 +181,14 @@ export class ProblemsService {
           skip,
           take: limit,
           orderBy,
-          include: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            difficulty: true,
+            tags: true,
+            createdAt: true,
+            type: true,
             submissions: {
               where: { userId: user.id },
               select: { status: true },
@@ -343,7 +357,7 @@ export class ProblemsService {
         code: true,
         status: true,
         createdAt: true,
-        output: true,
+        // Removed output - only fetch when viewing specific submission
         executionTime: true,
         memoryUsed: true,
         isSolution: true,

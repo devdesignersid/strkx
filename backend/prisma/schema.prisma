@@ -67,7 +67,7 @@ model Problem {
   timeLimit   Int         @default(45) // Minutes
   
   // Execution Constraints
-  timeoutMs       Int      @default(2000) // Execution time limit in milliseconds
+  timeoutMs       Int      @default(5000) // Execution time limit in milliseconds (increased from 2000ms)
   memoryLimitMb   Int      @default(128)  // Memory limit in megabytes
 
   tags        String[]

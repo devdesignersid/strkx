@@ -34,7 +34,14 @@ export class SystemDesignService {
     const problems = await this.prisma.systemDesignProblem.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        difficulty: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { submissions: true },
         },

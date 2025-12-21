@@ -34,11 +34,11 @@ const ResumeBuilderPage = lazy(() => import('../pages/resume-builder/ResumeBuild
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Data considered stale immediately for refetch on mount
-      gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+      staleTime: 10 * 1000, // 10 seconds - data is fresh for 10s, then refetch on access
+      gcTime: 15 * 60 * 1000, // 15 minutes - keep data in cache for background reuse
       refetchOnWindowFocus: false,
-      refetchOnMount: 'always', // Always refetch when component mounts (navigation)
-      refetchOnReconnect: true, // Refetch when network reconnects
+      refetchOnMount: 'always', // Always refetch when component mounts (navigating to page)
+      refetchOnReconnect: true,
       retry: 1,
     },
   },

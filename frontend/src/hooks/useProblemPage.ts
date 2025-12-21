@@ -36,6 +36,7 @@ export function useProblemPage(slug: string | undefined) {
     queryKey: ['problem', slug],
     queryFn: () => problemsService.findOne(slug!),
     enabled: !!slug,
+    staleTime: 10 * 60 * 1000, // 10 minutes - problem metadata rarely changes
   });
   const problem = problemData?.data;
 
@@ -44,6 +45,7 @@ export function useProblemPage(slug: string | undefined) {
     queryKey: ['submissions', slug],
     queryFn: () => problemsService.getSubmissions(slug!),
     enabled: !!slug,
+
   });
   const submissions = submissionsData?.data || [];
 
@@ -52,6 +54,7 @@ export function useProblemPage(slug: string | undefined) {
     queryKey: ['solutions', slug],
     queryFn: () => problemsService.getSolutions(slug!),
     enabled: !!slug,
+
   });
   const solutions = solutionsData?.data || [];
 
@@ -97,12 +100,18 @@ export function useProblemPage(slug: string | undefined) {
     };
   }, [isTimerRunning, timeLeft]);
 
-  // Persistence Logic
+  // PERFORMANCE: Debounced localStorage persistence (500ms delay)
+  // Reduces writes from every keystroke to only when user pauses typing
   useEffect(() => {
     if (!slug || !code) return;
     if (code === problem?.starterCode) return;
+
     const key = `strkx_code_${slug}`;
-    localStorage.setItem(key, code);
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem(key, code);
+    }, 500); // Debounce: save only after 500ms of no changes
+
+    return () => clearTimeout(timeoutId);
   }, [code, slug, problem]);
 
   useEffect(() => {
@@ -123,6 +132,8 @@ export function useProblemPage(slug: string | undefined) {
       } else {
         queryClient.invalidateQueries({ queryKey: ['submissions', slug] });
         queryClient.invalidateQueries({ queryKey: ['solutions', slug] });
+        // Invalidate dashboard to reflect new submission in stats/activity/heatmap
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         setOutput(data.data);
         if (data.data.passed) {
           recordSolve();

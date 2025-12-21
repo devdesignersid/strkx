@@ -578,7 +578,9 @@ QUALITY STANDARDS:
 
 Generate the complete solution now: `,
 
-  SOLUTION_EVALUATION: `You are an expert technical interviewer evaluating a candidate's solution.
+  SOLUTION_EVALUATION: `You are a Senior Algorithms Engineer performing interview-grade code analysis.
+
+Your task is to compute ACCURATE Time and Space Complexity based STRICTLY on the user's actual code, not on problem stereotypes or generic solutions. The analysis must reflect what the code ACTUALLY does, not what it is supposed to do.
 
 PROBLEM: {problemTitle}
 
@@ -591,26 +593,50 @@ TEST CASES:
 CANDIDATE'S SUBMITTED CODE:
 {userCode}
 
-CRITICAL INSTRUCTIONS:
-1. ONLY analyze the code provided above - do NOT reference code that doesn't exist
+CRITICAL INSTRUCTIONS - ABSOLUTE CONSTRAINTS:
+1. ONLY analyze the code provided above - do NOT reference code that does not exist
 2. ONLY critique patterns, structures, and logic actually present in the submitted code
 3. If the code is empty or trivial, score accordingly (low score)
 4. Do NOT hallucinate features or patterns not in the code
+5. DO NOT give generic or problem-level complexity - analyze the ACTUAL code
+6. DO NOT assume optimal or intended solutions - analyze what is written
+7. DO NOT ignore helper functions, recursion depth, or hidden loops
+8. If the code is inefficient, incorrect, or suboptimal - say so explicitly
 
-TIME COMPLEXITY ANALYSIS:
-- Identify ALL loops, recursive calls, and data structure operations in the code
-- For each loop: note its bounds and what it iterates over
-- For nested loops: multiply their complexities
-- For recursive functions: identify the recurrence relation
-- Consider hash map/set operations as O(1) average
+TIME COMPLEXITY ANALYSIS (STRICT - Code-Dependent):
+- Analyze ONLY the code currently present in the editor
+- Derive complexity by counting:
+  * Loops (nested depth, dependent vs independent bounds)
+  * Recursion depth and branching factor
+  * Function calls inside loops (including built-in methods)
+- Distinguish:
+  * Sequential vs nested operations
+  * Dependent loops (i < n, j < i) vs independent
+  * Early exits / breaks and their impact
+- For recursion: identify the recurrence relation explicitly
+- Consider hash map/set operations as O(1) average, O(n) worst case
 - Consider sorting as O(n log n)
-- Provide the FINAL Big-O in terms of input size n
+- Express final result in TIGHT Big-O, not loose upper bounds
+- Provide worst-case complexity, mention best-case only if meaningfully different
+- STATE YOUR ASSUMPTIONS clearly (e.g., n = length of input array)
 
-SPACE COMPLEXITY ANALYSIS:
-- Identify ALL data structures created (arrays, objects, maps, sets)
-- Note their sizes relative to input
-- Include recursion stack depth for recursive solutions
-- Provide the FINAL Big-O space usage
+SPACE COMPLEXITY ANALYSIS (STRICT - Memory Accounting):
+IMPORTANT: Space complexity measures the algorithm's EXTRA memory usage, NOT the output size.
+- DO NOT count the output/result array as part of space complexity (e.g., for 3Sum returning triplets, the results array is NOT counted)
+- DO NOT include the input array size unless it is modified in-place
+- Account for ONLY auxiliary memory used by the algorithm:
+  * Hash maps, sets, temporary arrays created for processing
+  * Recursion stack depth (call stack)
+  * Hidden allocations (closures, intermediate arrays from methods like map/filter)
+  * Sorting algorithms typically use O(log n) stack space for in-place sorting
+- Explicitly distinguish:
+  * Auxiliary space (extra space used beyond input and output) - THIS IS THE SPACE COMPLEXITY
+  * Input space (given, not counted)
+  * Output space (required by problem, not counted as algorithm inefficiency)
+  * Call stack space (for recursive solutions)
+- For two-pointer or sliding window solutions (without sorting): auxiliary space is O(1)
+- For JavaScript Array.sort(): uses Timsort which requires O(n) auxiliary space
+- Provide the FINAL Big-O space usage for AUXILIARY SPACE ONLY
 
 EVALUATION RUBRIC (100 points total):
 
@@ -640,8 +666,8 @@ OUTPUT FORMAT - Return ONLY valid JSON:
 {
   "timeComplexity": "O(n)",
   "spaceComplexity": "O(n)",
-  "timeComplexityBreakdown": "Line-by-line: the for loop on line X iterates n times, the inner operation is O(1), total O(n)",
-  "spaceComplexityBreakdown": "Hash map stores up to n elements: O(n), no additional structures",
+  "timeComplexityBreakdown": "**Time Complexity: O(n)**\\\\n\\\\n**Derivation:**\\\\n- Main for loop iterates n times (line X)\\\\n- Each hash map lookup/insert is O(1) average\\\\n- No nested loops present\\\\n- Total: O(n) * O(1) = O(n)\\\\n\\\\n**Assumptions:** n = length of input array",
+  "spaceComplexityBreakdown": "**Space Complexity: O(n)**\\\\n\\\\n**Memory Breakdown:**\\\\n- Auxiliary Space: Hash map stores up to n key-value pairs = O(n)\\\\n- Input Space: Not counted (given)\\\\n- Output Space: Not counted (required by problem)\\\\n- Call Stack: O(1) - no recursion\\\\n\\\\n**Total Auxiliary Space:** O(n)",
   "score": 85,
   "feedback": "## Score Breakdown\\\\n\\\\n**Correctness (35/40)**\\\\n- Core algorithm works correctly\\\\n- Missing edge case handling for empty array\\\\n\\\\n**Time Complexity (18/20)**\\\\n- Uses efficient hash map approach O(n)\\\\n- Single pass is optimal\\\\n\\\\n**Space Complexity (18/20)**\\\\n- O(n) hash map is acceptable\\\\n\\\\n**Code Quality (14/20)**\\\\n- Good variable names\\\\n- Could use more comments",
   "suggestions": [
