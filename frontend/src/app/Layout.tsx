@@ -18,7 +18,10 @@ export default function Layout() {
   ];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div
+      className="flex h-screen w-full overflow-hidden bg-background"
+      style={{ '--sidebar-width': isCollapsed ? '4rem' : '16rem' } as React.CSSProperties}
+    >
       {/* Sidebar */}
       <aside className={`border-r border-border bg-card flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-16' : 'w-64'}`}>
         {/* Logo */}

@@ -169,7 +169,8 @@ export function ProblemsToolbar({
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-popover border border-border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
+            className="fixed bottom-8 -translate-x-1/2 bg-popover border border-border rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 z-50"
+            style={{ left: 'calc(36vw + var(--sidebar-width, 4rem) / 2)' }}
           >
             <div className="flex items-center gap-3 border-r border-border pr-6">
               <div className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
