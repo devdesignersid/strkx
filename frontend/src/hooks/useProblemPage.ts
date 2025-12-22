@@ -155,7 +155,7 @@ export function useProblemPage(slug: string | undefined) {
     if (!problem || !slug) return;
     setIsRunning(true);
     setExecutionMode(mode);
-    if (mode === 'run') setOutput(null);
+    setOutput(null); // Clear output for both run and submit modes
 
     const codeToUse = codeToSubmit || code;
 
