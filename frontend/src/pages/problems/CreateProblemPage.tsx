@@ -676,7 +676,7 @@ function solution(${args}) {
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'SF Mono', Menlo, monospace",
                   padding: { top: 16 },
                   readOnly: isLocked,
                 }}

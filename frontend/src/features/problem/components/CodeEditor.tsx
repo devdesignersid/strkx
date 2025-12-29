@@ -106,7 +106,7 @@ export function CodeEditor({
     readOnly: false,
     automaticLayout: true,
     padding: { top: 16, bottom: 16 },
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontFamily: "'SF Mono', Menlo, monospace",
     fontLigatures: true,
     cursorBlinking: 'smooth' as const,
     cursorSmoothCaretAnimation: 'on' as const,
