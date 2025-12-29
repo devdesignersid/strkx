@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Clock, Brain, Filter, List as ListIcon, Hash, Search, ChevronDown, X, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Play, Clock, Brain, Filter, List as ListIcon, Hash, Search, ChevronDown, X, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { DIFFICULTY_LEVELS, PROBLEM_STATUSES, MOCK_INTERVIEW_CONSTANTS } from '@/config/constants';
 import { cn } from '@/lib/utils';
@@ -195,21 +195,44 @@ const MockInterviewSetup: React.FC = () => {
                 <Filter className="w-4 h-4 text-primary" /> Difficulty
               </Label>
               <div className="flex flex-wrap gap-2">
-                {DIFFICULTY_LEVELS.map(diff => (
-                  <Button
-                    key={diff}
-                    variant={difficulty.includes(diff) ? "default" : "secondary"}
-                    onClick={() => toggleSelection(diff, difficulty, setDifficulty)}
-                    className={cn(
-                      "transition-all",
-                      difficulty.includes(diff)
-                        ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
-                        : "bg-secondary/50 text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {diff}
-                  </Button>
-                ))}
+                {DIFFICULTY_LEVELS.map(diff => {
+                  const isSelected = difficulty.includes(diff);
+                  const colorClasses = {
+                    Easy: isSelected
+                      ? 'bg-green-500/15 text-green-400 border-green-500/30 ring-1 ring-green-500/20'
+                      : 'text-green-400/70 hover:bg-green-500/10 hover:text-green-400',
+                    Medium: isSelected
+                      ? 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30 ring-1 ring-yellow-500/20'
+                      : 'text-yellow-400/70 hover:bg-yellow-500/10 hover:text-yellow-400',
+                    Hard: isSelected
+                      ? 'bg-red-500/15 text-red-400 border-red-500/30 ring-1 ring-red-500/20'
+                      : 'text-red-400/70 hover:bg-red-500/10 hover:text-red-400',
+                  }[diff] || '';
+
+                  return (
+                    <button
+                      key={diff}
+                      type="button"
+                      onClick={() => toggleSelection(diff, difficulty, setDifficulty)}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150",
+                        isSelected
+                          ? colorClasses
+                          : `bg-secondary/30 border-transparent ${colorClasses}`
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={cn(
+                          "w-2 h-2 rounded-full",
+                          diff === 'Easy' && 'bg-green-500',
+                          diff === 'Medium' && 'bg-yellow-500',
+                          diff === 'Hard' && 'bg-red-500'
+                        )} />
+                        {diff}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -219,21 +242,34 @@ const MockInterviewSetup: React.FC = () => {
                 <Clock className="w-4 h-4 text-primary" /> Status
               </Label>
               <div className="flex flex-wrap gap-2">
-                {PROBLEM_STATUSES.map(s => (
-                  <Button
-                    key={s}
-                    variant={status.includes(s) ? "default" : "secondary"}
-                    onClick={() => toggleSelection(s, status, setStatus)}
-                    className={cn(
-                      "transition-all",
-                      status.includes(s)
-                        ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
-                        : "bg-secondary/50 text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {s}
-                  </Button>
-                ))}
+                {PROBLEM_STATUSES.map(s => {
+                  const isSelected = status.includes(s);
+                  const StatusIcon = s === 'Solved' ? CheckCircle2 : s === 'Attempted' ? Clock : Circle;
+                  const colorClass = s === 'Solved'
+                    ? 'text-green-500'
+                    : s === 'Attempted'
+                      ? 'text-yellow-500'
+                      : 'text-muted-foreground';
+
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSelection(s, status, setStatus)}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150",
+                        isSelected
+                          ? "bg-primary/10 text-primary border-primary/30 ring-1 ring-primary/20"
+                          : "bg-secondary/30 border-transparent text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <StatusIcon className={cn("w-3.5 h-3.5", isSelected ? 'text-primary' : colorClass)} />
+                        {s}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
