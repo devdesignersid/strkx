@@ -18,19 +18,8 @@ function ComplexityDisplay({ complexity }: { complexity: string }) {
   // Replace common patterns with proper formatting
   const formatComplexity = (text: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
-    let remaining = text;
+    const remaining = text;
     let keyIndex = 0;
-
-    // Pattern to match exponents: n^2, n², 2^n, n^k, n^logn, etc.
-    // Also matches standalone numbers after variables like n2 -> n²
-    const patterns = [
-      // Match caret notation: n^2, 2^n, n^log n, etc.
-      { regex: /\^(\([^)]+\)|[a-zA-Z0-9]+)/g, format: (match: string, exp: string) => <sup key={keyIndex++}>{exp.replace(/^\(|\)$/g, '')}</sup> },
-      // Match Unicode superscripts already present (preserve them)
-      { regex: /([\u00B2\u00B3\u00B9\u2070-\u209F]+)/g, format: (match: string) => match },
-      // Match log with subscript base: log₂, log_2, log2
-      { regex: /log[_]?(\d+)/gi, format: (_match: string, base: string) => <span key={keyIndex++}>log<sub>{base}</sub></span> },
-    ];
 
     // Process caret notation first (highest priority)
     const caretRegex = /\^(\([^)]+\)|[a-zA-Z0-9]+)/g;
