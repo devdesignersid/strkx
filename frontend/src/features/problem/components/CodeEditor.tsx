@@ -1,8 +1,9 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus, StickyNote } from 'lucide-react';
+import { Loader2, RotateCcw, Lightbulb, Sparkles, Maximize2, Minimize2, Keyboard, Focus, StickyNote, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components';
+import { toast } from '@/lib/toast';
 
 interface CodeEditorProps {
   code: string;
@@ -96,6 +97,20 @@ export function CodeEditor({
   isScratchpadOpen = false,
   onToggleScratchpad
 }: CodeEditorProps) {
+
+  const [hasCopied, setHasCopied] = useState(false);
+
+  const handleCopyCode = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setHasCopied(true);
+      toast.success('Code copied to clipboard');
+      setTimeout(() => setHasCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+      toast.error('Failed to copy code');
+    }
+  }, [code]);
 
   const editorOptions = useMemo(() => ({
     minimap: { enabled: false },
@@ -272,6 +287,19 @@ export function CodeEditor({
             title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
           >
             <Focus className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyCode}
+            className={cn(
+              "h-8 w-8 p-0",
+              hasCopied && "text-green-400"
+            )}
+            title="Copy Code"
+          >
+            {hasCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </Button>
 
           <Button
