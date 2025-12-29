@@ -35,3 +35,17 @@ export const useDeleteList = () => {
     },
   });
 };
+
+export const useAddProblemToList = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ listId, problemIds }: { listId: string; problemIds: string[] }) =>
+      listsService.addProblem(listId, problemIds),
+    onSuccess: (_data, variables) => {
+      // Invalidate the lists query to update problem counts
+      queryClient.invalidateQueries({ queryKey: ['lists'] });
+      // Also invalidate the specific list if it's cached
+      queryClient.invalidateQueries({ queryKey: ['list', variables.listId] });
+    },
+  });
+};

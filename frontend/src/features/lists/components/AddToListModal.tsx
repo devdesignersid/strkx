@@ -6,6 +6,7 @@ import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { listsService } from '@/services/api/lists.service';
 import { TruncatedText } from '@/components/ui/truncated-text';
+import { useAddProblemToList } from '@/hooks/useLists';
 
 interface List {
   id: string;
@@ -27,6 +28,8 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
   const [newListName, setNewListName] = useState('');
   const [selectedListIds, setSelectedListIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addProblemToListMutation = useAddProblemToList();
 
   useEffect(() => {
     if (isOpen) {
@@ -78,9 +81,9 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
     setIsSubmitting(true);
     try {
       // Add problems to each selected list
-      // We do this in parallel
+      // We do this in parallel using the mutation hook for proper cache invalidation
       await Promise.all(Array.from(selectedListIds).map(listId =>
-        listsService.addProblem(listId, selectedProblemIds)
+        addProblemToListMutation.mutateAsync({ listId, problemIds: selectedProblemIds })
       ));
 
       toast.success({
