@@ -57,8 +57,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-full overflow-y-auto bg-background text-foreground font-sans bg-grid-pattern">
+      <div className="py-8 mx-auto max-w-7xl px-8">
         <PageHeader
           title="Dashboard"
           description={getGreeting()}
@@ -119,8 +119,8 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-4">
                       {/* Status indicator - clean icon only */}
                       <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${activity.status === 'Solved'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-amber-500/10 text-amber-500'
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-amber-500/10 text-amber-500'
                         }`}>
                         {activity.status === 'Solved'
                           ? <CheckCircle2 className="w-4 h-4" />

@@ -60,7 +60,7 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-background text-foreground font-sans">
+    <div className="h-full overflow-y-auto bg-background text-foreground font-sans bg-grid-pattern">
       <div className="py-8 mx-auto max-w-7xl px-8">
         {/* Header */}
         <PageHeader

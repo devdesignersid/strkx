@@ -138,4 +138,32 @@
   .text-heading {
     @apply font-semibold tracking-tight leading-tight;
   }
+
+  /* Premium grid background pattern */
+  .bg-grid-pattern {
+    position: relative;
+  }
+
+  .bg-grid-pattern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 500px;
+    background-image:
+      linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%),
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  }
+
+  .bg-grid-pattern>* {
+    position: relative;
+    z-index: 1;
+  }
 }
