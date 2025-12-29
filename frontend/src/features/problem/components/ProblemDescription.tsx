@@ -8,6 +8,82 @@ import { fadeIn } from '@/design-system/animations';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/design-system/components';
 import { Modal } from '@/design-system/components';
 
+/**
+ * Formats complexity notation with proper superscripts/subscripts
+ * Converts patterns like n^2, n2, log2n into properly formatted HTML
+ */
+function ComplexityDisplay({ complexity }: { complexity: string }) {
+  if (!complexity) return null;
+
+  // Replace common patterns with proper formatting
+  const formatComplexity = (text: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    let remaining = text;
+    let keyIndex = 0;
+
+    // Pattern to match exponents: n^2, n², 2^n, n^k, n^logn, etc.
+    // Also matches standalone numbers after variables like n2 -> n²
+    const patterns = [
+      // Match caret notation: n^2, 2^n, n^log n, etc.
+      { regex: /\^(\([^)]+\)|[a-zA-Z0-9]+)/g, format: (match: string, exp: string) => <sup key={keyIndex++}>{exp.replace(/^\(|\)$/g, '')}</sup> },
+      // Match Unicode superscripts already present (preserve them)
+      { regex: /([\u00B2\u00B3\u00B9\u2070-\u209F]+)/g, format: (match: string) => match },
+      // Match log with subscript base: log₂, log_2, log2
+      { regex: /log[_]?(\d+)/gi, format: (_match: string, base: string) => <span key={keyIndex++}>log<sub>{base}</sub></span> },
+    ];
+
+    // Process caret notation first (highest priority)
+    const caretRegex = /\^(\([^)]+\)|[a-zA-Z0-9]+)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = caretRegex.exec(remaining)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        parts.push(remaining.slice(lastIndex, match.index));
+      }
+      // Add the superscript
+      const exponent = match[1].replace(/^\(|\)$/g, '');
+      parts.push(<sup key={keyIndex++}>{exponent}</sup>);
+      lastIndex = match.index + match[0].length;
+    }
+
+    // If we found caret patterns, add remaining text and return
+    if (parts.length > 0) {
+      if (lastIndex < remaining.length) {
+        parts.push(remaining.slice(lastIndex));
+      }
+      return parts;
+    }
+
+    // Handle log with subscript notation: log₂n, log_2(n), log2(n)
+    const logRegex = /log[_₂₃₄₅₆₇₈₉₀]?(\d)?/gi;
+    lastIndex = 0;
+
+    while ((match = logRegex.exec(remaining)) !== null) {
+      if (match[1]) {
+        if (match.index > lastIndex) {
+          parts.push(remaining.slice(lastIndex, match.index));
+        }
+        parts.push(<span key={keyIndex++}>log<sub>{match[1]}</sub></span>);
+        lastIndex = match.index + match[0].length;
+      }
+    }
+
+    if (parts.length > 0) {
+      if (lastIndex < remaining.length) {
+        parts.push(remaining.slice(lastIndex));
+      }
+      return parts;
+    }
+
+    // No special formatting needed, return as-is
+    return [text];
+  };
+
+  return <>{formatComplexity(complexity)}</>;
+}
+
 interface ProblemDescriptionProps {
   problem: Problem;
   submissions: Submission[];
@@ -268,11 +344,11 @@ export function ProblemDescription({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-card border border-border">
                       <h4 className="text-xs font-medium text-muted-foreground mb-1">Time Complexity</h4>
-                      <p className="text-lg font-semibold text-foreground">{aiAnalysis.timeComplexity}</p>
+                      <p className="text-lg font-semibold text-foreground font-mono"><ComplexityDisplay complexity={aiAnalysis.timeComplexity} /></p>
                     </div>
                     <div className="p-4 rounded-lg bg-card border border-border">
                       <h4 className="text-xs font-medium text-muted-foreground mb-1">Space Complexity</h4>
-                      <p className="text-lg font-semibold text-foreground">{aiAnalysis.spaceComplexity}</p>
+                      <p className="text-lg font-semibold text-foreground font-mono"><ComplexityDisplay complexity={aiAnalysis.spaceComplexity} /></p>
                     </div>
                   </div>
 
