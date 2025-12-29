@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Check, Loader2, FolderPlus } from 'lucide-react';
 import { LoadingThunder } from '@/design-system/components';
@@ -108,7 +109,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -262,6 +263,7 @@ export default function AddToListModal({ isOpen, onClose, selectedProblemIds }: 
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

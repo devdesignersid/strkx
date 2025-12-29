@@ -246,6 +246,18 @@ const MockInterviewSession: React.FC = () => {
       return;
     }
 
+    // CRITICAL: Read code directly from editor ref to avoid stale React state
+    // This fixes the empty code submission bug when using cmd+enter
+    const currentCode = editorRef.current?.getValue() || code;
+
+    if (!currentCode || currentCode.trim() === '' || currentCode.trim() === '// Write your solution here') {
+      toast.error({
+        title: 'Empty Code',
+        description: 'Please write some code before submitting.'
+      });
+      return;
+    }
+
     submissionInProgress.current = true; // Set lock immediately
     submittingQuestionId.current = question.id; // Mark this question as being submitted
     setIsSubmitting(true);
@@ -262,7 +274,7 @@ const MockInterviewSession: React.FC = () => {
 
       try {
         const execData = await executionService.run({
-          code,
+          code: currentCode,
           language: 'javascript',
           problemSlug: question.problem.slug,
           mode: 'submit'
@@ -282,7 +294,7 @@ const MockInterviewSession: React.FC = () => {
 
       // 2. Submit to Interview Session
       const submitPayload = {
-        code,
+        code: currentCode,
         language: 'javascript',
         timeSpent: 20 * 60 - timeLeft, // Calculate time spent
         status, // Pass the status from execution
