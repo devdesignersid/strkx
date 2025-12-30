@@ -197,26 +197,24 @@ export function CodeEditor({
               {formatTime(timeLeft)}
             </span>
             {!timerReadOnly && (
-              <button
-                onClick={onToggleTimer}
-                className={cn(
-                  "w-2 h-2 rounded-full transition-colors",
-                  isTimerRunning ? "bg-green-500 animate-pulse" : "bg-destructive"
-                )}
-              />
+              <>
+                <button
+                  onClick={onToggleTimer}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-colors",
+                    isTimerRunning ? "bg-green-500 animate-pulse" : "bg-destructive"
+                  )}
+                />
+                <button
+                  onClick={onResetTimer}
+                  className="p-0.5 rounded hover:bg-white/10 transition-colors"
+                  title="Reset Timer"
+                >
+                  <RotateCcw className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </>
             )}
           </div>
-          {!timerReadOnly && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onResetTimer}
-              className="h-8 w-8 p-0"
-              title="Reset Timer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </Button>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
