@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { type OnMount } from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
+import { sounds } from '@/lib/sounds';
 import * as monaco from 'monaco-editor';
 import { ProblemDescription } from '@/features/problem/components/ProblemDescription';
 import { CodeEditor } from '@/features/problem/components/CodeEditor';
@@ -285,9 +286,17 @@ const MockInterviewSession: React.FC = () => {
         status = resultData.passed ? 'ACCEPTED' : 'WRONG_ANSWER';
         outputLog = JSON.stringify(resultData.results);
 
+        // Play sound based on test results
+        if (resultData.passed) {
+          sounds.playSuccess();
+        } else {
+          sounds.playFailure();
+        }
+
       } catch (e) {
         console.error('Execution failed', e);
         status = 'RUNTIME_ERROR';
+        sounds.playFailure();
       }
 
       if (!mounted.current) return;

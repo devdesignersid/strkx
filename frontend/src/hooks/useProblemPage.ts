@@ -6,6 +6,7 @@ import { executionService } from '@/services/api/execution.service';
 import { useMotivation } from '@/hooks/useMotivation';
 import { aiService } from '@/lib/ai/aiService';
 import { PROMPTS } from '@/lib/ai/prompts';
+import { sounds } from '@/lib/sounds';
 import type { ExecutionResult } from '@/types/problem';
 
 export function useProblemPage(slug: string | undefined) {
@@ -129,6 +130,12 @@ export function useProblemPage(slug: string | undefined) {
     onSuccess: (data, variables) => {
       if (variables.mode === 'run') {
         setOutput(data.data);
+        // Play sound based on test results
+        if (data.data.passed) {
+          sounds.playSuccess();
+        } else {
+          sounds.playFailure();
+        }
       } else {
         queryClient.invalidateQueries({ queryKey: ['submissions', slug] });
         queryClient.invalidateQueries({ queryKey: ['solutions', slug] });
@@ -136,13 +143,17 @@ export function useProblemPage(slug: string | undefined) {
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         setOutput(data.data);
         if (data.data.passed) {
+          sounds.playSuccess();
           recordSolve();
           if (slug) localStorage.removeItem(`strkx_code_${slug}`);
+        } else {
+          sounds.playFailure();
         }
       }
     },
     onError: (err: any) => {
       console.error(err);
+      sounds.playFailure();
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         toast.error(TOAST_MESSAGES.PROBLEM.EXECUTION_TIMEOUT);
       } else {
