@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProblemsService } from './problems.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DashboardService } from '../dashboard/dashboard.service';
+import { ExecutionService } from '../execution/execution.service';
 import { NotFoundException } from '@nestjs/common';
 import { CreateProblemDto, Difficulty } from './dto/create-problem.dto';
 
@@ -9,6 +10,7 @@ describe('ProblemsService', () => {
   let service: ProblemsService;
   let prisma: PrismaService;
   let dashboardService: DashboardService;
+  let executionService: ExecutionService;
 
   const mockPrismaService = {
     problem: {
@@ -45,18 +47,24 @@ describe('ProblemsService', () => {
     invalidateUserCache: jest.fn(),
   };
 
+  const mockExecutionService = {
+    invalidateProblemCache: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProblemsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: DashboardService, useValue: mockDashboardService },
+        { provide: ExecutionService, useValue: mockExecutionService },
       ],
     }).compile();
 
     service = module.get<ProblemsService>(ProblemsService);
     prisma = module.get<PrismaService>(PrismaService);
     dashboardService = module.get<DashboardService>(DashboardService);
+    executionService = module.get<ExecutionService>(ExecutionService);
   });
 
   afterEach(() => {
@@ -152,7 +160,7 @@ describe('ProblemsService', () => {
   describe('update', () => {
     it('should update problem and replace test cases', async () => {
       const user = { id: 'user1' };
-      const problem = { id: '1', userId: 'user1' };
+      const problem = { id: '1', userId: 'user1', slug: 'test-problem' };
       const dto = { title: 'New Title', testCases: [] };
 
       mockPrismaService.problem.findUnique.mockResolvedValue(problem);
@@ -162,6 +170,7 @@ describe('ProblemsService', () => {
 
       expect(prisma.testCase.deleteMany).toHaveBeenCalledWith({ where: { problemId: '1' } });
       expect(prisma.problem.update).toHaveBeenCalled();
+      expect(executionService.invalidateProblemCache).toHaveBeenCalledWith('test-problem', 'user1');
     });
   });
 

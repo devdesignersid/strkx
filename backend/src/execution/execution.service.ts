@@ -413,4 +413,14 @@ export class ExecutionService {
     this.problemCache.set(cacheKey, { problem, timestamp: Date.now() });
     return problem;
   }
+
+  /**
+   * Invalidate cached problem data when problem is updated.
+   * This ensures fresh test cases are used on next execution.
+   */
+  public invalidateProblemCache(slug: string, userId: string): void {
+    const cacheKey = `${userId}:${slug}`;
+    this.problemCache.delete(cacheKey);
+    this.logger.debug(`Invalidated problem cache for ${cacheKey}`);
+  }
 }

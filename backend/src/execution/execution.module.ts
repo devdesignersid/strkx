@@ -11,5 +11,6 @@ import { DashboardModule } from '../dashboard/dashboard.module';
   imports: [DashboardModule],
   controllers: [ExecutionController],
   providers: [ExecutionService, DriverGenerator, HydrationService],
+  exports: [ExecutionService],
 })
 export class ExecutionModule { }

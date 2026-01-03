@@ -4,6 +4,7 @@ import { UpdateProblemDto } from './dto/update-problem.dto';
 import { PaginationDto, SortOrder } from '../common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { DashboardService } from '../dashboard/dashboard.service';
+import { ExecutionService } from '../execution/execution.service';
 import { Difficulty, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ProblemsService {
   constructor(
     private prisma: PrismaService,
     private dashboardService: DashboardService,
+    private executionService: ExecutionService,
   ) { }
 
   async create(createProblemDto: CreateProblemDto, user: any) {
@@ -277,6 +279,8 @@ export class ProblemsService {
       await this.prisma.testCase.deleteMany({
         where: { problemId: id },
       });
+      // Invalidate execution cache so new test cases are used
+      this.executionService.invalidateProblemCache(problem.slug, userId);
     }
 
     return this.prisma.problem.update({
