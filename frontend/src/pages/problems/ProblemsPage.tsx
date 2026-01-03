@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
 import AddToListModal from '@/features/lists/components/AddToListModal';
-import { useProblems } from '@/hooks/useProblems';
+import { useProblems } from '@/features/problems/hooks/useProblems';
 import { ProblemsToolbar } from '@/features/problems/components/ProblemsToolbar';
 import { ProblemsTable } from '@/features/problems/components/ProblemsTable';
 import { Modal, Button, PageHeader } from '@/design-system/components';

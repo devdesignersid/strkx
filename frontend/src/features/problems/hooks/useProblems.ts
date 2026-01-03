@@ -58,7 +58,10 @@ export function useProblems() {
         page: pageParam
       });
 
-      const { problems: fetchedProblems, hasMore } = res.data;
+      const { problems: fetchedProblems, meta } = res.data;
+      // Compute hasMore from meta - backend returns page and totalPages
+      const hasMore = meta ? meta.page < meta.totalPages : false;
+
       const enriched = fetchedProblems.map((p: any) => ({
         ...p,
         acceptance: p.acceptance || Math.floor(Math.random() * 60) + 20
