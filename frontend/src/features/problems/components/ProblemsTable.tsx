@@ -208,6 +208,25 @@ export function ProblemsTable({
     </div>
   );
 
+  // Calculate container height to snap to row multiples for clean display
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      // Available height calculation (viewport - header - spacing)
+      const available = window.innerHeight - 350;
+      // Snap to nearest row height to avoid partial rows
+      const rows = Math.floor(available / ROW_HEIGHT);
+      // Ensure minimum height
+      const snapped = Math.max(rows * ROW_HEIGHT, 400);
+      setContainerHeight(snapped);
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
+
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Sticky Header */}
@@ -296,7 +315,7 @@ export function ProblemsTable({
         <div
           ref={parentRef}
           className="overflow-auto"
-          style={{ height: 'calc(100vh - 350px)', minHeight: '400px' }} // Use available viewport height
+          style={{ height: containerHeight }}
         >
           <div
             style={{
@@ -318,90 +337,99 @@ export function ProblemsTable({
             })}
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Loading More Indicator */}
-      {isLoadingMore && (
-        <div className="flex justify-center py-4 border-t border-border">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            Loading more...
+      {
+        isLoadingMore && (
+          <div className="flex justify-center py-4 border-t border-border">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              Loading more...
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Manual Load More Button (fallback if auto-load doesn't trigger) */}
-      {!isLoading && !isLoadingMore && hasMore && problems.length > 0 && (
-        <div className="flex justify-center py-4 border-t border-border">
-          <Button
-            variant="outline"
-            onClick={onLoadMore}
-            size="sm"
-          >
-            <ChevronDownIcon className="w-4 h-4" />
-            Load More
-          </Button>
-        </div>
-      )}
+      {
+        !isLoading && !isLoadingMore && hasMore && problems.length > 0 && (
+          <div className="flex justify-center py-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={onLoadMore}
+              size="sm"
+            >
+              <ChevronDownIcon className="w-4 h-4" />
+              Load More
+            </Button>
+          </div>
+        )
+      }
 
       {/* Portal for Menu */}
-      {activeMenu && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-start justify-start"
-          onClick={() => setActiveMenu(null)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            style={{
-              position: 'absolute',
-              top: activeMenu.y + 5,
-              left: activeMenu.x - 128
-            }}
-            className="w-32 bg-card border border-border rounded-lg shadow-xl overflow-hidden row-action-menu-content"
-            onClick={(e) => e.stopPropagation()}
+      {
+        activeMenu && createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-start justify-start"
+            onClick={() => setActiveMenu(null)}
           >
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors text-left"
-              onClick={() => handleModify(activeMenu.id)}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={{
+                position: 'absolute',
+                top: activeMenu.y + 5,
+                left: activeMenu.x - 128
+              }}
+              className="w-32 bg-card border border-border rounded-lg shadow-xl overflow-hidden row-action-menu-content"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Edit className="w-3.5 h-3.5" />
-              Modify
-            </button>
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors text-left"
-              onClick={() => handleDelete(activeMenu.id)}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </button>
-          </motion.div>
-        </div>,
-        document.body
-      )}
+              <button
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors text-left"
+                onClick={() => handleModify(activeMenu.id)}
+              >
+                <Edit className="w-3.5 h-3.5" />
+                Modify
+              </button>
+              <button
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors text-left"
+                onClick={() => handleDelete(activeMenu.id)}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </motion.div>
+          </div>,
+          document.body
+        )
+      }
 
       {/* Tag Tooltip Portal */}
-      {hoveredTagTooltip && createPortal(
-        <div
-          className="fixed z-[9999] pointer-events-none"
-          style={{
-            left: hoveredTagTooltip.x,
-            top: hoveredTagTooltip.y,
-            transform: `translate(-50%, ${hoveredTagTooltip.position === 'top' ? '-100%' : '0'})`,
-            marginTop: hoveredTagTooltip.position === 'bottom' ? '8px' : '-8px',
-          }}
-        >
-          <div className="bg-popover border border-border rounded-md shadow-xl px-3 py-2 text-xs text-popover-foreground w-max max-w-md">
-            {Array.from({ length: Math.ceil(hoveredTagTooltip.tags.length / 4) }).map((_, i) => (
-              <div key={i} className="whitespace-nowrap">
-                {hoveredTagTooltip.tags.slice(i * 4, (i + 1) * 4).join(', ')}
-              </div>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
+      {
+        hoveredTagTooltip && createPortal(
+          <div
+            className="fixed z-[9999] pointer-events-none"
+            style={{
+              left: hoveredTagTooltip.x,
+              top: hoveredTagTooltip.y,
+              transform: `translate(-50%, ${hoveredTagTooltip.position === 'top' ? '-100%' : '0'})`,
+              marginTop: hoveredTagTooltip.position === 'bottom' ? '8px' : '-8px',
+            }}
+          >
+            <div className="bg-popover border border-border rounded-md shadow-xl px-3 py-2 text-xs text-popover-foreground w-max max-w-md">
+              {Array.from({ length: Math.ceil(hoveredTagTooltip.tags.length / 4) }).map((_, i) => (
+                <div key={i} className="whitespace-nowrap">
+                  {hoveredTagTooltip.tags.slice(i * 4, (i + 1) * 4).join(', ')}
+                </div>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )
+      }
+    </div >
   );
 }
