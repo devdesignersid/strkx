@@ -80,7 +80,7 @@ export function useSystemDesignProblems() {
     // Delete Mutation
     const deleteMutation = useMutation({
         mutationFn: (id: string) => systemDesignApi.deleteProblem(id),
-        onMutate: async (id) => {
+        onMutate: async (_id) => {
             await queryClient.cancelQueries({ queryKey: ['system-design-problems'] });
             const previousProblems = queryClient.getQueryData(['system-design-problems']);
 

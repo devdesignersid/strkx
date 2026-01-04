@@ -5,7 +5,7 @@ import {
     CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown, Filter
 } from 'lucide-react';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyState } from '@/design-system/components';
+import { EmptyState, Button } from '@/design-system/components';
 import { useTableSnapHeight } from '@/hooks/useTableSnapHeight';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { TagTooltip } from '@/components/shared/TagTooltip';
