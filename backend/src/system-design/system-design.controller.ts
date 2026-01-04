@@ -3,6 +3,7 @@ import { SystemDesignService } from './system-design.service';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CreateSystemDesignProblemDto, UpdateSystemDesignProblemDto } from './dto/create-problem.dto';
 import { CreateSystemDesignSubmissionDto, UpdateSystemDesignSubmissionDto, MarkSolutionDto } from './dto/create-submission.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('system-design')
 @UseGuards(OptionalJwtAuthGuard)
@@ -21,12 +22,18 @@ export class SystemDesignController {
   }
 
   @Get('problems')
-  async findAll(@Request() req) {
+  async findAll(
+    @Request() req,
+    @Query() paginationDto: PaginationDto,
+    @Query('difficulty') difficulty: string,
+    @Query('status') status: string,
+    @Query('tags') tags: string,
+  ) {
     let userId = req.user?.id;
     if (!userId) {
       userId = await this.systemDesignService.getDemoUserId();
     }
-    return this.systemDesignService.findAll(userId);
+    return this.systemDesignService.findAll(userId, paginationDto, difficulty, status, tags);
   }
 
   @Get('problems/:id')

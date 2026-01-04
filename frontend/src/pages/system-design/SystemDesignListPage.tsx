@@ -14,6 +14,9 @@ export default function SystemDesignListPage() {
     const {
         problems,
         isLoading,
+        isLoadingMore,
+        hasMore,
+        loadMore,
         searchQuery,
         setSearchQuery,
         filterDifficulties,
@@ -84,6 +87,9 @@ export default function SystemDesignListPage() {
                 <SystemDesignTable
                     problems={problems}
                     isLoading={isLoading}
+                    isLoadingMore={isLoadingMore}
+                    hasMore={hasMore}
+                    onLoadMore={loadMore}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     selectedIds={selectedIds}

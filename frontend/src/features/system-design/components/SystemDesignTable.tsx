@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { useState, useRef, useMemo, useCallback } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyCanvasIllustration } from '@/design-system/illustrations';
 import {
-    CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
-    Circle, MoreHorizontal, Edit, Trash2, Filter, Clock, CheckCircle2
+    CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown, Filter
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyState, Button, StatusBadge, getDifficultyVariant } from '@/design-system/components';
+import { EmptyState } from '@/design-system/components';
+import { useTableSnapHeight } from '@/hooks/useTableSnapHeight';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { TagTooltip } from '@/components/shared/TagTooltip';
+import { RowActionMenu } from '@/components/shared/RowActionMenu';
+import { SystemDesignRow } from './SystemDesignRow';
 import type { SystemDesignProblem } from '@/types/system-design';
 import type { SortKey, SortDirection } from '../hooks/useSystemDesignProblems';
 
 interface SystemDesignTableProps {
     problems: SystemDesignProblem[];
     isLoading: boolean;
+    isLoadingMore?: boolean;
+    hasMore?: boolean;
+    onLoadMore?: () => void;
     sortConfig: { key: SortKey; direction: SortDirection };
     onSort: (key: SortKey) => void;
     selectedIds: Set<string>;
@@ -27,9 +31,14 @@ interface SystemDesignTableProps {
     hasFilters?: boolean;
 }
 
+const ROW_HEIGHT = 52;
+
 export function SystemDesignTable({
     problems,
     isLoading,
+    isLoadingMore = false,
+    hasMore = false,
+    onLoadMore = () => { },
     sortConfig,
     onSort,
     selectedIds,
@@ -40,20 +49,66 @@ export function SystemDesignTable({
     onClearFilters,
     hasFilters = false
 }: SystemDesignTableProps) {
-    const navigate = useNavigate();
+    const parentRef = useRef<HTMLDivElement>(null);
+
+    // Shared hook for height
+    const containerHeight = useTableSnapHeight(ROW_HEIGHT);
+
+    // Infinite Scroll
+    useInfiniteScroll(parentRef, hasMore, isLoadingMore, onLoadMore, 50);
+
+    // Local state
     const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
     const [hoveredTagTooltip, setHoveredTagTooltip] = useState<{ id: string, x: number, y: number, tags: string[], position: 'top' | 'bottom' } | null>(null);
-    const lastSelectedId = useState<{ current: string | null }>({ current: null })[0];
+    const lastSelectedId = useRef<string | null>(null);
 
-    const handleMenuClick = (e: React.MouseEvent, id: string) => {
+    // Virtualizer
+    const virtualizer = useVirtualizer({
+        count: problems.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => ROW_HEIGHT,
+        overscan: 5,
+    });
+
+    const virtualItems = virtualizer.getVirtualItems();
+
+    // Stable Handlers
+    const handleMenuOpen = useCallback((e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (activeMenu?.id === id) {
             setActiveMenu(null);
         } else {
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            setActiveMenu({ id, x: rect.right, y: rect.bottom });
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            const y = spaceBelow < 200 ? rect.top : rect.bottom;
+            setActiveMenu({ id, x: rect.right, y });
         }
-    };
+    }, [activeMenu]);
+
+    const handleTagHover = useCallback((id: string, e: React.MouseEvent, tags: string[]) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - rect.bottom;
+        const showAbove = spaceBelow < 200;
+
+        setHoveredTagTooltip({
+            id,
+            x: rect.left + (rect.width / 2),
+            y: showAbove ? rect.top : rect.bottom,
+            tags,
+            position: showAbove ? 'top' : 'bottom'
+        });
+    }, []);
+
+    const handleTagLeave = useCallback(() => {
+        setHoveredTagTooltip(null);
+    }, []);
+
+    const handleToggleSelect = useCallback((id: string, shiftKey: boolean) => {
+        onToggleSelectOne(id, shiftKey, lastSelectedId.current);
+        lastSelectedId.current = id;
+    }, [onToggleSelectOne]);
 
     const handleModifyClick = (id: string) => {
         const problem = problems.find(p => p.id === id);
@@ -69,173 +124,85 @@ export function SystemDesignTable({
     };
 
     const isAllSelected = problems.length > 0 && selectedIds.size === problems.length;
+    const gridTemplate = "40px minmax(200px, 1fr) 100px minmax(200px, 1.5fr) 100px 50px";
+
+    // Memoize skeleton rows
+    const skeletonRows = useMemo(() => [...Array(5)].map((_, i) => (
+        <div key={i} className="grid animate-pulse" style={{ gridTemplateColumns: gridTemplate }}>
+            <div className="px-4 py-3"><Skeleton className="w-4 h-4 rounded" /></div>
+            <div className="px-4 py-3"><Skeleton className="h-4 w-32 rounded" /></div>
+            <div className="px-4 py-3"><Skeleton className="h-4 w-16 rounded-full" /></div>
+            <div className="px-4 py-3"><Skeleton className="h-4 w-24 rounded" /></div>
+            <div className="px-4 py-3"><Skeleton className="h-4 w-20 rounded" /></div>
+            <div className="px-4 py-3"></div>
+        </div>
+    )), [gridTemplate]);
 
     return (
-        <div className="rounded-xl border border-border bg-card shadow-sm">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-secondary/30 text-muted-foreground font-medium border-b border-border">
-                        <tr>
-                            <th className="px-4 py-3 w-10">
-                                <Button
-                                    variant="ghost"
-                                    onClick={onToggleSelectAll}
-                                    className="flex items-center justify-center h-auto w-auto p-0 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    {isAllSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                </Button>
-                            </th>
-                            <th
-                                className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
-                                onClick={() => onSort('title')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Title
-                                    {sortConfig.key === 'title' ? (
-                                        sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                                    ) : (
-                                        <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                                    )}
-                                </div>
-                            </th>
-                            <th
-                                className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none w-32"
-                                onClick={() => onSort('difficulty')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Difficulty
-                                    {sortConfig.key === 'difficulty' ? (
-                                        sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                                    ) : (
-                                        <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                                    )}
-                                </div>
-                            </th>
-                            <th className="px-4 py-3">Tags</th>
-                            <th
-                                className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none w-32"
-                                onClick={() => onSort('status')}
-                            >
-                                <div className="flex items-center gap-1">
-                                    Status
-                                    {sortConfig.key === 'status' ? (
-                                        sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                                    ) : (
-                                        <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                                    )}
-                                </div>
-                            </th>
-                            <th className="px-4 py-3 w-16 text-right"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                        {isLoading ? (
-                            [...Array(5)].map((_, i) => (
-                                <tr key={i} className="animate-pulse">
-                                    <td className="px-4 py-3"><Skeleton className="w-4 h-4 rounded" /></td>
-                                    <td className="px-4 py-3"><Skeleton className="h-4 w-32 rounded" /></td>
-                                    <td className="px-4 py-3"><Skeleton className="h-4 w-16 rounded-full" /></td>
-                                    <td className="px-4 py-3"><Skeleton className="h-4 w-24 rounded" /></td>
-                                    <td className="px-4 py-3"><Skeleton className="h-4 w-20 rounded" /></td>
-                                    <td className="px-4 py-3"></td>
-                                </tr>
-                            ))
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            {/* Sticky Header */}
+            <div
+                className="grid bg-secondary/30 text-muted-foreground font-medium text-sm border-b border-border"
+                style={{ gridTemplateColumns: gridTemplate }}
+            >
+                <div className="px-4 py-3">
+                    <Button
+                        variant="ghost"
+                        onClick={onToggleSelectAll}
+                        className="flex items-center justify-center h-auto w-auto p-0 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors transition-transform active:scale-95"
+                    >
+                        {isAllSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                    </Button>
+                </div>
+                <div
+                    className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => onSort('title')}
+                >
+                    <div className="flex items-center gap-1">
+                        Title
+                        {sortConfig.key === 'title' ? (
+                            sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
                         ) : (
-                            problems.map((problem) => (
-                                <tr
-                                    key={problem.id}
-                                    onClick={() => navigate(`/system-design/${problem.id}`)}
-                                    className={cn(
-                                        "group hover:bg-secondary/30 transition-colors cursor-pointer",
-                                        selectedIds.has(problem.id) && "bg-primary/5 hover:bg-primary/10"
-                                    )}
-                                >
-                                    <td className="px-4 py-3">
-                                        <Button
-                                            variant="ghost"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onToggleSelectOne(problem.id, e.shiftKey, lastSelectedId.current);
-                                                lastSelectedId.current = problem.id;
-                                            }}
-                                            className={cn(
-                                                "flex items-center justify-center h-auto w-auto p-0 hover:bg-transparent transition-colors",
-                                                selectedIds.has(problem.id) ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
-                                            )}
-                                        >
-                                            {selectedIds.has(problem.id) ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                        </Button>
-                                    </td>
-                                    <td className="px-4 py-3 font-medium text-foreground group-hover:text-primary transition-colors max-w-[300px]">
-                                        <div className="truncate" title={problem.title}>
-                                            {problem.title}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <StatusBadge
-                                            status={problem.difficulty}
-                                            variant={getDifficultyVariant(problem.difficulty)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center flex-wrap gap-1.5">
-                                            {problem.tags.slice(0, 3).map(tag => (
-                                                <span key={tag} className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                            {problem.tags.length > 3 && (
-                                                <span
-                                                    className="relative inline-block text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded border border-border cursor-help"
-                                                    onMouseEnter={(e) => {
-                                                        const rect = e.currentTarget.getBoundingClientRect();
-                                                        const viewportHeight = window.innerHeight;
-                                                        const spaceBelow = viewportHeight - rect.bottom;
-                                                        const showAbove = spaceBelow < 200;
-
-                                                        setHoveredTagTooltip({
-                                                            id: problem.id,
-                                                            x: rect.left + (rect.width / 2),
-                                                            y: showAbove ? rect.top : rect.bottom,
-                                                            tags: problem.tags.slice(3),
-                                                            position: showAbove ? 'top' : 'bottom'
-                                                        });
-                                                    }}
-                                                    onMouseLeave={() => setHoveredTagTooltip(null)}
-                                                >
-                                                    +{problem.tags.length - 3}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <StatusBadge
-                                                status={problem.status || 'Todo'}
-                                                icon={problem.status === 'Solved' ? CheckCircle2 : problem.status === 'Attempted' ? Clock : Circle}
-                                                variant={problem.status === 'Solved' ? 'success' : problem.status === 'Attempted' ? 'warning' : 'neutral'}
-                                                className="border-none bg-transparent p-0"
-                                            />
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-right relative">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={(e) => handleMenuClick(e, problem.id)}
-                                            className="h-8 w-8 p-0 row-action-menu-trigger"
-                                        >
-                                            <MoreHorizontal className="w-4 h-4" />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))
+                            <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
                         )}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
+                <div
+                    className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => onSort('difficulty')}
+                >
+                    <div className="flex items-center gap-1">
+                        Difficulty
+                        {sortConfig.key === 'difficulty' ? (
+                            sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                        ) : (
+                            <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+                        )}
+                    </div>
+                </div>
+                <div className="px-4 py-3">Tags</div>
+                <div
+                    className="px-4 py-3 cursor-pointer hover:text-foreground transition-colors group select-none"
+                    onClick={() => onSort('status')}
+                >
+                    <div className="flex items-center gap-1">
+                        Status
+                        {sortConfig.key === 'status' ? (
+                            sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                        ) : (
+                            <ChevronsUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+                        )}
+                    </div>
+                </div>
+                <div className="px-4 py-3"></div>
             </div>
 
-            {!isLoading && problems.length === 0 && (
+            {/* Virtualized List */}
+            {isLoading ? (
+                <div className="divide-y divide-border">
+                    {skeletonRows}
+                </div>
+            ) : problems.length === 0 ? (
                 <EmptyState
                     illustration={<EmptyCanvasIllustration className="w-full h-full" />}
                     title="No system design problems yet"
@@ -247,65 +214,67 @@ export function SystemDesignTable({
                     } : undefined}
                     className="py-12"
                 />
-            )}
-
-            {/* Portal for Menu */}
-            {activeMenu && createPortal(
+            ) : (
                 <div
-                    className="fixed inset-0 z-[9999] flex items-start justify-start"
-                    onClick={() => setActiveMenu(null)}
+                    ref={parentRef}
+                    className="overflow-auto scroll-smooth"
+                    style={{ height: containerHeight }}
                 >
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                    <div
                         style={{
-                            position: 'absolute',
-                            top: activeMenu.y + 5,
-                            left: activeMenu.x - 128
+                            height: `${virtualizer.getTotalSize()}px`,
+                            width: '100%',
+                            position: 'relative',
                         }}
-                        className="w-32 bg-card border border-border rounded-lg shadow-xl overflow-hidden row-action-menu-content"
-                        onClick={(e) => e.stopPropagation()}
                     >
-                        <button
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors text-left"
-                            onClick={() => handleModifyClick(activeMenu.id)}
-                        >
-                            <Edit className="w-3.5 h-3.5" />
-                            Modify
-                        </button>
-                        <button
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors text-left"
-                            onClick={() => handleDeleteClick(activeMenu.id)}
-                        >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Delete
-                        </button>
-                    </motion.div>
-                </div>,
-                document.body
+                        {virtualItems.map((virtualRow) => {
+                            const problem = problems[virtualRow.index];
+                            return (
+                                <SystemDesignRow
+                                    key={problem.id}
+                                    problem={problem}
+                                    isSelected={selectedIds.has(problem.id)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: `${virtualRow.size}px`,
+                                        transform: `translateY(${virtualRow.start}px)`,
+                                    }}
+                                    onToggleSelect={handleToggleSelect}
+                                    onMenuOpen={handleMenuOpen}
+                                    onTagHover={handleTagHover}
+                                    onTagLeave={handleTagLeave}
+                                    gridTemplate={gridTemplate}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
             )}
 
-            {/* Tag Tooltip Portal */}
-            {hoveredTagTooltip && createPortal(
-                <div
-                    className="fixed z-[9999] pointer-events-none"
-                    style={{
-                        left: hoveredTagTooltip.x,
-                        top: hoveredTagTooltip.y,
-                        transform: `translate(-50%, ${hoveredTagTooltip.position === 'top' ? '-100%' : '0'})`,
-                        marginTop: hoveredTagTooltip.position === 'bottom' ? '8px' : '-8px',
-                    }}
-                >
-                    <div className="bg-popover border border-border rounded-md shadow-xl px-3 py-2 text-xs text-popover-foreground w-max max-w-md">
-                        {Array.from({ length: Math.ceil(hoveredTagTooltip.tags.length / 4) }).map((_, i) => (
-                            <div key={i} className="whitespace-nowrap">
-                                {hoveredTagTooltip.tags.slice(i * 4, (i + 1) * 4).join(', ')}
-                            </div>
-                        ))}
-                    </div>
-                </div>,
-                document.body
+            {/* Shared Row Action Menu */}
+            {activeMenu && (
+                <RowActionMenu
+                    id={activeMenu.id}
+                    x={activeMenu.x}
+                    y={activeMenu.y}
+                    onClose={() => setActiveMenu(null)}
+                    onModify={handleModifyClick}
+                    onDelete={handleDeleteClick}
+                />
+            )}
+
+            {/* Shared Tag Tooltip */}
+            {hoveredTagTooltip && (
+                <TagTooltip
+                    id={hoveredTagTooltip.id}
+                    x={hoveredTagTooltip.x}
+                    y={hoveredTagTooltip.y}
+                    tags={hoveredTagTooltip.tags}
+                    position={hoveredTagTooltip.position}
+                />
             )}
         </div>
     );

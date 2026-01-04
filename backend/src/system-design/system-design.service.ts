@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { SYSTEM_DESIGN_CONSTANTS, DEMO_USER_EMAIL } from '../common/constants';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Difficulty, Prisma } from '@prisma/client';
 import { CreateSystemDesignProblemDto, UpdateSystemDesignProblemDto } from './dto/create-problem.dto';
 import { CreateSystemDesignSubmissionDto, UpdateSystemDesignSubmissionDto } from './dto/create-submission.dto';
 
@@ -30,31 +32,173 @@ export class SystemDesignService {
     return user?.id || 'demo-user';
   }
 
-  async findAll(userId: string) {
-    const problems = await this.prisma.systemDesignProblem.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        difficulty: true,
-        tags: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: { submissions: true },
-        },
-        // Check if there is any submission marked as solution
-        submissions: {
-          where: { userId },
-          select: { id: true, status: true, isSolution: true },
-        },
-      },
-    });
+  async findAll(
+    userId: string,
+    paginationDto: PaginationDto,
+    difficulty?: string,
+    status?: string,
+    tags?: string,
+  ) {
+    const { page = 1, limit = 20, search, sortBy, sortOrder = 'desc' } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SystemDesignProblemWhereInput = {
+      userId,
+    };
+
+    // Search
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Difficulty
+    if (difficulty) {
+      where.difficulty = { in: difficulty.split(',') as Difficulty[] };
+    }
+
+    // Tags
+    if (tags) {
+      where.tags = { hasSome: tags.split(',') };
+    }
+
+    // Status Filter (DB Level)
+    if (status) {
+      const statuses = status.split(',');
+      const statusConditions: Prisma.SystemDesignProblemWhereInput[] = [];
+
+      if (statuses.includes('Solved')) {
+        statusConditions.push({
+          submissions: { some: { userId: userId, isSolution: true } },
+        });
+      }
+      if (statuses.includes('Attempted')) {
+        statusConditions.push({
+          AND: [
+            { submissions: { some: { userId: userId } } },
+            { submissions: { none: { userId: userId, isSolution: true } } },
+            { submissions: { some: { status: 'completed' } } } // System design 'Attempted' logic might differ slightly, but mapping based on service logic
+          ],
+        });
+      }
+      if (statuses.includes('Todo')) {
+        statusConditions.push({
+          submissions: { none: { userId: userId } },
+        });
+      }
+
+      if (statusConditions.length > 0) {
+        where.AND = [{ OR: statusConditions }];
+      }
+    }
+
+    // Determine Order
+    let orderBy: Prisma.SystemDesignProblemOrderByWithRelationInput = { createdAt: 'desc' };
+    if (sortBy) {
+      if (sortBy === 'title') {
+        orderBy = { title: sortOrder === 'asc' ? 'asc' : 'desc' };
+      } else if (sortBy === 'difficulty') {
+        orderBy = { difficulty: sortOrder === 'asc' ? 'asc' : 'desc' };
+      } else {
+        orderBy = { createdAt: sortOrder === 'asc' ? 'asc' : 'desc' };
+      }
+    }
+
+    let problems;
+    let total;
+
+    // Special handling for Status sorting (In-Memory Sort)
+    if (sortBy === 'status') {
+      // 1. Fetch minimal data identifying status for ALL matching problems
+      const allMatchingProblems = await this.prisma.systemDesignProblem.findMany({
+        where,
+        select: {
+          id: true,
+          submissions: {
+            where: { userId },
+            select: { status: true, isSolution: true }
+          }
+        }
+      });
+
+      total = allMatchingProblems.length;
+
+      // 2. Calculate rank for each problem
+      // Rank: 3=Solved, 2=Attempted, 1=Todo
+      const rankedProblems = allMatchingProblems.map(p => {
+        const hasSolution = p.submissions.some(s => s.isSolution);
+        const hasCompleted = p.submissions.some(s => s.status === 'completed');
+        let rank = 1; // Todo
+        if (hasSolution) rank = 3; // Solved
+        else if (hasCompleted) rank = 2; // Attempted
+
+        return { id: p.id, rank };
+      });
+
+      // 3. Sort in memory
+      const multiplier = sortOrder === 'asc' ? 1 : -1;
+      rankedProblems.sort((a, b) => (a.rank - b.rank) * multiplier);
+
+      // 4. Slice for pagination
+      const slicedIds = rankedProblems.slice(skip, skip + limit).map(p => p.id);
+
+      // 5. Fetch full data for the sliced IDs
+      const pageProblems = await this.prisma.systemDesignProblem.findMany({
+        where: { id: { in: slicedIds } },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          difficulty: true,
+          tags: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: {
+            select: { submissions: true },
+          },
+          submissions: {
+            where: { userId },
+            select: { id: true, status: true, isSolution: true },
+          },
+        }
+      });
+
+      // Re-sort pageProblems to match slicedIds order
+      problems = slicedIds.map(id => pageProblems.find(p => p.id === id)).filter(Boolean);
+
+    } else {
+      // Standard DB-level sorting
+      [problems, total] = await this.prisma.$transaction([
+        this.prisma.systemDesignProblem.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            difficulty: true,
+            tags: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: {
+              select: { submissions: true },
+            },
+            submissions: {
+              where: { userId },
+              select: { id: true, status: true, isSolution: true },
+            },
+          },
+        }),
+        this.prisma.systemDesignProblem.count({ where }),
+      ]);
+    }
 
     // Map problems with derived status
-    return problems.map(problem => {
+    const enrichedProblems = problems.map(problem => {
       const hasSolution = problem.submissions.some(s => s.isSolution);
       const hasCompleted = problem.submissions.some(s => s.status === 'completed');
 
@@ -68,8 +212,19 @@ export class SystemDesignService {
       return {
         ...problem,
         status,
+        submissions: undefined,
       };
     });
+
+    return {
+      problems: enrichedProblems,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(idOrSlug: string) {

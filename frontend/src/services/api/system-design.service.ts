@@ -5,9 +5,9 @@ const BASE_URL = '/system-design';
 
 export const systemDesignApi = {
     // Problems
-    getAllProblems: async () => {
-        const response = await apiClient.get(`${BASE_URL}/problems`);
-        return response.data.data;
+    getAllProblems: async (params?: any) => {
+        const response = await apiClient.get(`${BASE_URL}/problems`, { params });
+        return response.data;
     },
 
     getProblem: async (id: string): Promise<SystemDesignProblem> => {

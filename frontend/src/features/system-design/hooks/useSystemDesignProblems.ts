@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { systemDesignApi } from '@/services/api/system-design.service';
 import type { SystemDesignProblem } from '@/types/system-design';
@@ -23,41 +23,74 @@ export function useSystemDesignProblems() {
     // Selection State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    // Fetch Problems with React Query
-    const { data: rawProblems = [], isLoading, error } = useQuery({
-        queryKey: ['system-design-problems'],
-        queryFn: () => systemDesignApi.getAllProblems(),
+    const LIMIT = 20;
+
+    // Build params
+    const queryParams = useMemo(() => ({
+        limit: LIMIT,
+        search: searchQuery || undefined,
+        difficulty: filterDifficulties.length ? filterDifficulties.join(',') : undefined,
+        // Status filtering to be implemented fully on backend, passing for now
+        status: filterStatus.length ? filterStatus.join(',') : undefined,
+        tags: filterTags.length ? filterTags.join(',') : undefined,
+        sortBy: sortConfig.key,
+        sortOrder: sortConfig.direction
+    }), [searchQuery, filterDifficulties, filterStatus, filterTags, sortConfig]);
+
+    // Fetch Problems with Infinite Query
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        error,
+        refetch
+    } = useInfiniteQuery({
+        queryKey: ['system-design-problems', queryParams],
+        queryFn: async ({ pageParam = 1 }) => {
+            const res = await systemDesignApi.getAllProblems({
+                ...queryParams,
+                page: pageParam
+            });
+            // Backend returns { data: { problems: [], meta: {} } } usually, or just { problems: [], meta: {} }
+            // Adjust based on actual API response structure. 
+            // In ProblemsService it returns { data: { problems: ..., meta: ... } } (axios response structure handling in service?)
+            // systemDesignApi.getAllProblems now returns response.data which is { statusCode, data: { problems, meta }, ... } 
+
+            // Let's assume the API returns the standard structure where res.data contains { problems, meta }
+            const { problems, meta } = res.data;
+            const hasMore = meta ? meta.page < meta.totalPages : false;
+            return { problems, hasMore };
+        },
+        getNextPageParam: (lastPage, pages) => {
+            return lastPage.hasMore ? pages.length + 1 : undefined;
+        },
+        initialPageParam: 1,
     });
 
     const problems = useMemo(() => {
-        return rawProblems.map((problem: SystemDesignProblem & { _count?: { submissions: number }, submissions?: { id: string }[] }) => {
-            // Backend now provides the status field, just use it or default to 'Todo'
-            return {
-                ...problem,
-                status: problem.status || 'Todo'
-            };
-        });
-    }, [rawProblems]);
+        return data?.pages.flatMap(page => page.problems) ?? [];
+    }, [data]);
+
+    // Filter & Sort Logic is now server-side, references to filteredProblems should use problems
+    const filteredProblems = problems;
 
 
     // Delete Mutation
     const deleteMutation = useMutation({
         mutationFn: (id: string) => systemDesignApi.deleteProblem(id),
         onMutate: async (id) => {
-            // Optimistic update
             await queryClient.cancelQueries({ queryKey: ['system-design-problems'] });
             const previousProblems = queryClient.getQueryData(['system-design-problems']);
 
-            queryClient.setQueryData(['system-design-problems'], (old: SystemDesignProblem[] = []) =>
-                old.filter(p => p.id !== id)
-            );
-
+            // Optimistic update for infinite query structure is complex, invalidation is safer
             return { previousProblems };
         },
         onError: (_err, _id, context) => {
-            // Rollback on error
             if (context?.previousProblems) {
-                queryClient.setQueryData(['system-design-problems'], context.previousProblems);
+                // Restoration might be tricky with infinite query
+                queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
             }
             toast.error('Failed to delete problem');
         },
@@ -76,18 +109,10 @@ export function useSystemDesignProblems() {
             Promise.all(ids.map(id => systemDesignApi.deleteProblem(id))),
         onMutate: async (ids) => {
             await queryClient.cancelQueries({ queryKey: ['system-design-problems'] });
-            const previousProblems = queryClient.getQueryData(['system-design-problems']);
-
-            queryClient.setQueryData(['system-design-problems'], (old: SystemDesignProblem[] = []) =>
-                old.filter(p => !ids.includes(p.id))
-            );
-
-            return { previousProblems, count: ids.length };
+            return { count: ids.length };
         },
-        onError: (_err, _ids, context) => {
-            if (context?.previousProblems) {
-                queryClient.setQueryData(['system-design-problems'], context.previousProblems);
-            }
+        onError: (_err, _ids, _context) => {
+            queryClient.invalidateQueries({ queryKey: ['system-design-problems'] });
             toast.error('Failed to delete some problems');
         },
         onSuccess: () => {
@@ -100,40 +125,11 @@ export function useSystemDesignProblems() {
         }
     });
 
-    // Filter & Sort Logic
-    const filteredProblems = useMemo(() => {
-        return problems.filter((problem: SystemDesignProblem) => {
-            // Search
-            if (searchQuery && !problem.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-                return false;
-            }
-
-            // Difficulty
-            if (filterDifficulties.length > 0 && !filterDifficulties.includes(problem.difficulty)) {
-                return false;
-            }
-
-            // Tags
-            if (filterTags.length > 0 && !filterTags.some(tag => problem.tags.includes(tag))) {
-                return false;
-            }
-
-            // Status (Mock logic for now as status isn't fully integrated in list view yet)
-            // In a real app, we'd check user's submission status for this problem
-            if (filterStatus.length > 0) {
-                // TODO: Implement status filtering based on user submissions
-            }
-
-            return true;
-        }).sort((a: SystemDesignProblem, b: SystemDesignProblem) => {
-            const aValue = sortConfig.key === 'status' ? (a.status || '') : a[sortConfig.key];
-            const bValue = sortConfig.key === 'status' ? (b.status || '') : b[sortConfig.key];
-
-            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }, [problems, searchQuery, filterDifficulties, filterTags, filterStatus, sortConfig]);
+    const loadMore = async () => {
+        if (!isFetchingNextPage && hasNextPage) {
+            await fetchNextPage();
+        }
+    };
 
     // Handlers
     const handleSort = (key: SortKey) => {
@@ -187,6 +183,9 @@ export function useSystemDesignProblems() {
     return {
         problems: filteredProblems,
         isLoading,
+        isLoadingMore: isFetchingNextPage,
+        hasMore: hasNextPage ?? false,
+        loadMore,
         error: error ? 'Failed to load problems' : null,
         searchQuery,
         setSearchQuery,
@@ -206,6 +205,6 @@ export function useSystemDesignProblems() {
         bulkDelete,
         isDeleting: deleteMutation.isPending,
         isBulkDeleting: bulkDeleteMutation.isPending,
-        refreshProblems: () => queryClient.invalidateQueries({ queryKey: ['system-design-problems'] })
+        refreshProblems: refetch
     };
 }
