@@ -2,11 +2,10 @@ import { useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown,
-  ChevronDown as ChevronDownIcon, X
+  CheckSquare, Square, ChevronUp, ChevronDown, ChevronsUpDown, X
 } from 'lucide-react';
 import { Skeleton } from '@/design-system/components/Skeleton';
-import { EmptyState, Button } from '@/design-system/components';
+import { EmptyState } from '@/design-system/components';
 import { EmptyProblemsIllustration } from '@/design-system/illustrations';
 import { useTableSnapHeight } from '@/hooks/useTableSnapHeight';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';

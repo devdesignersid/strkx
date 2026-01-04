@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Typography from '@tiptap/extension-typography';
 import { Markdown } from 'tiptap-markdown';
@@ -205,7 +205,7 @@ export default function NotesEditor({
         ],
         content: value,
         editable: !readOnly,
-        onUpdate: ({ editor }) => {
+        onUpdate: ({ editor }: { editor: Editor }) => {
             // Get markdown content
             const markdown = (editor.storage as any).markdown.getMarkdown();
             onChange(markdown);
