@@ -13,6 +13,7 @@ import { LoadingThunder } from '@/design-system/components';
 import Layout from './Layout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import LoginPage from '../pages/auth/LoginPage';
+import AuthCallbackPage from '../pages/auth/AuthCallbackPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 
 // Lazy imports for heavy pages
@@ -77,6 +78,7 @@ function App() {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
                   <Route path="/excalidraw-canvas" element={
                     <Suspense fallback={<div className="h-screen w-screen bg-[#151515]" />}>
                       <ExcalidrawCanvasPage />

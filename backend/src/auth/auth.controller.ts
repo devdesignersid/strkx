@@ -26,7 +26,12 @@ export class AuthController {
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     const { access_token } = await this.authService.login(req.user);
 
+    // For Safari compatibility: return token in URL
+    // Cookies still set as fallback for Chrome
     const isProduction = process.env.NODE_ENV === 'production';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    // Set cookie (Chrome will use this)
     res.cookie('Authentication', access_token, {
       httpOnly: true,
       secure: isProduction,
@@ -35,7 +40,8 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
+    // Redirect with token in URL (Safari will use this)
+    return res.redirect(`${frontendUrl}/auth/callback?token=${access_token}`);
   }
 
   @Post('logout')

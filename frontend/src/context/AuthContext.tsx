@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast, TOAST_MESSAGES } from '@/lib/toast';
 import { API_URL } from '@/config';
 import { userService } from '@/services/api/user.service';
+import { tokenStorage } from '@/utils/tokenStorage';
+
 
 interface User {
   id: string;
@@ -55,11 +57,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await userService.logout();
+      tokenStorage.remove(); // Clear token from localStorage
       setUser(null);
       toast.success(TOAST_MESSAGES.AUTH.LOGOUT_SUCCESS);
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Clear token even if API call fails
+      tokenStorage.remove();
+      setUser(null);
+      navigate('/login');
     }
   };
 

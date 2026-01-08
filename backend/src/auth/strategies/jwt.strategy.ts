@@ -9,9 +9,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private prisma: PrismaService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
+        // Try cookie first (Chrome)
         (request: Request) => {
           return request?.cookies?.Authentication;
         },
+        // Fall back to Authorization header (Safari with localStorage)
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env.SESSION_SECRET || 'super-secret-key',
@@ -24,7 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!user) {
-        throw new UnauthorizedException();
+      throw new UnauthorizedException();
     }
 
     return user;
