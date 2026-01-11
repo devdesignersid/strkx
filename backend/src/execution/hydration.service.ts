@@ -73,6 +73,7 @@ export class HydrationService {
         if (match && match[1]) functionName = match[1];
 
         // 6. Construct Final Script
+        // SECURITY: Use globalThis property access instead of eval() for safer function resolution
         return `
       ${definitionsCode}
       ${helpersCode}
@@ -81,8 +82,11 @@ export class HydrationService {
 
       try {
         const functionName = '${functionName}';
-
-        if (typeof eval(functionName) === 'function') {
+        
+        // SECURITY: Safer function lookup via globalThis instead of eval()
+        const fn = globalThis[functionName] || (typeof ${functionName} !== 'undefined' ? ${functionName} : undefined);
+        
+        if (typeof fn === 'function') {
             const args = global.args || [];
             
             try {
@@ -93,7 +97,6 @@ export class HydrationService {
             }
             
             // Execute
-            const fn = eval(functionName);
             global.result = fn(...args);
             
             // Dehydrate Result

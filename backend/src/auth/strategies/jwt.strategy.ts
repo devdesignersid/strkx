@@ -7,6 +7,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private prisma: PrismaService) {
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) {
+      throw new Error('CRITICAL: SESSION_SECRET environment variable must be set.');
+    }
+    if (secret.length < 32) {
+      throw new Error('CRITICAL: SESSION_SECRET must be at least 32 characters for security.');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         // Try cookie first (Chrome)
@@ -17,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.SESSION_SECRET || 'super-secret-key',
+      secretOrKey: secret,
     });
   }
 

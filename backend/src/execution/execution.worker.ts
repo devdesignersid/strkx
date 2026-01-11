@@ -17,6 +17,19 @@ async function run() {
     // Set up the global object
     jail.setSync('global', jail.derefInto());
 
+    // SECURITY: Freeze intrinsic prototypes to prevent prototype pollution
+    ivmContext.evalSync(`
+        Object.freeze(Object.prototype);
+        Object.freeze(Function.prototype);
+        Object.freeze(Array.prototype);
+        Object.freeze(String.prototype);
+        Object.freeze(Number.prototype);
+        Object.freeze(Boolean.prototype);
+        Object.freeze(RegExp.prototype);
+        Object.freeze(Date.prototype);
+        Object.freeze(Error.prototype);
+    `);
+
     // Inject context variables
     if (context) {
         for (const [key, value] of Object.entries(context)) {
